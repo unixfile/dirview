@@ -70,13 +70,17 @@ func (w *web) serveRoot(rw http.ResponseWriter, r *http.Request) {
 }
 
 // serveJob shows what a visit set going: the reading page.
-func (w *web) serveJob(rw http.ResponseWriter, r *http.Request, j *webJob) {
+func (w *web) serveJob(rw http.ResponseWriter, r *http.Request, j *webJob, key string) {
 	esc := template.HTMLEscapeString
 	w.mu.Lock()
 	steps, line, failed, started := slices.Clone(j.steps), j.line, j.err, j.started
 	w.mu.Unlock()
 	var body strings.Builder
 	status := http.StatusAccepted
+	if read := strings.TrimPrefix(j.urlPath, "/"); read != key {
+		u := (&url.URL{Path: rooted(j.urlPath)}).String()
+		fmt.Fprintf(&body, "<p class=\"own\">This page waits for the read that <a href=\"%s\">%s</a> set going, which reads its repo.</p>\n", esc(u), esc(read))
+	}
 	if failed != "" {
 		status = http.StatusBadGateway
 		body.WriteString("<pre class=\"error\">" + esc(failed) + "</pre>\n")
@@ -98,7 +102,6 @@ func (w *web) serveJob(rw http.ResponseWriter, r *http.Request, j *webJob) {
 		body.WriteString(" The page turns into what was asked for when it is read.")
 	}
 	body.WriteString("</p>\n")
-	key := strings.TrimPrefix(j.urlPath, "/")
 	w.render(rw, r, status, "reading "+key, webCrumbs(key), "reading", body.String())
 }
 

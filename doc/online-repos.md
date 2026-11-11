@@ -26,6 +26,8 @@ Both appear wherever a server serves the web address: on its default address and
 
 A repo not yet cached opens a page that says "reading". It names each step as www takes it: the git command, the URL and where the files go, with git's progress below and its time. When the repo is ready the page turns into it on its own. For most repos that takes one to three seconds; git's own repo takes about 20.
 
+A visit to another path in a repo being read, eg its README in a second tab, joins that read. Its page shows the same steps and turns into the page asked for when the read ends. It starts nothing, so it counts against no limit. A link to a version of a repo not yet cached, eg `fzf@26ff936`, reads the repo and then shows the version.
+
 www first finds where the repo ends in the path. It asks `git ls-remote` on every prefix at once, with and without `.git`, and takes the longest that answers; the rest of the path lies inside the repo. GitHub, Bitbucket and Codeberg keep every repo at owner/name, so there it asks nothing and clones at once.
 
 A URL that ends in `.git` redirects to the one without, so a repo has one URL.
@@ -84,7 +86,7 @@ A visitor can name any host, so www fetches only from hosts whose every address 
 
 The limits aim at a bot that makes www clone without end, not at a reader. A repo already in the cache opens at any time. A visit to an uncached path starts a read: a probe, a clone or a listing.
 
-One address runs one read at a time and starts at most 20 within an hour. Over that it gets a 429 with `Retry-After`, and the log names the address. An IPv6 address counts by its /64. Behind a proxy on loopback, eg Caddy, the visitor is the last address in `X-Forwarded-For`.
+One address runs one read at a time and starts at most 20 within an hour. A second read waits on its reading page, which names the read ahead of it, and starts when that ends; reads run in the order asked. A waiting read counts from the moment it is asked. Over 20 an address gets a 429 with `Retry-After`, and the log names the address. An IPv6 address counts by its /64. Behind a proxy on loopback, eg Caddy, the visitor is the last address in `X-Forwarded-For`.
 
 At most four clones run at once, and a fifth waits on its reading page.
 

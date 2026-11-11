@@ -392,8 +392,8 @@ func TestVisitor(t *testing.T) {
 	}
 }
 
-// A public server lets one address start visitorJobs reads an hour, one
-// at a time; another address and a cached repo are not limited.
+// A public server lets one address start visitorJobs reads an hour;
+// another address and a cached repo are not limited.
 func TestWebPublicLimits(t *testing.T) {
 	f := newForge(t, nil)
 	f.repo(t, "acct/r", map[string]string{"README.md": "x\n"})
@@ -426,13 +426,77 @@ func TestWebPublicLimits(t *testing.T) {
 	if rec := from("198.51.100.7:4000", "/"+f.host+"/acct/one-more"); rec.Code != http.StatusAccepted {
 		t.Errorf("another address: %d\n%s", rec.Code, rec.Body)
 	}
-	// A read still running holds the address's next.
+}
+
+// A visit to a path in a repo being read joins the read and counts for
+// nothing; under --public an address's second read waits for its first,
+// where it was refused before. The test holds the clones on a full slot.
+func TestWebSecondReadWaitsAndAVisitJoins(t *testing.T) {
+	f := newForge(t, nil)
+	f.repo(t, "acct/a", map[string]string{"README.md": "# A\n"})
+	f.repo(t, "acct/b", map[string]string{"README.md": "# B\n"})
+	depths[f.host] = 3
+	t.Cleanup(func() { delete(depths, f.host) })
+	w := testWeb(t, defaultDisk)
+	w.public, w.srv.public = true, true
+	w.slots = make(chan struct{}, 1)
+	w.slots <- struct{}{}
+	from := func(path string) *httptest.ResponseRecorder {
+		req := httptest.NewRequest("GET", path, nil)
+		req.RemoteAddr = "203.0.113.9:4000"
+		req.Host = "127.31.1.2"
+		rec := httptest.NewRecorder()
+		w.srv.handler().ServeHTTP(rec, req)
+		return rec
+	}
+	a, b := "/"+f.host+"/acct/a/", "/"+f.host+"/acct/b/"
+	if rec := from(a); rec.Code != http.StatusAccepted {
+		t.Fatalf("first read: %d\n%s", rec.Code, rec.Body)
+	}
+	rec := from(a + "README.md")
+	if rec.Code != http.StatusAccepted || !strings.Contains(rec.Body.String(), "This page waits for the read") ||
+		!strings.Contains(rec.Body.String(), "<title>reading "+f.host+"/acct/a/README.md</title>") {
+		t.Errorf("a path in the repo being read: %d\n%s", rec.Code, rec.Body)
+	}
+	// A version of the repo joins too.
+	if rec := from("/" + f.host + "/acct/a@1234567/README.md"); rec.Code != http.StatusAccepted || !strings.Contains(rec.Body.String(), "This page waits for the read") {
+		t.Errorf("a version of the repo being read: %d\n%s", rec.Code, rec.Body)
+	}
+	if rec := from(b); rec.Code != http.StatusAccepted {
+		t.Fatalf("a second read at once: %d\n%s", rec.Code, rec.Body)
+	}
 	busy, _ := netip.MustParseAddr("203.0.113.9").Prefix(32)
 	w.mu.Lock()
-	w.visitors[busy] = []*webJob{{urlPath: "/" + f.host + "/acct/slow", started: time.Now()}}
+	jobs, counted := len(w.jobs), len(w.visitors[busy])
 	w.mu.Unlock()
-	if rec := from("203.0.113.9:4000", "/"+f.host+"/acct/other"); rec.Code != http.StatusTooManyRequests || !strings.Contains(rec.Body.String(), "acct/slow is still being read") {
-		t.Errorf("a second read at once: %d\n%s", rec.Code, rec.Body)
+	if jobs != 2 || counted != 2 {
+		t.Errorf("%d jobs, %d counted, want 2 and 2: a joined visit starts and counts nothing", jobs, counted)
+	}
+	waiting := func() bool {
+		body := from(b).Body.String()
+		return strings.Contains(body, "waiting: one read at a time from one address, and /"+f.host+"/acct/a goes first")
+	}
+	for end := time.Now().Add(5 * time.Second); !waiting() && time.Now().Before(end); {
+		time.Sleep(10 * time.Millisecond)
+	}
+	if !waiting() {
+		t.Errorf("the second read's page does not say it waits:\n%s", from(b).Body)
+	}
+	packs := f.packs.Load()
+	time.Sleep(50 * time.Millisecond)
+	if f.packs.Load() != packs {
+		t.Error("the second read fetched while the first ran")
+	}
+	<-w.slots
+	for _, p := range []string{a + "README.md", b + "README.md"} {
+		rec := from(p)
+		for end := time.Now().Add(20 * time.Second); rec.Code == http.StatusAccepted && time.Now().Before(end); {
+			time.Sleep(20 * time.Millisecond)
+			rec = from(p)
+		}
+		if rec.Code != http.StatusOK {
+			t.Errorf("%s after the reads: %d\n%s", p, rec.Code, rec.Body)
+		}
 	}
 }
 

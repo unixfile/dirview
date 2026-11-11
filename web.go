@@ -199,11 +199,13 @@ func (r *webRepo) status(ctx context.Context, prefix, urlPath string) template.H
 // reading page shows.
 type webJob struct {
 	urlPath string
+	repo    string // the key of the repo read, once known
 	started time.Time
 	steps   []string
 	line    string // git's latest progress line
 	err     string
 	ended   time.Time
+	done    chan struct{} // closed when the job ends
 }
 
 // serve answers every request on the web address.
@@ -276,11 +278,10 @@ func (w *web) serve(rw http.ResponseWriter, r *http.Request, t *tree) {
 	key := strings.Join(segs, "/")
 	w.mu.Lock()
 	l := w.lists[key]
-	j := w.jobs[key]
-	if j != nil && !j.ended.IsZero() && time.Since(j.ended) > 30*time.Second {
+	if j := w.jobs[key]; j != nil && !j.ended.IsZero() && time.Since(j.ended) > 30*time.Second {
 		delete(w.jobs, key)
-		j = nil
 	}
+	j := w.jobFor(key)
 	if l != nil && time.Since(l.at) > l.fresh() {
 		delete(w.lists, key)
 		l = nil
@@ -290,7 +291,7 @@ func (w *web) serve(rw http.ResponseWriter, r *http.Request, t *tree) {
 	case l != nil:
 		w.serveListing(rw, r, l)
 	case j != nil:
-		w.serveJob(rw, r, j)
+		w.serveJob(rw, r, j, key)
 	case r.Header.Get("Sec-Fetch-Site") == "cross-site":
 		w.serveConfirm(rw, r, key)
 	default:
@@ -302,7 +303,7 @@ func (w *web) serve(rw http.ResponseWriter, r *http.Request, t *tree) {
 				"<pre class=\"error\">"+template.HTMLEscapeString(refused)+"</pre>")
 			return
 		}
-		w.serveJob(rw, w.srv.withLive(r), j)
+		w.serveJob(rw, w.srv.withLive(r), j, key)
 	}
 }
 
@@ -473,16 +474,33 @@ func (w *web) dropTree(r *webRepo, wt string) {
 	}
 }
 
+// jobFor is the job a visit to the URL path key shows: the job key set
+// going, or a read still running of the repo key lies in. w.mu is held.
+func (w *web) jobFor(key string) *webJob {
+	if j := w.jobs[key]; j != nil {
+		return j
+	}
+	p := strings.Join(unversioned(strings.Split(key, "/")), "/")
+	for _, j := range w.jobs {
+		if j.repo != "" && j.ended.IsZero() && (p == j.repo || strings.HasPrefix(p, j.repo+"/")) {
+			return j
+		}
+	}
+	return nil
+}
+
 // start begins the job for the URL path key, whose segments are segs, for
-// the visitor who. On a public server over who's limits it returns nil,
-// why, and how long until who may start one.
+// the visitor who, or returns the read it joins. On a public server a job
+// waits for who's earlier jobs to end, and over who's hourly limit start
+// returns nil, why, and how long until who may start one.
 func (w *web) start(key string, segs []string, who netip.Prefix) (*webJob, string, time.Duration) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
-	if j := w.jobs[key]; j != nil {
+	if j := w.jobFor(key); j != nil {
 		return j, "", 0
 	}
 	now := time.Now()
+	var before *webJob
 	if w.public {
 		if now.Sub(w.swept) > time.Minute {
 			for v := range w.visitors {
@@ -491,23 +509,43 @@ func (w *web) start(key string, segs []string, who netip.Prefix) (*webJob, strin
 			w.swept = now
 		}
 		mine := w.recent(who, now)
-		for _, o := range mine {
-			if o.ended.IsZero() {
-				return nil, "One read at a time from one address, and " + o.urlPath + " is still being read. Its page shows how far it is; this one can start when it ends.", 5 * time.Second
-			}
-		}
 		if len(mine) >= visitorJobs {
 			wait := mine[0].started.Add(visitorWindow).Sub(now)
 			return nil, fmt.Sprintf("This address has started %d reads within %d minutes, the most a public server allows. The next can start in %d minutes. A repo already read opens at any time.",
 				len(mine), int(visitorWindow.Minutes()), int(wait.Minutes())+1), wait
 		}
+		// The address's latest job still to end goes first; it waits for
+		// those before it, so the address's jobs run one at a time, in
+		// the order asked.
+		for _, o := range slices.Backward(mine) {
+			if o.ended.IsZero() {
+				before = o
+				break
+			}
+		}
 	}
-	j := &webJob{urlPath: "/" + key, started: now}
+	j := &webJob{urlPath: "/" + key, started: now, done: make(chan struct{})}
+	// A forge that keeps repos at one depth names the repo at once, so a
+	// visit to another of its paths joins this read from the start.
+	if d, ok := depths[segs[0]]; ok && len(segs) >= d {
+		j.repo = strings.Join(unversioned(segs)[:d], "/")
+	}
 	w.jobs[key] = j
 	if w.public {
 		w.visitors[who] = append(w.visitors[who], j)
 	}
-	w.wg.Go(func() { w.run(j, key, segs) })
+	w.wg.Go(func() {
+		if before != nil {
+			w.step(j, "waiting: one read at a time from one address, and "+before.urlPath+" goes first")
+			select {
+			case <-before.done:
+			case <-w.ctx.Done():
+				w.end(j, w.ctx.Err())
+				return
+			}
+		}
+		w.run(j, key, segs)
+	})
 	return j, "", 0
 }
 
@@ -572,6 +610,7 @@ func (w *web) end(j *webJob, err error) {
 		delete(w.jobs, strings.TrimPrefix(j.urlPath, "/"))
 	}
 	w.mu.Unlock()
+	close(j.done)
 	w.kick(true)
 }
 
@@ -585,6 +624,11 @@ func (w *web) run(j *webJob, key string, segs []string) {
 		}
 	}
 	repoKey, cloneURL, probed := w.probe(j, unversioned(segs))
+	if repoKey != "" {
+		w.mu.Lock()
+		j.repo = repoKey
+		w.mu.Unlock()
+	}
 	if repoKey == "" {
 		w.list(j, key, probed)
 		return
@@ -653,7 +697,7 @@ func (w *web) version(h io.Writer, urlPath string) {
 	key := strings.Trim(p, "/")
 	w.mu.Lock()
 	defer w.mu.Unlock()
-	if j := w.jobs[key]; j != nil {
+	if j := w.jobFor(key); j != nil {
 		fmt.Fprintf(h, "job %p\n%s\n%s\n%s\n", j, strings.Join(j.steps, "\n"), j.line, j.err)
 	}
 	if l := w.lists[key]; l != nil {
