@@ -42,7 +42,9 @@ Add `?tree`, or follow tree, for the syntax tree: one row per named node, with i
 
 A helper parses it with tree-sitter: `www-syntax`, which the package of that name installs and `make syntax` builds beside www with a C compiler. It knows Go, Python, JavaScript, TypeScript, Rust, C, C++, shell, Java, C#, JSON, HTML, CSS and Ruby. Without the helper, or for another language, the page says so above the plain code.
 
-A first view of a 1,400-line file takes about 20 ms and sends 1.2 MB; one of jquery.js, 10,900 lines, takes about 85 ms, most of it in the parse. www renders the rows as the helper prints them. The server keeps the tree, so a later view takes a few milliseconds.
+The page carries only the folds that show. A closed fold arrives empty and fetches its rows when it opens, its own folds empty in turn. jquery.js's tree is 4.8 MB, and its page sends 413 bytes of it, since the file is one function; server.go's sends 9 KB of 266. A search fetches the whole tree first, then filters it, so it still finds a row in a fold not yet opened. A request for a fold names the hash of the file the page showed; when the file changed since, the page reloads instead of mixing two trees.
+
+A first view of a 1,400-line file takes about 20 ms; one of jquery.js, 10,900 lines, takes about 85 ms, most of it in the parse. www renders the rows as the helper prints them. The server keeps the tree, so a later view takes a few milliseconds.
 
 ## Gron
 

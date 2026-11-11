@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -26,10 +27,11 @@ func fakeSyntax(t *testing.T) {
 func TestSyntaxPage(t *testing.T) {
 	fakeSyntax(t)
 	src := []byte("func f() {\n\treturn\n}\n")
-	h, err := syntaxPage(context.Background(), "a.go", pageHref("/t/a.go"), src)
+	tree, err := syntaxPage(context.Background(), "a.go", pageHref("/t/a.go"), src)
 	if err != nil {
 		t.Fatal(err)
 	}
+	h := tree.html
 	for _, want := range []string{
 		`<details open><summary><b>source_file</b> <code>func f() { …</code> <a href="a.go#L1-L3">1–3</a></summary>`,
 		`<details><summary><b>function_declaration</b> <code>func f() { …</code> <a href="a.go#L1-L3">1–3</a></summary>`,
@@ -41,6 +43,96 @@ func TestSyntaxPage(t *testing.T) {
 	}
 	if strings.Count(h, "<details") != strings.Count(h, "</details>") {
 		t.Errorf("folds not closed:\n%s", h)
+	}
+}
+
+// A tree page sends only what shows: the open root, and each closed fold
+// with its summary and no rows. A fold's rows come on request, with the
+// folds inside it empty in turn, and together they make the whole tree.
+func TestSyntaxFoldsComeWhenOpened(t *testing.T) {
+	src := []byte("a\nb\nc\nd\n")
+	w := newSynRows("x.go", src)
+	for _, n := range []synNode{
+		{depth: 0, kind: "root", sr: 0, er: 4},
+		{depth: 1, kind: "f", sr: 0, er: 2},
+		{depth: 2, kind: "g", sr: 0, er: 1},
+		{depth: 3, kind: "leaf1", sr: 0, er: 0, ec: 1},
+		{depth: 2, kind: "leaf2", sr: 1, er: 1, ec: 1},
+		{depth: 1, kind: "h", sr: 2, er: 3},
+		{depth: 2, kind: "leaf3", sr: 2, er: 2, ec: 1},
+		{depth: 1, kind: "leaf4", sr: 3, er: 3, ec: 1},
+	} {
+		w.add(n)
+	}
+	tree := &synTree{html: w.done(), folds: w.folds, sum: "s"}
+	if len(tree.folds) != 3 {
+		t.Fatalf("%d closed folds, want 3: %+v", len(tree.folds), tree.folds)
+	}
+	page := tree.page()
+	for _, want := range []string{`<div class="syntax" data-sum="s">`, `<details open><summary><b>root</b>`,
+		`<details data-fold="0"><summary><b>f</b>`, `<details data-fold="2"><summary><b>h</b>`, `<b>leaf4</b>`} {
+		if !strings.Contains(page, want) {
+			t.Errorf("page lacks %s:\n%s", want, page)
+		}
+	}
+	for _, gone := range []string{"<b>g</b>", "leaf1", "leaf2", "leaf3"} {
+		if strings.Contains(page, gone) {
+			t.Errorf("page carries %s, which sits in a closed fold:\n%s", gone, page)
+		}
+	}
+	f0, _ := tree.fold(0)
+	if !strings.Contains(f0, `<details data-fold="1"><summary><b>g</b>`) || !strings.Contains(f0, "leaf2") || strings.Contains(f0, "leaf1") {
+		t.Errorf("fold 0:\n%s", f0)
+	}
+	if _, ok := tree.fold(3); ok {
+		t.Error("a fold past the last")
+	}
+	// Each fold's rows put back in place give the whole tree.
+	whole := page
+	for strings.Contains(whole, "data-fold=") {
+		i := strings.Index(whole, `<details data-fold="`)
+		j := i + len(`<details data-fold="`)
+		k := j + strings.IndexByte(whole[j:], '"')
+		n, _ := strconv.Atoi(whole[j:k])
+		rows, _ := tree.fold(n)
+		end := k + strings.Index(whole[k:], "</summary>\n") + len("</summary>\n")
+		whole = whole[:i] + "<details>" + whole[k+2:end] + rows + whole[end:]
+	}
+	if want := strings.Replace(tree.html, `<div class="syntax">`, `<div class="syntax" data-sum="s">`, 1); whole != want {
+		t.Errorf("folds put back:\n%s\nwant:\n%s", whole, want)
+	}
+}
+
+// A fold is asked for by number and by the hash of the source the page
+// showed: a changed file gets 409, a fold that does not exist 404, and
+// "all" the whole tree.
+func TestSyntaxFoldRequests(t *testing.T) {
+	fakeSyntax(t)
+	s, _, dir := serveTree(t)
+	os.WriteFile(filepath.Join(dir, "f.go"), []byte("func f() {\n\treturn\n}\n"), 0o644)
+	page := get(s.handler(), "/f.go?tree").Body.String()
+	i := strings.Index(page, `data-sum="`)
+	if i < 0 || !strings.Contains(page, `<details data-fold="0"><summary><b>function_declaration</b>`) || strings.Contains(page, "identifier") {
+		t.Fatalf("tree page:\n%s", page)
+	}
+	sum := page[i+len(`data-sum="`) : i+len(`data-sum="`)+12]
+	for q, want := range map[string]struct {
+		code int
+		body string
+	}{
+		"fold=0&sum=" + sum:       {200, "<b>identifier</b>"},
+		"fold=all&sum=" + sum:     {200, "<b>function_declaration</b>"},
+		"fold=7&sum=" + sum:       {404, "no fold 7"},
+		"fold=x&sum=" + sum:       {404, "no fold x"},
+		"fold=0&sum=000000000000": {409, "the file changed"},
+	} {
+		rec := get(s.handler(), "/f.go?tree&"+q)
+		if rec.Code != want.code || !strings.Contains(rec.Body.String(), want.body) {
+			t.Errorf("%s: %d %s, want %d %s", q, rec.Code, rec.Body, want.code, want.body)
+		}
+	}
+	if rec := get(s.handler(), "/f.go?tree&fold=0&sum="+sum); strings.Contains(rec.Body.String(), "<html") {
+		t.Errorf("a fold came as a whole page: %s", rec.Body)
 	}
 }
 

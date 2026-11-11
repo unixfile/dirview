@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"path"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -222,12 +223,15 @@ func (t *tree) serveCode(w http.ResponseWriter, r *http.Request, name string, in
 	}
 	if _, ok := q["tree"]; ok {
 		tree, err := syntaxPage(r.Context(), name, pageHref(r.URL.Path), b)
+		if err == nil && q.Has("fold") {
+			serveFold(w, tree, q.Get("fold"), q.Get("sum"))
+			return
+		}
 		if err == nil {
-			// A large file's tree is megabytes, so it is written once,
-			// into room made for it.
-			body.Grow(len(tree) + 1024)
+			rows := tree.page()
+			body.Grow(len(rows) + 1024)
 			body.WriteString(`<div class="code">` + codeViews(name, "tree"))
-			body.WriteString(tree)
+			body.WriteString(rows)
 			body.WriteString(`</div>`)
 			t.render(w, r, http.StatusOK, page{Title: name, Crumbs: t.crumbs(name), Kind: "tree", Body: template.HTML(body.String())})
 			return
@@ -247,6 +251,29 @@ func (t *tree) serveCode(w http.ResponseWriter, r *http.Request, name string, in
 	body.WriteString(code)
 	body.WriteString(`</div>`)
 	t.render(w, r, http.StatusOK, page{Title: name, Crumbs: t.crumbs(name), Kind: "code", Body: template.HTML(body.String())})
+}
+
+// serveFold sends the rows of a syntax tree's fold n, which a tree page
+// asks for when the fold first opens, or the whole tree for n "all",
+// which the page's search asks for before it filters. sum names the
+// source the page showed; a file changed since gets 409, and the page
+// reloads.
+func serveFold(w http.ResponseWriter, tree *synTree, n, sum string) {
+	if sum != tree.sum {
+		http.Error(w, "the file changed since the page was shown", http.StatusConflict)
+		return
+	}
+	rows := tree.html
+	if n != "all" {
+		i, err := strconv.Atoi(n)
+		var ok bool
+		if rows, ok = tree.fold(i); err != nil || !ok {
+			http.Error(w, "no fold "+n, http.StatusNotFound)
+			return
+		}
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	io.WriteString(w, rows)
 }
 
 // serveRaw sends the file itself. Text goes as plain text, so a stray .html

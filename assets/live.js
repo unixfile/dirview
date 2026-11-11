@@ -299,6 +299,50 @@
 		}
 		return t;
 	};
+	// A syntax tree arrives with its closed folds empty, each marked with
+	// its number, so a large file's page carries only what shows. A fold
+	// fetches its rows when it first opens. A search fetches the whole
+	// tree, swaps it in and filters again. Each request names the hash of
+	// the source the page showed; a file changed since gets 409, and the
+	// page reloads rather than mix two trees.
+	const treePart = (tree, n) =>
+		fetch(location.pathname + "?tree&fold=" + n + "&sum=" + tree.dataset.sum).then((r) => {
+			if (r.status === 409) location.reload();
+			if (!r.ok) throw new Error("fold " + n + ": " + r.status);
+			return r.text();
+		});
+	let treeLoading = null;
+	const wholeTree = (tree) => {
+		if (treeLoading) return;
+		treeLoading = treePart(tree, "all")
+			.then((h) => {
+				const t = document.createElement("template");
+				t.innerHTML = h;
+				tree.replaceWith(t.content);
+				const q = box() && !palOn() ? box().value.trim() : "";
+				if (q) filterPage(q);
+			})
+			.catch(() => {
+				treeLoading = null;
+			});
+	};
+	// toggle does not bubble, so the listener captures it.
+	document.addEventListener(
+		"toggle",
+		(e) => {
+			const d = e.target;
+			if (!d.open || !d.matches("div.syntax details[data-fold]")) return;
+			const n = d.dataset.fold;
+			delete d.dataset.fold;
+			treePart(d.closest("div.syntax"), n)
+				.then((h) => d.insertAdjacentHTML("beforeend", h))
+				.catch(() => {
+					d.dataset.fold = n;
+					d.open = false;
+				});
+		},
+		true,
+	);
 	// filterTree keeps each row of a syntax tree that holds q and the folds
 	// above it, opened so the row shows; unfilter closes them again. A kept
 	// fold with no match below it keeps all its rows, so opening it shows
@@ -334,6 +378,11 @@
 	// or goes whole. A file's name in a diff stays while its lines do.
 	const filter = (el, q, ranges) => {
 		let parts = null;
+		// A tree with folds still to come shows whole until it is in.
+		if (el.matches("div.syntax[data-sum]")) {
+			wholeTree(el);
+			return true;
+		}
 		if (el.matches("div.syntax")) {
 			const hide = [];
 			const any = filterTree(el, q, ranges, hide);
