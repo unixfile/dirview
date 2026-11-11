@@ -60,4 +60,4 @@ Values keep their types. A string that looks like a number or `true` stays quote
 
 Some files do not convert, and the page then says why above the file as written: a file that does not parse, a document that is a single value, a name with a space, or YAML whose aliases expand past a million nodes.
 
-A converted view takes about a second per MB the first time, most of it in kv and in colouring YAML, so a file over 1 MB is not converted. The server keeps the view by the file's hash, and a later view takes a few milliseconds.
+A converted view takes one to two seconds per MB the first time, most of it in kv and in colouring YAML, so a file over 4 MB is not converted. The server keeps the view by the file's hash, and a later view takes a few milliseconds.

@@ -2,7 +2,6 @@ package www
 
 import (
 	"crypto/sha256"
-	"errors"
 	"fmt"
 	"html/template"
 	"path"
@@ -48,11 +47,12 @@ func formatOf(name string) *docFormat {
 }
 
 // formatMax bounds the file a format view converts. A conversion builds
-// the whole tree in memory and takes about a second per MB with its
+// the whole tree in memory and takes one to two seconds per MB with its
 // colouring, so a larger file would hold a reader and a processor too long.
-const formatMax = 1 << 20
+// The server keeps the result, so only a first view waits.
+const formatMax = 4 << 20
 
-var errFormatSize = errors.New("the file is over 1 MB")
+var errFormatSize = fmt.Errorf("the file is over %d MB", formatMax>>20)
 
 // formatPage is a file's converted view as coloured, numbered HTML. The
 // server keeps it by the file's hash, so only a first view converts.

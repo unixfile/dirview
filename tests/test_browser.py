@@ -197,8 +197,8 @@ def test_colour_modes_wear_their_colours(origin, browser):
         )
         assert got == {
             "light": "rgb(246, 246, 246)",
-            "system": "rgb(28, 28, 28)",
-            "dark": "rgb(28, 28, 28)",
+            "system": "rgb(11, 15, 11)",
+            "dark": "rgb(11, 15, 11)",
         }, got
         page.click("details.theme button[data-theme=light]")
         assert page.evaluate(shown) == "light"

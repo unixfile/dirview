@@ -2,30 +2,32 @@
    own now; the light palette is the user's design. */
 
 /* The page colours, each as light-dark(light, dark). The light palette
-   is the user's design. The dark one is a draft by the model for the
-   user to adjust: light grey on near black, not white on black, so a
-   long read does not glare, and each tint keeps the role it has in the
-   light palette. The syntax colours below are pandoc's.
+   is the user's design. The dark one is green on near black, soft
+   rather than bright, so a long read does not glare; the greens are the
+   model's draft for the user to adjust. Diffs and the danger colour keep
+   their red, since it carries meaning. The light syntax colours below
+   are pandoc's; the dark ones are shades of green, comments dimmest and
+   keywords brightest.
    color-scheme picks the side: the system's by default, or the one the
    reader set in the header's menu, dark, light or system, which the script
    keeps in data-theme on the root. */
 :root {
   color-scheme: light dark;
-  --page: light-dark(#f6f6f6, #1c1c1c);
-  --text: light-dark(#1a1a1a, #d6d6d6);
-  --muted: light-dark(#666666, #999999);
-  --rule: light-dark(#cccccc, #3d3d3d);
+  --page: light-dark(#f6f6f6, #0b0f0b);
+  --text: light-dark(#1a1a1a, #9fd49a);
+  --muted: light-dark(#666666, #6a9466);
+  --rule: light-dark(#cccccc, #253825);
   --danger: light-dark(#902000, #e07a5a);
-  --target: light-dark(#fff3b0, #4a4020);
-  --gutter: light-dark(#aaaaaa, #5e5e5e);
-  --faint: light-dark(#b8b8b8, #555555);
-  --added: light-dark(#e4f2e4, #1f3322);
+  --target: light-dark(#fff3b0, #3a4a14);
+  --gutter: light-dark(#aaaaaa, #44633f);
+  --faint: light-dark(#b8b8b8, #3a5237);
+  --added: light-dark(#e4f2e4, #17361c);
   --removed: light-dark(#f8e6e2, #3b2420);
-  --added-strong: light-dark(#bfe0bf, #2f5934);
+  --added-strong: light-dark(#bfe0bf, #2a5e30);
   --removed-strong: light-dark(#efc6bc, #6a3a30);
-  --shadow: light-dark(#a8a8a8, #050505);
-  --light: light-dark(#ffffff, #3a3a3a);
-  --shade: light-dark(#ebebeb, #111111);
+  --shadow: light-dark(#a8a8a8, #000000);
+  --light: light-dark(#ffffff, #1c2a1c);
+  --shade: light-dark(#ebebeb, #060906);
 }
 :root[data-theme="dark"] { color-scheme: dark; }
 :root[data-theme="light"] { color-scheme: light; }
@@ -217,12 +219,10 @@ ul.listing li:not(.cmds):hover > a, ol.versions > li:hover > a, div.backlinks li
 /* The program's own links, in the header, listings and the index, are quiet,
    not lost: the text colour with a faint underline, which tells a link
    from the current crumb or a refused entry on a share. The underline
-   turns full under the pointer, and a visited link turns grey. */
+   turns full under the pointer. A visited link looks like any other. */
 /* A link in a document keeps the text colour and a grey underline, dark
-   enough to find among words. Visited, the underline fades; the words
-   stay readable. */
+   enough to find among words. */
 main a { color: inherit; text-decoration-color: var(--muted); }
-main a:visited { text-decoration-color: var(--rule); }
 main a:hover { text-decoration-color: currentColor; }
 /* A link whose target is missing keeps its words and wears a dotted
    underline in the danger colour; its title names the missing path. */
@@ -231,7 +231,6 @@ main a.broken { text-decoration-style: dotted; text-decoration-color: var(--dang
 main a.web { font-family: "Iosevka", "Iosevka web", monospace; font-size: 0.6em; vertical-align: super; line-height: 0; margin-left: 0.2em; color: var(--muted); text-decoration: none; }
 main a.web:hover { color: inherit; }
 header a, ul.listing a, table.gone a, table.locks a, .latest a, .own a { color: inherit; text-decoration-color: var(--rule); }
-header a:visited, ul.listing a:visited, table.gone a:visited, table.locks a:visited, .latest a:visited, .own a:visited { color: var(--muted); }
 header a:hover, ul.listing a:hover, table.gone a:hover, table.locks a:hover, .latest a:hover, .own a:hover { text-decoration-color: currentColor; }
 ul.listing li.refused span { color: var(--muted); font-size: 0.8em; }
 /* A history: hash and date are the program's and mono, subject and body the
@@ -444,8 +443,8 @@ div.found .line { color: var(--muted); font-size: 0.8em; hyphens: none; }
 div.found p.note { color: var(--muted); font-size: 0.8em; margin-top: 0.8em; }
 /* A page the box filters keeps its matching lines stacked, each with its
    own number, and marks the matches. The directory's results follow a
-   blank line, dimmed as one block, so a visited link stays a step lighter
-   within it. hidden wins over any display a rule gives. */
+   blank line, dimmed as one block. hidden wins over any display a rule
+   gives. */
 [hidden] { display: none !important; }
 pre.filtering > code.sourceCode { white-space: normal; }
 pre.filtering > code.sourceCode > span { display: block; white-space: pre; }
@@ -618,31 +617,31 @@ div.sourceCode
 pre > code.sourceCode > span > a:first-child:hover::before { text-decoration: underline; }
 }
 code span.al { color: light-dark(#ff0000, #ff6b6b); font-weight: bold; } /* Alert */
-code span.an { color: light-dark(#60a0b0, #7fa9b5); font-weight: bold; font-style: italic; } /* Annotation */
-code span.at { color: light-dark(#7d9029, #b5c46a); } /* Attribute */
-code span.bn { color: light-dark(#40a070, #7fc4a0); } /* BaseN */
-code span.bu { color: light-dark(#008000, #82c482); } /* BuiltIn */
-code span.cf { color: light-dark(#007020, #8fc47f); font-weight: bold; } /* ControlFlow */
-code span.ch { color: light-dark(#4070a0, #8fb3d9); } /* Char */
-code span.cn { color: light-dark(#880000, #e48080); } /* Constant */
-code span.co { color: light-dark(#60a0b0, #7fa9b5); font-style: italic; } /* Comment */
-code span.cv { color: light-dark(#60a0b0, #7fa9b5); font-weight: bold; font-style: italic; } /* CommentVar */
-code span.do { color: light-dark(#ba2121, #e07070); font-style: italic; } /* Documentation */
-code span.dt { color: light-dark(#902000, #e0906e); } /* DataType */
-code span.dv { color: light-dark(#40a070, #7fc4a0); } /* DecVal */
+code span.an { color: light-dark(#60a0b0, #5f8a5b); font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: light-dark(#7d9029, #b5d47a); } /* Attribute */
+code span.bn { color: light-dark(#40a070, #7fd4a8); } /* BaseN */
+code span.bu { color: light-dark(#008000, #a6e3a0); } /* BuiltIn */
+code span.cf { color: light-dark(#007020, #c4f0bc); font-weight: bold; } /* ControlFlow */
+code span.ch { color: light-dark(#4070a0, #c8dc8a); } /* Char */
+code span.cn { color: light-dark(#880000, #8fd8b8); } /* Constant */
+code span.co { color: light-dark(#60a0b0, #5f8a5b); font-style: italic; } /* Comment */
+code span.cv { color: light-dark(#60a0b0, #5f8a5b); font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: light-dark(#ba2121, #6f9a6a); font-style: italic; } /* Documentation */
+code span.dt { color: light-dark(#902000, #a0d8c0); } /* DataType */
+code span.dv { color: light-dark(#40a070, #7fd4a8); } /* DecVal */
 code span.er { color: light-dark(#ff0000, #ff6b6b); font-weight: bold; } /* Error */
 code span.ex { } /* Extension */
-code span.fl { color: light-dark(#40a070, #7fc4a0); } /* Float */
-code span.fu { color: light-dark(#06287e, #8eaaf0); } /* Function */
-code span.im { color: light-dark(#008000, #82c482); font-weight: bold; } /* Import */
-code span.in { color: light-dark(#60a0b0, #7fa9b5); font-weight: bold; font-style: italic; } /* Information */
-code span.kw { color: light-dark(#007020, #8fc47f); font-weight: bold; } /* Keyword */
-code span.op { color: light-dark(#666666, #999999); } /* Operator */
-code span.ot { color: light-dark(#007020, #8fc47f); } /* Other */
-code span.pp { color: light-dark(#bc7a00, #d9a85a); } /* Preprocessor */
-code span.sc { color: light-dark(#4070a0, #8fb3d9); } /* SpecialChar */
-code span.ss { color: light-dark(#bb6688, #d494b4); } /* SpecialString */
-code span.st { color: light-dark(#4070a0, #8fb3d9); } /* String */
-code span.va { color: light-dark(#19177c, #a9a8f0); } /* Variable */
-code span.vs { color: light-dark(#4070a0, #8fb3d9); } /* VerbatimString */
-code span.wa { color: light-dark(#60a0b0, #7fa9b5); font-weight: bold; font-style: italic; } /* Warning */
+code span.fl { color: light-dark(#40a070, #7fd4a8); } /* Float */
+code span.fu { color: light-dark(#06287e, #b4ecae); } /* Function */
+code span.im { color: light-dark(#008000, #a6e3a0); font-weight: bold; } /* Import */
+code span.in { color: light-dark(#60a0b0, #5f8a5b); font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: light-dark(#007020, #c4f0bc); font-weight: bold; } /* Keyword */
+code span.op { color: light-dark(#666666, #6a9466); } /* Operator */
+code span.ot { color: light-dark(#007020, #9fd49a); } /* Other */
+code span.pp { color: light-dark(#bc7a00, #d0d890); } /* Preprocessor */
+code span.sc { color: light-dark(#4070a0, #c8dc8a); } /* SpecialChar */
+code span.ss { color: light-dark(#bb6688, #b8d8a0); } /* SpecialString */
+code span.st { color: light-dark(#4070a0, #c8dc8a); } /* String */
+code span.va { color: light-dark(#19177c, #9fd4b4); } /* Variable */
+code span.vs { color: light-dark(#4070a0, #c8dc8a); } /* VerbatimString */
+code span.wa { color: light-dark(#60a0b0, #5f8a5b); font-weight: bold; font-style: italic; } /* Warning */

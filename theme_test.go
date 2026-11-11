@@ -21,7 +21,7 @@ func TestColourMode(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, w := range []string{`:root[data-theme="dark"] { color-scheme: dark; }`, `:root[data-theme="light"] { color-scheme: light; }`,
-		`--page: light-dark(#f6f6f6, #1c1c1c);`, `:root:not([data-theme]) summary > span[data-theme="system"]`, `button[data-theme="light"] { color-scheme: light; }`,
+		`--page: light-dark(#f6f6f6, #0b0f0b);`, `:root:not([data-theme]) summary > span[data-theme="system"]`, `button[data-theme="light"] { color-scheme: light; }`,
 		`button[data-theme="system"] { color-scheme: light dark; }`, `button[data-theme="dark"] { color-scheme: dark; }`} {
 		if !strings.Contains(string(css), w) {
 			t.Errorf("the stylesheet lacks %s", w)
@@ -40,5 +40,17 @@ func TestColourMode(t *testing.T) {
 		if !strings.Contains(string(js), w) {
 			t.Errorf("the script lacks %s", w)
 		}
+	}
+}
+
+// A visited link looks like any other, so no row reads as selected or
+// spent.
+func TestNoVisitedMark(t *testing.T) {
+	css, err := os.ReadFile("assets/style.css")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(css), ":visited") {
+		t.Error("the stylesheet styles visited links")
 	}
 }

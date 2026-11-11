@@ -59,7 +59,7 @@ func TestConvertErrors(t *testing.T) {
 		{yaml, "just text\n", "must be a mapping or sequence"},
 		{yaml, "? [1]\n: 2\n", "must be a scalar"},
 		{keyval, "a\n  b\n", "line 2"},
-		{json, `{"a":"` + strings.Repeat("x", formatMax) + `"}`, "over 1 MB"},
+		{json, `{"a":"` + strings.Repeat("x", formatMax) + `"}`, "over 4 MB"},
 	} {
 		to := yaml
 		if c.from == yaml {
