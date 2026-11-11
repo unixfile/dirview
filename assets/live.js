@@ -1,12 +1,13 @@
 (() => {
 	let url = document.currentScript.dataset.live;
-	// The colour mode is the system's unless the reader chose dark or
-	// light in the header's menu. The choice lives in this browser, per server
+	// The colour mode is the system's unless the reader chose another in
+	// the header's menu. The choice lives in this browser, per server
 	// address, and goes on the root before the body is read, so no page
 	// shows in the other mode first. The stylesheet does the rest.
 	const themeKey = "theme";
+	const themes = ["light", "dark", "green"];
 	const theme = (t) => {
-		if (t === "dark" || t === "light") document.documentElement.dataset.theme = t;
+		if (themes.includes(t)) document.documentElement.dataset.theme = t;
 		else delete document.documentElement.dataset.theme;
 	};
 	try {
@@ -27,7 +28,7 @@
 		theme(t);
 		b.closest("details.theme").open = false;
 		try {
-			if (t === "dark" || t === "light") localStorage.setItem(themeKey, t);
+			if (themes.includes(t)) localStorage.setItem(themeKey, t);
 			else localStorage.removeItem(themeKey);
 		} catch {}
 	});

@@ -2,32 +2,113 @@
    own now; the light palette is the user's design. */
 
 /* The page colours, each as light-dark(light, dark). The light palette
-   is the user's design. The dark one is green on near black, soft
-   rather than bright, so a long read does not glare; the greens are the
-   model's draft for the user to adjust. Diffs and the danger colour keep
-   their red, since it carries meaning. The light syntax colours below
-   are pandoc's; the dark ones are shades of green, comments dimmest and
-   keywords brightest.
+   is the user's design. The dark one is a draft by the model for the
+   user to adjust: light grey on near black, not white on black, so a
+   long read does not glare, and each tint keeps the role it has in the
+   light palette.
    color-scheme picks the side: the system's by default, or the one the
-   reader set in the header's menu, dark, light or system, which the script
-   keeps in data-theme on the root. */
-:root {
+   reader set in the header's menu, which the script keeps in data-theme
+   on the root. */
+/* The menu's buttons declare the palette again, each for itself, so a
+   button shows its own mode while another palette is in force. */
+:root, header details.theme button {
   color-scheme: light dark;
-  --page: light-dark(#f6f6f6, #0b0f0b);
-  --text: light-dark(#1a1a1a, #9fd49a);
-  --muted: light-dark(#666666, #6a9466);
-  --rule: light-dark(#cccccc, #253825);
+  --page: light-dark(#f6f6f6, #1c1c1c);
+  --text: light-dark(#1a1a1a, #d6d6d6);
+  --muted: light-dark(#666666, #999999);
+  --rule: light-dark(#cccccc, #3d3d3d);
   --danger: light-dark(#902000, #e07a5a);
-  --target: light-dark(#fff3b0, #3a4a14);
-  --gutter: light-dark(#aaaaaa, #44633f);
-  --faint: light-dark(#b8b8b8, #3a5237);
-  --added: light-dark(#e4f2e4, #17361c);
+  --target: light-dark(#fff3b0, #4a4020);
+  --gutter: light-dark(#aaaaaa, #5e5e5e);
+  --faint: light-dark(#b8b8b8, #555555);
+  --added: light-dark(#e4f2e4, #1f3322);
   --removed: light-dark(#f8e6e2, #3b2420);
-  --added-strong: light-dark(#bfe0bf, #2a5e30);
+  --added-strong: light-dark(#bfe0bf, #2f5934);
   --removed-strong: light-dark(#efc6bc, #6a3a30);
-  --shadow: light-dark(#a8a8a8, #000000);
-  --light: light-dark(#ffffff, #1c2a1c);
-  --shade: light-dark(#ebebeb, #060906);
+  --shadow: light-dark(#a8a8a8, #050505);
+  --light: light-dark(#ffffff, #3a3a3a);
+  --shade: light-dark(#ebebeb, #111111);
+  /* The syntax colours: pandoc's on the light side. */
+  --syn-al: light-dark(#ff0000, #ff6b6b);
+  --syn-an: light-dark(#60a0b0, #7fa9b5);
+  --syn-at: light-dark(#7d9029, #b5c46a);
+  --syn-bn: light-dark(#40a070, #7fc4a0);
+  --syn-bu: light-dark(#008000, #82c482);
+  --syn-cf: light-dark(#007020, #8fc47f);
+  --syn-ch: light-dark(#4070a0, #8fb3d9);
+  --syn-cn: light-dark(#880000, #e48080);
+  --syn-co: light-dark(#60a0b0, #7fa9b5);
+  --syn-cv: light-dark(#60a0b0, #7fa9b5);
+  --syn-do: light-dark(#ba2121, #e07070);
+  --syn-dt: light-dark(#902000, #e0906e);
+  --syn-dv: light-dark(#40a070, #7fc4a0);
+  --syn-er: light-dark(#ff0000, #ff6b6b);
+  --syn-fl: light-dark(#40a070, #7fc4a0);
+  --syn-fu: light-dark(#06287e, #8eaaf0);
+  --syn-im: light-dark(#008000, #82c482);
+  --syn-in: light-dark(#60a0b0, #7fa9b5);
+  --syn-kw: light-dark(#007020, #8fc47f);
+  --syn-op: light-dark(#666666, #999999);
+  --syn-ot: light-dark(#007020, #8fc47f);
+  --syn-pp: light-dark(#bc7a00, #d9a85a);
+  --syn-sc: light-dark(#4070a0, #8fb3d9);
+  --syn-ss: light-dark(#bb6688, #d494b4);
+  --syn-st: light-dark(#4070a0, #8fb3d9);
+  --syn-va: light-dark(#19177c, #a9a8f0);
+  --syn-vs: light-dark(#4070a0, #8fb3d9);
+  --syn-wa: light-dark(#60a0b0, #7fa9b5);
+}
+/* green is a palette of its own, picked only in the menu: green text on
+   near black, soft rather than bright, so a long read does not glare.
+   Syntax colours are shades of green, comments dimmest and keywords
+   brightest; diffs and the danger colour keep their red, since it
+   carries meaning. Its button in the menu wears it too. A later
+   palette is another block like this one and a button. */
+:root[data-theme="green"], header details.theme button[data-theme="green"] {
+  color-scheme: dark;
+  --page: #0b0f0b;
+  --text: #9fd49a;
+  --muted: #6a9466;
+  --rule: #253825;
+  --danger: #e07a5a;
+  --target: #3a4a14;
+  --gutter: #44633f;
+  --faint: #3a5237;
+  --added: #17361c;
+  --removed: #3b2420;
+  --added-strong: #2a5e30;
+  --removed-strong: #6a3a30;
+  --shadow: #000000;
+  --light: #1c2a1c;
+  --shade: #060906;
+  --syn-al: #ff6b6b;
+  --syn-an: #5f8a5b;
+  --syn-at: #b5d47a;
+  --syn-bn: #7fd4a8;
+  --syn-bu: #a6e3a0;
+  --syn-cf: #c4f0bc;
+  --syn-ch: #c8dc8a;
+  --syn-cn: #8fd8b8;
+  --syn-co: #5f8a5b;
+  --syn-cv: #5f8a5b;
+  --syn-do: #6f9a6a;
+  --syn-dt: #a0d8c0;
+  --syn-dv: #7fd4a8;
+  --syn-er: #ff6b6b;
+  --syn-fl: #7fd4a8;
+  --syn-fu: #b4ecae;
+  --syn-im: #a6e3a0;
+  --syn-in: #5f8a5b;
+  --syn-kw: #c4f0bc;
+  --syn-op: #6a9466;
+  --syn-ot: #9fd49a;
+  --syn-pp: #d0d890;
+  --syn-sc: #c8dc8a;
+  --syn-ss: #b8d8a0;
+  --syn-st: #c8dc8a;
+  --syn-va: #9fd4b4;
+  --syn-vs: #c8dc8a;
+  --syn-wa: #5f8a5b;
 }
 :root[data-theme="dark"] { color-scheme: dark; }
 :root[data-theme="light"] { color-scheme: light; }
@@ -120,20 +201,20 @@ header > span { display: inline-flex; gap: 1em; align-items: baseline; flex: non
 header form { display: inline; }
 /* The colour mode opens like the menu of versions: its line names the
    mode in force after the browser's disclosure marker, and a click drops
-   the three modes in a box under it, flush with its right edge. The line
-   holds all three words and shows the one the root's data-theme names,
+   the modes in a box under it, flush with its right edge. The line
+   holds every mode's word and shows the one the root's data-theme names,
    so it is right before the script runs and without it.
    Each mode in the box wears its own colours: light as light pages,
-   dark as dark ones, system as the system's mode is now. The page's
-   colours are light-dark() pairs, so color-scheme on a button picks its
-   side. The mode in force has a border in its own text colour. The
+   dark as dark ones, green as green ones, system as the system's mode
+   is now. The page's colours are light-dark() pairs, so color-scheme on
+   a button picks its side; green sets its own. The mode in force has a border in its own text colour. The
    modes are buttons, since they change a setting, drawn as text. */
 header details.theme { position: relative; color: var(--muted);
   font-family: "Iosevka", "Iosevka web", monospace; font-size: max(0.625em, 11px); font-variant-ligatures: none; }
 header details.theme > summary { cursor: pointer; white-space: nowrap; }
 header details.theme > summary > span { display: none; }
 :root[data-theme="light"] summary > span[data-theme="light"], :root[data-theme="dark"] summary > span[data-theme="dark"],
-  :root:not([data-theme]) summary > span[data-theme="system"] { display: inline; }
+  :root[data-theme="green"] summary > span[data-theme="green"], :root:not([data-theme]) summary > span[data-theme="system"] { display: inline; }
 header details.theme > summary:hover, header details.theme[open] > summary { color: var(--text); }
 header details.theme > span { position: absolute; z-index: 4; top: calc(100% + 0.4em); right: 0; display: flex; flex-direction: column;
   gap: 0.3em; padding: 0.4em; background: var(--page); border: 1px solid var(--text); }
@@ -143,7 +224,7 @@ header details.theme button[data-theme="system"] { color-scheme: light dark; }
 header details.theme button[data-theme="dark"] { color-scheme: dark; }
 header details.theme button:focus-visible, header details.theme > summary:focus-visible { outline: 1px solid var(--muted); outline-offset: 0.15em; }
 :root[data-theme="dark"] button[data-theme="dark"], :root[data-theme="light"] button[data-theme="light"],
-  :root:not([data-theme]) button[data-theme="system"] { box-shadow: inset 0 0 0 1px var(--text); }
+  :root[data-theme="green"] button[data-theme="green"], :root:not([data-theme]) button[data-theme="system"] { box-shadow: inset 0 0 0 1px var(--text); }
 /* Buttons are flat, as on printed paper: one border in the text's
    colour, square corners, no bevel. */
 header button, table.locks button, p.bug button.bug {
@@ -616,32 +697,32 @@ div.sourceCode
 @media screen {
 pre > code.sourceCode > span > a:first-child:hover::before { text-decoration: underline; }
 }
-code span.al { color: light-dark(#ff0000, #ff6b6b); font-weight: bold; } /* Alert */
-code span.an { color: light-dark(#60a0b0, #5f8a5b); font-weight: bold; font-style: italic; } /* Annotation */
-code span.at { color: light-dark(#7d9029, #b5d47a); } /* Attribute */
-code span.bn { color: light-dark(#40a070, #7fd4a8); } /* BaseN */
-code span.bu { color: light-dark(#008000, #a6e3a0); } /* BuiltIn */
-code span.cf { color: light-dark(#007020, #c4f0bc); font-weight: bold; } /* ControlFlow */
-code span.ch { color: light-dark(#4070a0, #c8dc8a); } /* Char */
-code span.cn { color: light-dark(#880000, #8fd8b8); } /* Constant */
-code span.co { color: light-dark(#60a0b0, #5f8a5b); font-style: italic; } /* Comment */
-code span.cv { color: light-dark(#60a0b0, #5f8a5b); font-weight: bold; font-style: italic; } /* CommentVar */
-code span.do { color: light-dark(#ba2121, #6f9a6a); font-style: italic; } /* Documentation */
-code span.dt { color: light-dark(#902000, #a0d8c0); } /* DataType */
-code span.dv { color: light-dark(#40a070, #7fd4a8); } /* DecVal */
-code span.er { color: light-dark(#ff0000, #ff6b6b); font-weight: bold; } /* Error */
+code span.al { color: var(--syn-al); font-weight: bold; } /* Alert */
+code span.an { color: var(--syn-an); font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: var(--syn-at); } /* Attribute */
+code span.bn { color: var(--syn-bn); } /* BaseN */
+code span.bu { color: var(--syn-bu); } /* BuiltIn */
+code span.cf { color: var(--syn-cf); font-weight: bold; } /* ControlFlow */
+code span.ch { color: var(--syn-ch); } /* Char */
+code span.cn { color: var(--syn-cn); } /* Constant */
+code span.co { color: var(--syn-co); font-style: italic; } /* Comment */
+code span.cv { color: var(--syn-cv); font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: var(--syn-do); font-style: italic; } /* Documentation */
+code span.dt { color: var(--syn-dt); } /* DataType */
+code span.dv { color: var(--syn-dv); } /* DecVal */
+code span.er { color: var(--syn-er); font-weight: bold; } /* Error */
 code span.ex { } /* Extension */
-code span.fl { color: light-dark(#40a070, #7fd4a8); } /* Float */
-code span.fu { color: light-dark(#06287e, #b4ecae); } /* Function */
-code span.im { color: light-dark(#008000, #a6e3a0); font-weight: bold; } /* Import */
-code span.in { color: light-dark(#60a0b0, #5f8a5b); font-weight: bold; font-style: italic; } /* Information */
-code span.kw { color: light-dark(#007020, #c4f0bc); font-weight: bold; } /* Keyword */
-code span.op { color: light-dark(#666666, #6a9466); } /* Operator */
-code span.ot { color: light-dark(#007020, #9fd49a); } /* Other */
-code span.pp { color: light-dark(#bc7a00, #d0d890); } /* Preprocessor */
-code span.sc { color: light-dark(#4070a0, #c8dc8a); } /* SpecialChar */
-code span.ss { color: light-dark(#bb6688, #b8d8a0); } /* SpecialString */
-code span.st { color: light-dark(#4070a0, #c8dc8a); } /* String */
-code span.va { color: light-dark(#19177c, #9fd4b4); } /* Variable */
-code span.vs { color: light-dark(#4070a0, #c8dc8a); } /* VerbatimString */
-code span.wa { color: light-dark(#60a0b0, #5f8a5b); font-weight: bold; font-style: italic; } /* Warning */
+code span.fl { color: var(--syn-fl); } /* Float */
+code span.fu { color: var(--syn-fu); } /* Function */
+code span.im { color: var(--syn-im); font-weight: bold; } /* Import */
+code span.in { color: var(--syn-in); font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: var(--syn-kw); font-weight: bold; } /* Keyword */
+code span.op { color: var(--syn-op); } /* Operator */
+code span.ot { color: var(--syn-ot); } /* Other */
+code span.pp { color: var(--syn-pp); } /* Preprocessor */
+code span.sc { color: var(--syn-sc); } /* SpecialChar */
+code span.ss { color: var(--syn-ss); } /* SpecialString */
+code span.st { color: var(--syn-st); } /* String */
+code span.va { color: var(--syn-va); } /* Variable */
+code span.vs { color: var(--syn-vs); } /* VerbatimString */
+code span.wa { color: var(--syn-wa); font-weight: bold; font-style: italic; } /* Warning */

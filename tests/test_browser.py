@@ -182,8 +182,8 @@ def test_a_diff_fits_99_columns(servers, page):
 
 
 # The colour mode's line names the mode in force, and each mode in its
-# menu wears its own colours: light and dark their own, system the
-# system's. The system here is dark.
+# menu wears its own colours: light, dark and green their own, system
+# the system's. The system here is dark.
 def test_colour_modes_wear_their_colours(origin, browser):
     page = browser.new_page(viewport={"width": 1280, "height": 800}, color_scheme="dark")
     try:
@@ -197,13 +197,26 @@ def test_colour_modes_wear_their_colours(origin, browser):
         )
         assert got == {
             "light": "rgb(246, 246, 246)",
-            "system": "rgb(11, 15, 11)",
-            "dark": "rgb(11, 15, 11)",
+            "system": "rgb(28, 28, 28)",
+            "dark": "rgb(28, 28, 28)",
+            "green": "rgb(11, 15, 11)",
         }, got
         page.click("details.theme button[data-theme=light]")
         assert page.evaluate(shown) == "light"
         assert page.evaluate("""document.querySelector("details.theme").open""") is False
         assert page.evaluate("""getComputedStyle(document.body).backgroundColor""") == "rgb(246, 246, 246)"
+        # green is a palette of its own, and the other buttons keep theirs
+        # while it is in force.
+        page.click("details.theme > summary")
+        page.click("details.theme button[data-theme=green]")
+        assert page.evaluate(shown) == "green"
+        assert page.evaluate("""getComputedStyle(document.body).backgroundColor""") == "rgb(11, 15, 11)"
+        page.click("details.theme > summary")
+        got = page.evaluate(
+            """Object.fromEntries([...document.querySelectorAll("details.theme button")]
+                .map((b) => [b.dataset.theme, getComputedStyle(b).backgroundColor]))"""
+        )
+        assert got["light"] == "rgb(246, 246, 246)" and got["dark"] == "rgb(28, 28, 28)", got
     finally:
         page.close()
 
@@ -239,7 +252,7 @@ def test_a_colon_lists_the_page_s_commands(origin, page):
     page.keyboard.type(":")
     got = palette(page)
     names = [n for n, _ in got["rows"]]
-    for want in ["scopes", "tree", "raw", "up", "light", "system", "dark", "copy", "share"]:
+    for want in ["scopes", "tree", "raw", "up", "light", "system", "dark", "green", "copy", "share"]:
         assert want in names, got
     assert names.index("raw") < names.index("up") < names.index("light"), names
     assert got["sel"] == names[0], got

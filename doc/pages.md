@@ -72,9 +72,9 @@ The server watches the directory of each open page and its repo's git directory 
 
 The stylesheet is www's own. It began as md2html-default's, whose light palette it keeps, and the page colours sit as variables on `:root`.
 
-A page turns dark when the OS asks for it: green text on near black, with syntax colours in shades of green. Comments are dimmest and keywords brightest. Diffs and the kill button keep their red and green, since those colours carry meaning.
+A page turns dark when the OS asks for it, with a grey palette and syntax colours of its own. The dark palette is a first draft.
 
-The header's right end names the mode in force, eg `▸ system`, and opens like the menu of versions. The menu sets the mode by hand: `light`, `system` and `dark`. Each shows in its own colours: light as a light page, dark as a dark one, system as the OS has it now. The one in force has a border. A choice, a click outside the menu or Escape closes it. `system` follows the OS again. The browser keeps the choice per server address, so a server on another address starts with the system's mode, and nothing goes to the server. The stylesheet writes each colour as `light-dark(light, dark)`, which browsers know since 2024; an older one shows pages without www's colours.
+The header's right end names the mode in force, eg `▸ system`, and opens like the menu of versions. The menu sets the mode by hand: `light`, `system`, `dark` and `green`. Green is green text on near black, with syntax colours in shades of green, and only the menu or `:green` turns it on. Diffs and the kill button keep their red and green in it, since those colours carry meaning. Each mode shows in its own colours: light as a light page, dark as a dark one, green as a green one, system as the OS has it now. The one in force has a border. A choice, a click outside the menu or Escape closes it. `system` follows the OS again. The browser keeps the choice per server address, so a server on another address starts with the system's mode, and nothing goes to the server. The stylesheet writes each colour as `light-dark(light, dark)`, which browsers know since 2024; an older one shows pages without www's colours.
 
 The browser loads the stylesheet once. Its URL names a hash of its content, eg `/_www/style.7b94a08e7731.css`, so it is kept for a year, and a changed stylesheet comes under a new URL.
 
