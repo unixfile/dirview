@@ -134,11 +134,11 @@ def test_a_document_s_code_fits_99_columns(servers, page):
     assert over > 0, (fits, over)
 
 
-# Code in a document keeps the text colour; a code page colours its
-# keywords. Named after "Code in docs carries no syntax colour".
+# Code in a document keeps the text colour; a code page mutes its
+# comments. Named after "Code in docs carries no syntax colour".
 def test_code_in_docs_carries_no_syntax_colour(servers, page):
     server = servers("public")
-    colours = """(() => [getComputedStyle(document.querySelector("code span.kw")).color,
+    colours = """(() => [getComputedStyle(document.querySelector("code span.co")).color,
         getComputedStyle(document.body).color])()"""
     server.get("/forge.invalid/acct/cols/code.md")
     page.goto(server.origin + "/forge.invalid/acct/cols/code.md", wait_until="load")
@@ -156,6 +156,26 @@ def test_code_has_no_italics(origin, page):
     page.goto(origin + PAGE, wait_until="load")
     styles = page.evaluate("""[...new Set([...document.querySelectorAll("code span[class]")].map((s) => getComputedStyle(s).fontStyle))]""")
     assert styles == ["normal"], styles
+
+
+# A code page colours strings and mutes comments; keywords are bold in the
+# text colour, and so is everything else. Named after "Code pages colour
+# strings and comments".
+def test_code_pages_colour_strings_and_comments(servers, page):
+    server = servers("public")
+    server.get("/forge.invalid/acct/cols/str.go")
+    page.goto(server.origin + "/forge.invalid/acct/cols/str.go", wait_until="load")
+    got = page.evaluate(
+        """(() => {
+            const c = (sel) => getComputedStyle(document.querySelector(sel)).color;
+            const k = document.querySelector("code span.kw");
+            return { text: getComputedStyle(document.body).color, kw: c("code span.kw"), bold: getComputedStyle(k).fontWeight,
+                fu: c("code span.fu"), st: c("code span.st"), co: c("code span.co") };
+        })()"""
+    )
+    assert got["kw"] == got["text"] and got["fu"] == got["text"], got
+    assert int(got["bold"]) >= 700, got
+    assert got["st"] != got["text"] and got["co"] != got["text"] and got["st"] != got["co"], got
 
 
 # The lines below a 404 read at a listing's size. Named after "Error text

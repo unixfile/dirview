@@ -28,40 +28,42 @@
   --shadow: light-dark(#a8a8a8, #050505);
   --light: light-dark(#ffffff, #3a3a3a);
   --shade: light-dark(#ebebeb, #111111);
-  /* The syntax colours: pandoc's on the light side. */
+  /* The syntax colours. Code needs few: strings in one colour, comments
+     muted, keywords bold in the text colour, the rest text. Errors keep
+     their red. The user chose this on 2026-11-12 from a sketch of four. */
   --syn-al: light-dark(#ff0000, #ff6b6b);
-  --syn-an: light-dark(#60a0b0, #7fa9b5);
-  --syn-at: light-dark(#7d9029, #b5c46a);
-  --syn-bn: light-dark(#40a070, #7fc4a0);
-  --syn-bu: light-dark(#008000, #82c482);
-  --syn-cf: light-dark(#007020, #8fc47f);
+  --syn-an: var(--muted);
+  --syn-at: currentColor;
+  --syn-bn: currentColor;
+  --syn-bu: currentColor;
+  --syn-cf: currentColor;
   --syn-ch: light-dark(#4070a0, #8fb3d9);
-  --syn-cn: light-dark(#880000, #e48080);
-  --syn-co: light-dark(#60a0b0, #7fa9b5);
-  --syn-cv: light-dark(#60a0b0, #7fa9b5);
-  --syn-do: light-dark(#ba2121, #e07070);
-  --syn-dt: light-dark(#902000, #e0906e);
-  --syn-dv: light-dark(#40a070, #7fc4a0);
+  --syn-cn: currentColor;
+  --syn-co: var(--muted);
+  --syn-cv: var(--muted);
+  --syn-do: var(--muted);
+  --syn-dt: currentColor;
+  --syn-dv: currentColor;
   --syn-er: light-dark(#ff0000, #ff6b6b);
-  --syn-fl: light-dark(#40a070, #7fc4a0);
-  --syn-fu: light-dark(#06287e, #8eaaf0);
-  --syn-im: light-dark(#008000, #82c482);
-  --syn-in: light-dark(#60a0b0, #7fa9b5);
-  --syn-kw: light-dark(#007020, #8fc47f);
-  --syn-op: light-dark(#666666, #999999);
-  --syn-ot: light-dark(#007020, #8fc47f);
-  --syn-pp: light-dark(#bc7a00, #d9a85a);
+  --syn-fl: currentColor;
+  --syn-fu: currentColor;
+  --syn-im: currentColor;
+  --syn-in: var(--muted);
+  --syn-kw: currentColor;
+  --syn-op: currentColor;
+  --syn-ot: currentColor;
+  --syn-pp: currentColor;
   --syn-sc: light-dark(#4070a0, #8fb3d9);
-  --syn-ss: light-dark(#bb6688, #d494b4);
+  --syn-ss: light-dark(#4070a0, #8fb3d9);
   --syn-st: light-dark(#4070a0, #8fb3d9);
-  --syn-va: light-dark(#19177c, #a9a8f0);
+  --syn-va: currentColor;
   --syn-vs: light-dark(#4070a0, #8fb3d9);
-  --syn-wa: light-dark(#60a0b0, #7fa9b5);
+  --syn-wa: var(--muted);
 }
 /* green is a palette of its own, picked only in the menu: green text on
    near black, soft rather than bright, so a long read does not glare.
-   Syntax colours are shades of green, comments dimmest and keywords
-   brightest; diffs and the danger colour keep their red, since it
+   Strings are a yellow green and comments muted, as on the other
+   palettes; diffs and the danger colour keep their red, since it
    carries meaning. Its button in the menu wears it too. A later
    palette is another block like this one and a button. */
 :root[data-theme="green"], header details.theme button[data-theme="green"] {
@@ -82,33 +84,33 @@
   --light: #1c2a1c;
   --shade: #060906;
   --syn-al: #ff6b6b;
-  --syn-an: #5f8a5b;
-  --syn-at: #b5d47a;
-  --syn-bn: #7fd4a8;
-  --syn-bu: #a6e3a0;
-  --syn-cf: #c4f0bc;
+  --syn-an: var(--muted);
+  --syn-at: currentColor;
+  --syn-bn: currentColor;
+  --syn-bu: currentColor;
+  --syn-cf: currentColor;
   --syn-ch: #c8dc8a;
-  --syn-cn: #8fd8b8;
-  --syn-co: #5f8a5b;
-  --syn-cv: #5f8a5b;
-  --syn-do: #6f9a6a;
-  --syn-dt: #a0d8c0;
-  --syn-dv: #7fd4a8;
+  --syn-cn: currentColor;
+  --syn-co: var(--muted);
+  --syn-cv: var(--muted);
+  --syn-do: var(--muted);
+  --syn-dt: currentColor;
+  --syn-dv: currentColor;
   --syn-er: #ff6b6b;
-  --syn-fl: #7fd4a8;
-  --syn-fu: #b4ecae;
-  --syn-im: #a6e3a0;
-  --syn-in: #5f8a5b;
-  --syn-kw: #c4f0bc;
-  --syn-op: #6a9466;
-  --syn-ot: #9fd49a;
-  --syn-pp: #d0d890;
+  --syn-fl: currentColor;
+  --syn-fu: currentColor;
+  --syn-im: currentColor;
+  --syn-in: var(--muted);
+  --syn-kw: currentColor;
+  --syn-op: currentColor;
+  --syn-ot: currentColor;
+  --syn-pp: currentColor;
   --syn-sc: #c8dc8a;
-  --syn-ss: #b8d8a0;
+  --syn-ss: #c8dc8a;
   --syn-st: #c8dc8a;
-  --syn-va: #9fd4b4;
+  --syn-va: currentColor;
   --syn-vs: #c8dc8a;
-  --syn-wa: #5f8a5b;
+  --syn-wa: var(--muted);
 }
 :root[data-theme="dark"] { color-scheme: dark; }
 :root[data-theme="light"] { color-scheme: light; }
@@ -702,7 +704,7 @@ pre > code.sourceCode > span > a:first-child:hover::before { text-decoration: un
    with every letter blank whose italic shape differs, and the user
    chose dropping them over chasing the cause. */
 code span.al { color: var(--syn-al); font-weight: bold; } /* Alert */
-code span.an { color: var(--syn-an); font-weight: bold; } /* Annotation */
+code span.an { color: var(--syn-an); } /* Annotation */
 code span.at { color: var(--syn-at); } /* Attribute */
 code span.bn { color: var(--syn-bn); } /* BaseN */
 code span.bu { color: var(--syn-bu); } /* BuiltIn */
@@ -710,7 +712,7 @@ code span.cf { color: var(--syn-cf); font-weight: bold; } /* ControlFlow */
 code span.ch { color: var(--syn-ch); } /* Char */
 code span.cn { color: var(--syn-cn); } /* Constant */
 code span.co { color: var(--syn-co); } /* Comment */
-code span.cv { color: var(--syn-cv); font-weight: bold; } /* CommentVar */
+code span.cv { color: var(--syn-cv); } /* CommentVar */
 code span.do { color: var(--syn-do); } /* Documentation */
 code span.dt { color: var(--syn-dt); } /* DataType */
 code span.dv { color: var(--syn-dv); } /* DecVal */
@@ -718,8 +720,8 @@ code span.er { color: var(--syn-er); font-weight: bold; } /* Error */
 code span.ex { } /* Extension */
 code span.fl { color: var(--syn-fl); } /* Float */
 code span.fu { color: var(--syn-fu); } /* Function */
-code span.im { color: var(--syn-im); font-weight: bold; } /* Import */
-code span.in { color: var(--syn-in); font-weight: bold; } /* Information */
+code span.im { color: var(--syn-im); } /* Import */
+code span.in { color: var(--syn-in); } /* Information */
 code span.kw { color: var(--syn-kw); font-weight: bold; } /* Keyword */
 code span.op { color: var(--syn-op); } /* Operator */
 code span.ot { color: var(--syn-ot); } /* Other */
@@ -729,7 +731,7 @@ code span.ss { color: var(--syn-ss); } /* SpecialString */
 code span.st { color: var(--syn-st); } /* String */
 code span.va { color: var(--syn-va); } /* Variable */
 code span.vs { color: var(--syn-vs); } /* VerbatimString */
-code span.wa { color: var(--syn-wa); font-weight: bold; } /* Warning */
+code span.wa { color: var(--syn-wa); } /* Warning */
 /* Code in a document keeps the text colour: a document is read as prose,
    and colour in it draws the eye from the words. Bold stays. */
 body.doc code span[class] { color: inherit; }

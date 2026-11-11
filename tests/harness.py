@@ -24,7 +24,8 @@ SEEDED = {
         "cols.md": "# cols\n\n```\n" + "x" * 99 + "\n```\n\n```\n" + "x" * 100 + "\n```\n",
         "fits.go": "package cols\n" + "// a line\n" * 998 + "// " + "x" * 96 + "\n",
         "over.go": "package cols\n// " + "x" * 97 + "\n",
-        "code.md": "# code\n\n```go\nfunc f() { return }\n```\n",
+        "code.md": "# code\n\n```go\nfunc f() { return } // done\n```\n",
+        "str.go": "package cols\n\n// f says hi.\nfunc f() string { return fmt.Sprint(\"hi\") }\n",
     },
 }
 
