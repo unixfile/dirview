@@ -133,7 +133,7 @@ header details.theme > summary > span { display: none; }
 :root[data-theme="light"] summary > span[data-theme="light"], :root[data-theme="dark"] summary > span[data-theme="dark"],
   :root:not([data-theme]) summary > span[data-theme="system"] { display: inline; }
 header details.theme > summary:hover, header details.theme[open] > summary { color: var(--text); }
-header details.theme > span { position: absolute; z-index: 2; top: calc(100% + 0.4em); right: 0; display: flex; flex-direction: column;
+header details.theme > span { position: absolute; z-index: 4; top: calc(100% + 0.4em); right: 0; display: flex; flex-direction: column;
   gap: 0.3em; padding: 0.4em; background: var(--page); border: 1px solid var(--text); }
 header details.theme button { all: unset; cursor: pointer; padding: 0.15em 0.8em; color: var(--text); background: var(--page); }
 header details.theme button[data-theme="light"] { color-scheme: light; }
@@ -278,7 +278,11 @@ details.latest > summary:hover span.state { text-decoration: underline; text-dec
    right end, outside the line's one target. */
 a.now { float: right; position: relative; z-index: 1; margin-left: 1em; font-size: max(0.5em, 11px); }
 details.latest > summary:hover span.subject { text-decoration: underline; text-decoration-color: var(--rule); }
-details.latest > div.versions, details.latest > ol.versions { position: absolute; z-index: 1; top: 100%; left: 0; margin: 0;
+/* The layers, from the page up: a code page's view links 1, this menu 2,
+   the search row 3, the colour menu and the connection note 4, and the
+   search row while it holds the command list 5. The menu drops over the
+   view links and scrolls under the search row. */
+details.latest > div.versions, details.latest > ol.versions { position: absolute; z-index: 2; top: 100%; left: 0; margin: 0;
   max-height: 60vh; overflow-y: auto; min-width: 20em; max-width: 100%; padding: 0.4em 0; list-style: none;
   background: var(--page); border: 1px solid var(--text); }
 details.latest > div.versions { padding: 0.4em 0.8em; }
@@ -373,7 +377,7 @@ div.search {
      share stay at hand. */
   position: sticky;
   top: 0;
-  z-index: 1;
+  z-index: 3;
   background: var(--page);
 }
 /* The palette drops under the box over the page, in the box like the
@@ -389,9 +393,8 @@ ul.palette > li.sel { outline-offset: -1px; }
 ul.palette span.what { color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
 ul.palette > li.armed span.what { color: var(--text); }
 ul.palette > li.none { color: var(--muted); cursor: default; }
-/* While the palette is open, its row rises over a code page's sticky
-   view links, which would otherwise paint across it. */
-div.search:has(> ul.palette) { z-index: 4; }
+/* While the palette is open, its row rises over every other layer. */
+div.search:has(> ul.palette) { z-index: 5; }
 input.search, button.copy, button.share {
   font: inherit;
   border: 1px solid var(--text);
@@ -473,7 +476,7 @@ li > a.sel, ul.listing li > a:focus-visible { outline: none; }
 /* The line that says the server is gone floats over the top of the page,
    so nothing moves, and stays until a server answers. The one that says
    a new server answered fades over three seconds. */
-p.conn { position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 2; margin: 0; padding: 0.2em 0.8em;
+p.conn { position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 4; margin: 0; padding: 0.2em 0.8em;
   background: var(--target); color: var(--text); font-size: 0.6em; white-space: nowrap; }
 p.conn.fade { animation: conn 3s ease-in forwards; }
 @keyframes conn { from { opacity: 1; } to { opacity: 0; } }

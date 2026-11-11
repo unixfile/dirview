@@ -301,3 +301,27 @@ def test_the_palette_opens_the_versions(servers, page):
     # A selector, not a function: the page's CSP refuses eval.
     page.wait_for_selector("details.latest[open] ol.versions")
     assert page.evaluate("""[document.querySelector("details.latest").open, !!document.querySelector("ul.palette")]""") == [True, False]
+
+
+# The menu of versions drops over a code page's view links: each row is
+# what a click on it reaches, the second included, which the sticky row
+# of links once covered.
+def test_the_versions_drop_over_the_view_links(servers, page):
+    server = servers("default")
+    url = hist_repo(server, "over")
+    repo = server.home / "tree" / "over"
+    for n in range(3):
+        (repo / "a.go").write_text("package a\n" + f"// {n}\n" * 40)
+        harness.git(repo, "add", ".")
+        harness.git(repo, "commit", "-q", "-m", f"change {n}")
+    page.goto(url + "a.go", wait_until="load")
+    page.click("details.latest > summary")
+    page.wait_for_selector("ol.versions > li:nth-child(4)")
+    got = page.evaluate(
+        """[...document.querySelectorAll("ol.versions > li")].map((li) => {
+            const r = li.getBoundingClientRect();
+            const at = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+            return !!at && !!at.closest("ol.versions");
+        })"""
+    )
+    assert got == [True, True, True, True], got
