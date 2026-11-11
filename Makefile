@@ -39,9 +39,12 @@ RUNADDR := 127.31.$(shell expr $$(id -u) - 1000).1:8080
 run: build syntax
 	@build/$(NAME) --restart --debug -a $(RUNADDR) .
 
+# The page budget is measured in a run of its own, after the other tests
+# end: a compile or a test beside it adds the machine's load to a page's time.
 test:
 	go vet ./...
-	go test ./...
+	go test -skip '^TestPageBudget$$' ./...
+	go test -count=1 -run '^TestPageBudget$$' .
 
 # blackbox runs tests/ against the built binary. See doc/testing.md.
 blackbox: build

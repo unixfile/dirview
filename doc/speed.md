@@ -24,4 +24,4 @@ When it takes over 100 ms, the history page says so and names `git commit-graph 
 
 Python, JavaScript and shell are timed on argparse.py, jquery.js and bash_completion from Debian's packages, and skipped where those are not installed.
 
-Warm pages have no benchmark, since `TestPageBudget` in `make test` holds them under 5 ms.
+Warm pages have no benchmark, since `TestPageBudget` in `make test` holds them under 5 ms. `make test` runs it in a step of its own after the other tests, so nothing compiles or runs beside the measurement.
