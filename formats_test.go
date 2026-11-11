@@ -164,3 +164,33 @@ func TestFormatViews(t *testing.T) {
 		}
 	}
 }
+
+// The spec's name on a keyval page's first line links to the spec, in a
+// converted view and in a .kv file; elsewhere, or as part of a longer
+// word, it stays text.
+func TestKeyvalSpecLinks(t *testing.T) {
+	s, _, dir := serveTree(t)
+	for name, content := range map[string]string{
+		"a.json":  `{"b":1}`,
+		"h.kv":    "# github.com/unixfile/keyval\nb 1\n",
+		"note.kv": "# data, github.com/unixfile/keyval v1\nb 1\n",
+		"no.kv":   "# github.com/unixfile/keyvalue\nb 1\n",
+		"key.kv":  "github.com/unixfile/keyval 1\n",
+		"h.txt":   "# github.com/unixfile/keyval\n",
+	} {
+		os.WriteFile(filepath.Join(dir, name), []byte(content), 0o644)
+	}
+	link := `<a class="spec" href="https://github.com/unixfile/keyval" title="the keyval spec">github.com/unixfile/keyval</a>`
+	for p, want := range map[string]bool{
+		"/a.json?keyval": true, "/h.kv": true, "/note.kv": true,
+		"/a.json": false, "/no.kv": false, "/key.kv": false, "/h.txt": false, "/h.kv?raw": false,
+	} {
+		b := get(s.handler(), p).Body.String()
+		if got := strings.Contains(b, link); got != want {
+			t.Errorf("%s links the spec: %v, want %v\n%s", p, got, want, b)
+		}
+	}
+	if b := get(s.handler(), "/note.kv").Body.String(); !strings.Contains(b, "# data, "+link+" v1</span>") {
+		t.Errorf("/note.kv lost the words around the link: %s", b)
+	}
+}

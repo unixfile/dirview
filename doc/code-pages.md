@@ -56,6 +56,8 @@ A JSON, YAML or keyval file links the other two formats at the left end of the r
 
 [kv](https://github.com/unixfile/kv) converts, through keyval's tree. A converted view is a reading aid, not the file: a line above the code says what changed. Keys are sorted. An empty list becomes an empty map. From YAML, comments are dropped and aliases are written out, and a stream of documents becomes a list.
 
+keyval's first line names its spec, `# github.com/unixfile/keyval`. In a keyval view and on a `.kv` file's own page, that name links to the spec on GitHub. Only the first line is read, since keyval lets no other line begin with `#`.
+
 Values keep their types. A string that looks like a number or `true` stays quoted, and a name with a dot converts whole.
 
 Some files do not convert, and the page then says why above the file as written: a file that does not parse, a document that is a single value, a name with a space, or YAML whose aliases expand past a million nodes.

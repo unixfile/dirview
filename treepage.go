@@ -240,7 +240,11 @@ func (t *tree) serveCode(w http.ResponseWriter, r *http.Request, name string, in
 		view = "scopes"
 	}
 	body.WriteString(`<div class="code">` + codeViews(name, view))
-	body.WriteString(highlightPage(codeLexer(name), b, scoped))
+	code := highlightPage(codeLexer(name), b, scoped)
+	if f := formatOf(name); f != nil && f.name == "keyval" {
+		code = linkSpec(code)
+	}
+	body.WriteString(code)
 	body.WriteString(`</div>`)
 	t.render(w, r, http.StatusOK, page{Title: name, Crumbs: t.crumbs(name), Kind: "code", Body: template.HTML(body.String())})
 }

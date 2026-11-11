@@ -33,6 +33,55 @@ var docFormats = []*docFormat{
 		func(f *kv.File) ([]byte, error) { return []byte(f.String()), nil }},
 }
 
+// keyvalSpec is the name of keyval's spec that kv writes on a file's first
+// line, eg # github.com/unixfile/keyval, and where the name leads.
+const (
+	keyvalSpec    = "github.com/unixfile/keyval"
+	keyvalSpecURL = "https://" + keyvalSpec
+)
+
+// linkSpec turns the spec's name on a keyval page's first line into a link
+// to the spec, so the line leads where it points. keyval lets only the
+// first line begin with #, so only a first line that does is read, and the
+// name counts only as a whole word.
+func linkSpec(h string) string {
+	const lead = `<span id="L1"><a href="#L1"></a>`
+	i := strings.Index(h, lead)
+	if i < 0 {
+		return h
+	}
+	i += len(lead)
+	end := strings.IndexByte(h[i:], '\n')
+	if end < 0 {
+		end = len(h) - i
+	}
+	line := h[i : i+end]
+	text := line
+	for strings.HasPrefix(text, "<span") {
+		text = text[strings.IndexByte(text, '>')+1:]
+	}
+	if !strings.HasPrefix(text, "#") {
+		return h
+	}
+	for off := 0; ; {
+		j := strings.Index(line[off:], keyvalSpec)
+		if j < 0 {
+			return h
+		}
+		j += off
+		k := j + len(keyvalSpec)
+		before, after := line[j-1], byte('<')
+		if k < len(line) {
+			after = line[k]
+		}
+		if (before == ' ' || before == '\t' || before == '#') && (after == ' ' || after == '\t' || after == '<') {
+			link := `<a class="spec" href="` + keyvalSpecURL + `" title="the keyval spec">` + keyvalSpec + `</a>`
+			return h[:i+j] + link + h[i+k:]
+		}
+		off = k
+	}
+}
+
 // formatOf is the format a file's name gives it, or nil.
 func formatOf(name string) *docFormat {
 	switch strings.ToLower(path.Ext(name)) {
@@ -69,6 +118,9 @@ func formatPage(b []byte, from, to *docFormat) (string, error) {
 	var hl strings.Builder
 	highlight(&hl, to.lexer, string(out), true, false)
 	h := hl.String()
+	if to.name == "keyval" {
+		h = linkSpec(h)
+	}
 	codeCache.put(key, h, int64(len(h)))
 	return h, nil
 }
