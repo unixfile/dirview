@@ -262,7 +262,7 @@ func (w *web) serve(rw http.ResponseWriter, r *http.Request, t *tree) {
 		http.Redirect(rw, r, (&url.URL{Path: rooted("/" + strings.Join(segs, "/"))}).String(), http.StatusMovedPermanently)
 		return
 	}
-	if w.cached(segs) != "" {
+	if w.cached(unversioned(segs)) != "" {
 		if t := w.srv.byPrefix(r.URL.Path + "/"); t != nil {
 			http.Redirect(rw, r, t.prefixURL(), http.StatusFound)
 			return
@@ -328,6 +328,20 @@ func visitor(r *http.Request) netip.Prefix {
 	}
 	p, _ := a.Prefix(bits)
 	return p
+}
+
+// unversioned is segs with a version's segment, eg fzf@26ff936, cut to the
+// repo's name, so a visit to a version of a repo not yet read reads the
+// repo, which then serves the version.
+func unversioned(segs []string) []string {
+	for i, s := range segs {
+		if at := strings.LastIndexByte(s, '@'); at > 0 && atSegment.MatchString(s[at:]) {
+			out := slices.Clone(segs)
+			out[i] = s[:at]
+			return out
+		}
+	}
+	return segs
 }
 
 // validHost accepts a host name or address, with a port.
@@ -570,7 +584,7 @@ func (w *web) run(j *webJob, key string, segs []string) {
 			return
 		}
 	}
-	repoKey, cloneURL, probed := w.probe(j, segs)
+	repoKey, cloneURL, probed := w.probe(j, unversioned(segs))
 	if repoKey == "" {
 		w.list(j, key, probed)
 		return

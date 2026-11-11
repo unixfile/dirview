@@ -233,6 +233,54 @@ func TestWebVersionFetchesADirectoryAtOnce(t *testing.T) {
 	}
 }
 
+// A link pinned to a commit, eg in a doc on the web address, opens that
+// version of a repo not yet read: the visit reads the repo, not a repo
+// named fzf@26ff936. A repo on disk but not yet served loads without a
+// read.
+func TestWebVersionOfARepoNotYetRead(t *testing.T) {
+	f := newForge(t, nil)
+	first := f.repo(t, "acct/r", map[string]string{"README.md": "# Old\n"})
+	f.repo(t, "acct/r", map[string]string{"README.md": "# New\n"})
+	depths[f.host] = 3
+	t.Cleanup(func() { delete(depths, f.host) })
+	w := testWeb(t, defaultDisk)
+	path := "/" + f.host + "/acct/r@" + first[:7] + "/README.md"
+	rec := read(t, w, path)
+	for i := 0; i < 3 && rec.Code == http.StatusMovedPermanently; i++ {
+		rec = webGet(w, rec.Header().Get("Location"))
+	}
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), "Old") {
+		t.Fatalf("first commit's README.md: %d\n%s", rec.Code, rec.Body)
+	}
+	w.forget(w.repos[f.host+"/acct/r"])
+	before := f.packs.Load()
+	rec = webGet(w, path)
+	for i := 0; i < 3 && rec.Code == http.StatusMovedPermanently; i++ {
+		rec = webGet(w, rec.Header().Get("Location"))
+	}
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), "Old") {
+		t.Errorf("a version of a repo on disk: %d\n%s", rec.Code, rec.Body)
+	}
+	if n := f.packs.Load() - before; n != 0 || len(w.jobs) != 0 {
+		t.Errorf("a version of a repo on disk took %d requests and %d jobs, want 0", n, len(w.jobs))
+	}
+}
+
+func TestUnversioned(t *testing.T) {
+	for _, c := range []struct{ in, want string }{
+		{"github.com/a/fzf@26ff936/BUILD.md", "github.com/a/fzf/BUILD.md"},
+		{"github.com/a/fzf@261024.4", "github.com/a/fzf"},
+		{"git.suckless.org/dwm@26ff936", "git.suckless.org/dwm"},
+		{"github.com/a/fzf/BUILD.md", "github.com/a/fzf/BUILD.md"},
+		{"github.com/a/fzf@main/BUILD.md", "github.com/a/fzf@main/BUILD.md"},
+		{"github.com/a/@26ff936", "github.com/a/@26ff936"},
+	} {
+		if got := strings.Join(unversioned(strings.Split(c.in, "/")), "/"); got != c.want {
+			t.Errorf("%s: %s, want %s", c.in, got, c.want)
+		}
+	}
+}
+
 // Another site cannot make the browser download a repo.
 func TestWebAsksWhenAnotherSiteSends(t *testing.T) {
 	f := newForge(t, nil)
