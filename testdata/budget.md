@@ -1,49 +1,49 @@
-# www
+# prog
 
-www reads directories and repos in the browser: Markdown as pages, code as code, history beside both.
+prog reads directories and repos in the browser: Markdown as pages, code as code, history beside both.
 
 It is for anyone who keeps notes, docs and code in plain files and wants to read them as linked pages. It runs on your machine. Nothing needs a build step, and nothing needs a push first.
 
-A repo on GitHub, GitLab or Codeberg reads the same way, once www has fetched it.
+A repo on GitHub, GitLab or Codeberg reads the same way, once prog has fetched it.
 
 It is fast. A page takes one to three milliseconds and a server starts in about 40 ms. `make test` fails any page that takes over 5 ms.
 
 ## Usage
 
 ```
-www [-p] [--foreground] [--no-open] [-a ADDR] [--debug] [--no-bug]
+prog [-p] [--foreground] [--no-open] [-a ADDR] [--debug] [--no-bug]
     [--cache=SIZE] [--disk=SIZE] [--base=PATH] [--] [DIR]
-www [-p] [--foreground] [--no-open] --share[=HOST] [--secret] [--debug]
+prog [-p] [--foreground] [--no-open] --share[=HOST] [--secret] [--debug]
     [--no-bug] [--cache=SIZE] [--disk=SIZE] [--base=PATH] [--] [DIR]
-www --restart [-f] [--no-open] [--debug] [--no-bug]
+prog --restart [-f] [--no-open] [--debug] [--no-bug]
     [-a ADDR | --share[=HOST]] [--] [DIR]
-www -l [-a ADDR | --share[=HOST]] [--] [DIR]
-www --kill [-a ADDR | --share[=HOST]]
-www --commit=REV [--] [DIR]
-www -h | --help
-www -V | --version
+prog -l [-a ADDR | --share[=HOST]] [--] [DIR]
+prog --kill [-a ADDR | --share[=HOST]]
+prog --commit=REV [--] [DIR]
+prog -h | --help
+prog -V | --version
 ```
 
-A second executable, `www-public`, serves online repos to the web and nothing else:
+A second executable, `prog-public`, serves online repos to the web and nothing else:
 
 ```
-www-public --disk=SIZE (-a ADDR | --share[=HOST]) [--debug] [--cache=SIZE]
+prog-public --disk=SIZE (-a ADDR | --share[=HOST]) [--debug] [--cache=SIZE]
     [--base=PATH]
-www-public -h | --help
-www-public -V | --version
+prog-public -h | --help
+prog-public -V | --version
 ```
 
-Run `www` in a directory. It prints the tree's URL and opens the browser.
+Run `prog` in a directory. It prints the tree's URL and opens the browser.
 
 It also writes a lockfile named after the endpoint, eg `127.31.1.1-8080.lock`. Delete the lockfile to stop serving the tree. Trees on one address share one server, which exits when its last lock is gone.
 
 ```
-www                         serve this directory and open it
-www -p ~/notes              serve ~/notes, and again after a reboot
-www --share=192.168.1.5     serve this directory to the LAN
-www -l                      list every served tree as keyval
-www --restart               move every server to the current binary
-www-public --disk=6G -a 127.0.0.1:8080
+prog                         serve this directory and open it
+prog -p ~/notes              serve ~/notes, and again after a reboot
+prog --share=192.168.1.5     serve this directory to the LAN
+prog -l                      list every served tree as keyval
+prog --restart               move every server to the current binary
+prog-public --disk=6G -a 127.0.0.1:8080
                             serve online repos to the web, behind a proxy
 ```
 
@@ -53,11 +53,11 @@ To read a repo from GitHub, open `http://127.31.1.2/github.com/junegunn/fzf/`.
 
 ## Install
 
-www needs git.
+prog needs git.
 
-`make install` links `build/www` and `build/www-public` into `~/.local/bin` and serves on port 8080.
+`make install` links `build/prog` and `build/prog-public` into `~/.local/bin` and serves on port 8080.
 
-`make install-deb` builds and installs two Debian packages: www and its syntax tree helper. The package's binary may bind port 80, so URLs carry no port.
+`make install-deb` builds and installs two Debian packages: prog and its syntax tree helper. The package's binary may bind port 80, so URLs carry no port.
 
 ## Documentation
 
@@ -69,9 +69,9 @@ www needs git.
 - [History](doc/history.md): histories, commits, stardates, the timeline and old versions of a tree
 - [Online repos](doc/online-repos.md): reading a forge's repos on the second address, or serving them to the web
 - [Sharing](doc/sharing.md): serving a tree to other machines
-- [Safety](doc/safety.md): what www refuses to serve, follow or run
-- [Speed](doc/speed.md): what www caches and how it is timed
-- [Log](doc/log.md): what www writes to the journal
+- [Safety](doc/safety.md): what prog refuses to serve, follow or run
+- [Speed](doc/speed.md): what prog caches and how it is timed
+- [Log](doc/log.md): what prog writes to the journal
 - [Debugging](doc/debugging.md): the bug button and the build stamp
 - [Install](doc/install.md): the Debian package, port 80 and locks in git
 - [Development](doc/development.md): `make run`, the two executables, the working name and the usage check
@@ -83,7 +83,7 @@ MIT, see `LICENSE`.
 
 The embedded fonts are subsets of STIX Two Text and Iosevka, under the SIL Open Font License: see `assets/fonts/STIXTwoText-OFL.txt` and `assets/fonts/Iosevka-OFL.txt`.
 
-The binary links in five Go modules. Four are under the MIT licence: goldmark by Yusuke Inuzuka, chroma by Alec Thomas, regexp2 by Doug Clark and kv, www's sister project. regexp2 ports parts of Microsoft's dotnet/corefx. The fifth, yaml.v3 by Canonical, is under Apache 2.0, with its files from Kirill Simonov's libyaml under MIT. The package's copyright file carries their notices.
+The binary links in five Go modules. Four are under the MIT licence: goldmark by Yusuke Inuzuka, chroma by Alec Thomas, regexp2 by Doug Clark and kv, prog's sister project. regexp2 ports parts of Microsoft's dotnet/corefx. The fifth, yaml.v3 by Canonical, is under Apache 2.0, with its files from Kirill Simonov's libyaml under MIT. The package's copyright file carries their notices.
 
 # Code pages
 
@@ -93,7 +93,7 @@ Code in a fenced block with a known language is highlighted by chroma, as are co
 
 Go is lexed by Go's own scanner from the standard library instead, about 150 times faster, with the same colours. A Go page of 1,400 lines takes 2 ms.
 
-Python, JavaScript and shell have lexers of www's own. They follow chroma's rules and give every byte the class chroma gives it. chroma took 180 ms to lex argparse.py, 2,633 lines, and they take under 2 ms. A whole page of it renders in about 3 ms, and jquery.js, 10,907 lines, in about 20 ms instead of 400.
+Python, JavaScript and shell have lexers of prog's own. They follow chroma's rules and give every byte the class chroma gives it. chroma took 180 ms to lex argparse.py, 2,633 lines, and they take under 2 ms. A whole page of it renders in about 3 ms, and jquery.js, 10,907 lines, in about 20 ms instead of 400.
 
 Other languages go through chroma, at about 70 µs a line.
 
@@ -127,9 +127,9 @@ In the same corner, flat goes back to the plain page.
 
 Add `?tree`, or follow tree, for the syntax tree: one row per named node, with its field in its parent, its kind, its text on one line and a link to its lines. It is folded so the file's top-level declarations show first.
 
-A helper parses it with tree-sitter: `www-syntax`, which the package of that name installs and `make syntax` builds beside www with a C compiler. It knows Go, Python, JavaScript, TypeScript, Rust, C, C++, shell, Java, C#, JSON, HTML, CSS and Ruby. Without the helper, or for another language, the page says so above the plain code.
+A helper parses it with tree-sitter: `prog-syntax`, which the package of that name installs and `make syntax` builds beside prog with a C compiler. It knows Go, Python, JavaScript, TypeScript, Rust, C, C++, shell, Java, C#, JSON, HTML, CSS and Ruby. Without the helper, or for another language, the page says so above the plain code.
 
-A first view of a 1,400-line file takes about 20 ms and sends 1.2 MB; one of jquery.js, 10,900 lines, takes about 85 ms, most of it in the parse. www renders the rows as the helper prints them. The server keeps the tree, so a later view takes a few milliseconds.
+A first view of a 1,400-line file takes about 20 ms and sends 1.2 MB; one of jquery.js, 10,900 lines, takes about 85 ms, most of it in the parse. prog renders the rows as the helper prints them. The server keeps the tree, so a later view takes a few milliseconds.
 
 ## Gron
 
@@ -153,20 +153,20 @@ A converted view takes about a second per MB the first time, most of it in kv an
 
 ## Bug reports
 
-A small, faint `www bug` button sits at the foot of every page. It reports a bug in www and the server, not in the tree you are reading.
+A small, faint `prog bug` button sits at the foot of every page. It reports a bug in prog and the server, not in the tree you are reading.
 
 A click files a numbered bug with the page attached, and the button says which, eg `bug 7 filed`. Text selected on the page goes in as the note. A field then opens beside the button for a comment: Enter adds it, Escape or clicking away leaves the bug without one.
 
-Each report lands in `csi/bugs/` of the checkout the binary was built from, when `make build` built it there and that checkout has csi, so the bugs sit with www's own project. Otherwise, as for the package, it lands in `~/.local/state/www/bugs/`, or below `$XDG_STATE_HOME` when set:
+Each report lands in `csi/bugs/` of the checkout the binary was built from, when `make build` built it there and that checkout has csi, so the bugs sit with prog's own project. Otherwise, as for the package, it lands in `~/.local/state/prog/bugs/`, or below `$XDG_STATE_HOME` when set:
 
 - `7.kv`: the report as keyval: the time, the page's URL, the note, the window's size and scroll as `view`, the browser as `ua`, the build, then the server: its `pid`, its binary as `exe`, `stale yes` if a rebuild has replaced that binary, its `addr`, when it `started`, its `command` line and each tree it serves as `tree.0`, `tree.1` and on, then each comment as `comment.0`, `comment.1` and on
 - `7.html`: the page as it stood at the click, script changes included, with its stylesheet and no script, so it opens as you saw it
 - `next`: the number the next report gets. Numbers only grow, so a bug deleted once fixed never gives its number away
 
-Each report and comment is also one line in the log. Find them with `journalctl --user -t www -g '^bug '`:
+Each report and comment is also one line in the log. Find them with `journalctl --user -t prog -g '^bug '`:
 
 ```
-bug 7: http://127.31.1.1/x/nowhere.md note="the coin is cut off" view=1280x800+0 ua="Mozilla/5.0 ..." build=1aa282c snapshot=/home/t/scratch/github.com/unixfile/www/csi/bugs/7.html
+bug 7: http://127.31.1.1/x/nowhere.md note="the coin is cut off" view=1280x800+0 ua="Mozilla/5.0 ..." build=1aa282c snapshot=/home/t/scratch/github.com/unixfile/prog/csi/bugs/7.html
 bug 7 comment: "after a restart"
 ```
 
@@ -176,25 +176,25 @@ bug 7 comment: "after a restart"
 
 With `--debug`, each page says when its binary was built and how many seconds ago, the commit it was built from and how long the page took to render, eg `built 12:49, 108 s ago, from 1aa282c+modified, rendered in 3.3 ms`. It sits small and faint above the header, so a glance tells which build served the page.
 
-`+modified` marks a build from uncommitted code. www's script counts the seconds up while the page is open. Shares leave the stamp out.
+`+modified` marks a build from uncommitted code. prog's script counts the seconds up while the page is open. Shares leave the stamp out.
 
 # Development
 
-To try a change without installing it, run `make run`. It builds `build/www` and the syntax tree helper and serves this directory on port 8080 with `--debug`, beside an installed server on port 80.
+To try a change without installing it, run `make run`. It builds `build/prog` and the syntax tree helper and serves this directory on port 8080 with `--debug`, beside an installed server on port 80.
 
 A later run replaces the server on 8080 with the new build, serving the same trees, and open pages go on under it. So edit and `make run` again.
 
-It opens the browser only when no page of this directory was open on the old server, and says which happened. A hidden tab holds no connection, so it does not count and gets a second tab. `www --kill -a 127.31.N.1:8080` stops it.
+It opens the browser only when no page of this directory was open on the old server, and says which happened. A hidden tab holds no connection, so it does not count and gets a second tab. `prog --kill -a 127.31.N.1:8080` stops it.
 
 ## Two executables
 
-The root directory is a library package. Each executable has only its main under `cmd/`: `cmd/local` builds `www`, the reader, and `cmd/public` builds `www-public`, for the open web. `make build` builds both into `build/`.
+The root directory is a library package. Each executable has only its main under `cmd/`: `cmd/local` builds `prog`, the reader, and `cmd/public` builds `prog-public`, for the open web. `make build` builds both into `build/`.
 
 The public executable leaves a feature out by never calling it, and the linker drops code that no call leads to. A server gets the stop form, the bug form and the index only through `local()`, which the public start never calls. `TestPublicLeavesOutTheReadersFeatures` builds both and reads their symbols: the public one must hold none of the listed names and the reader every one.
 
 ## The working name
 
-The program's name lives in the file `WORKING_NAME`, since www is a working name until a final one is chosen. The binary, its paths, environment variables, journal tag and URLs, the Makefile and the Debian package all take it from there. A test fails on any other copy outside prose and `go.mod`.
+The program's name lives in the file `WORKING_NAME`, since prog is a working name until a final one is chosen. The binary, its paths, environment variables, journal tag and URLs, the Makefile and the Debian package all take it from there. A test fails on any other copy outside prose and `go.mod`.
 
 ## Usage check
 
@@ -232,7 +232,7 @@ A commit on no main line, eg on another branch, shows its short hash.
 
 A doc or code page with commits opens with a line that says where the reader is: current when the page matches its last commit, changed when it has edits since. Hover names the commit by stardate and subject.
 
-www compares git's id for the file with the one HEAD keeps, which takes microseconds, and asks `git status` only when they differ.
+prog compares git's id for the file with the one HEAD keeps, which takes microseconds, and asks `git status` only when they differ.
 
 ## The timeline
 
@@ -248,7 +248,7 @@ A commit's hash in a history's fold, or commit at the right end of a version's t
 
 Added lines sit on a green tint and removed ones on a red. The diff stops at 1 MiB.
 
-From the terminal, `www --commit=261024.4` prints a commit's full hash, stardate and subject as keyval.
+From the terminal, `prog --commit=261024.4` prints a commit's full hash, stardate and subject as keyval.
 
 ## Semantic diffs
 
@@ -264,9 +264,9 @@ A first view of a commit that touches 12 files took about 190 ms. The server kee
 
 ## Git's safety
 
-www runs `git log`, `git show` and `git rev-parse` in the directory of what the page shows, after links resolve.
+prog runs `git log`, `git show` and `git rev-parse` in the directory of what the page shows, after links resolve.
 
-A cloned repo's `.git/config` can name programs for git to run. So www turns off external diff, textconv, signature checks and fetches, and drops `GIT_` variables from its environment. git's own `safe.directory` check refuses repos that other users own.
+A cloned repo's `.git/config` can name programs for git to run. So prog turns off external diff, textconv, signature checks and fetches, and drops `GIT_` variables from its environment. git's own `safe.directory` check refuses repos that other users own.
 
 No history page shows authors, on a share or on loopback.
 
@@ -274,7 +274,7 @@ No history page shows authors, on a share or on loopback.
 
 A shared server shows history and diffs as loopback does, with four differences.
 
-History appears only when other users could read the repo's git directory, its `HEAD`, `objects` and `refs`. Nobody reads through www what git run as another user would not show them.
+History appears only when other users could read the repo's git directory, its `HEAD`, `objects` and `refs`. Nobody reads through prog what git run as another user would not show them.
 
 Each message loses its trailer block, which carries emails and session links in lines such as `Signed-off-by:` and `Claude-Session:`. As in git, the last paragraph is a trailer block when a quarter of its lines are `Key: value` lines, so a cherry-pick note or a wrapped trailer does not keep it.
 
@@ -286,15 +286,15 @@ A share never shows git's errors, which name paths on the machine, and says only
 
 Each commit in a history has a browse link, inside its fold, to the page as it was in that commit.
 
-`@` and a commit's hash on a tree's name serve the tree as of that commit, eg `/scratch/www@5430ac3/` for its root or `/scratch/www@5430ac3/doc/history.md` for one doc. The version qualifies the tree, so it sits on the name, not below it as an entry would. A tree served at `/` has no name, so its versions sit below it, eg `/@5430ac3/`.
+`@` and a commit's hash on a tree's name serve the tree as of that commit, eg `/scratch/prog@5430ac3/` for its root or `/scratch/prog@5430ac3/doc/history.md` for one doc. The version qualifies the tree, so it sits on the name, not below it as an entry would. A tree served at `/` has no name, so its versions sit below it, eg `/@5430ac3/`.
 
-The address below the tree, eg `/scratch/www/@5430ac3/`, is the old form and redirects. A tree that holds an entry named like a version, eg a directory `@cafe`, serves that entry at `/scratch/www/@cafe/`, and the old form does not redirect there.
+The address below the tree, eg `/scratch/prog/@5430ac3/`, is the old form and redirects. A tree that holds an entry named like a version, eg a directory `@cafe`, serves that entry at `/scratch/prog/@cafe/`, and the old form does not redirect there.
 
-A stardate works the same, eg `www@261024.4/`, and a hash of a commit with a stardate redirects to it. A day alone, eg `www@261024/`, names no commit and says so, though its six digits would also read as a hash. Any length of hash from four characters up works and redirects to git's short form.
+A stardate works the same, eg `prog@261024.4/`, and a hash of a commit with a stardate redirects to it. A day alone, eg `prog@261024/`, names no commit and says so, though its six digits would also read as a hash. Any length of hash from four characters up works and redirects to git's short form.
 
-Docs, code pages, listings and search work there as on the tree itself, read from git rather than the disk. Relative links stay in the same version. www's script still runs there, so keys, the search box and line marks work as on the tree.
+Docs, code pages, listings and search work there as on the tree itself, read from git rather than the disk. Relative links stay in the same version. prog's script still runs there, so keys, the search box and line marks work as on the tree.
 
-The top line names the commit that last changed the page as of that version, stardate first as in histories, and opens the same timeline with that version marked. At the line's right end, commit opens the commit's page, and current leads to the page as it is, as does the timeline's first row. The breadcrumbs and the tab title carry the hash, eg `www @ 5430ac3`.
+The top line names the commit that last changed the page as of that version, stardate first as in histories, and opens the same timeline with that version marked. At the line's right end, commit opens the commit's page, and current leads to the page as it is, as does the timeline's first row. The breadcrumbs and the tab title carry the hash, eg `prog @ 5430ac3`.
 
 A version never changes, so it has no live reload, no Delete lock button and no path to copy, and its docs list no backlinks.
 
@@ -302,25 +302,25 @@ Shares and the web address have no versions. A page whose history lies in a nest
 
 # Install
 
-www needs git.
+prog needs git.
 
-`make install` links `build/www` into `~/.local/bin`.
+`make install` links `build/prog` into `~/.local/bin`.
 
 ## Debian packages
 
-`make deb` builds a Debian package in `build/`, such as `www_0~git20261015223930.20f02fd_amd64.deb`, versioned by the last commit's UTC time and hash. It depends on git. For another architecture, pass `ARCH`, eg `make deb ARCH=arm64`.
+`make deb` builds a Debian package in `build/`, such as `prog_0~git20261015223930.20f02fd_amd64.deb`, versioned by the last commit's UTC time and hash. It depends on git. For another architecture, pass `ARCH`, eg `make deb ARCH=arm64`.
 
-`make deb-syntax` builds `www-syntax`, the syntax tree helper, as a package of its own beside it, since the helper needs cgo and libc while www is static. The main package recommends it and the helper depends on www, each at the same version, because www reads the helper's output. For another architecture it needs a C cross compiler, eg `make deb-syntax ARCH=arm64 CC=aarch64-linux-gnu-gcc`.
+`make deb-syntax` builds `prog-syntax`, the syntax tree helper, as a package of its own beside it, since the helper needs cgo and libc while prog is static. The main package recommends it and the helper depends on prog, each at the same version, because prog reads the helper's output. For another architecture it needs a C cross compiler, eg `make deb-syntax ARCH=arm64 CC=aarch64-linux-gnu-gcc`.
 
 `make install-deb` builds both packages while sudo asks for the password, then installs them with `sudo apt install`, which pulls in git. It first removes the `~/.local/bin` link from `make install`, which would otherwise shadow the package's binary. Run it again to replace an installed build, even of the same commit. `make uninstall-deb` removes both.
 
-Debian's needrestart lists the services that use old libraries after the install instead of asking which to restart. None of them is www.
+Debian's needrestart lists the services that use old libraries after the install instead of asking which to restart. None of them is prog.
 
 ## Port 80
 
-The package holds both executables, `/usr/bin/www` and `/usr/bin/www-public`. It grants `/usr/bin/www` one capability, `cap_net_bind_service`, so it can bind port 80 while running as the user. `getcap /usr/bin/www` shows it.
+The package holds both executables, `/usr/bin/prog` and `/usr/bin/prog-public`. It grants `/usr/bin/prog` one capability, `cap_net_bind_service`, so it can bind port 80 while running as the user. `getcap /usr/bin/prog` shows it.
 
-With it www serves on port 80 and URLs carry no port. Without it, as after `make install`, the port is 8080. www also takes port 80 where the machine lets every user bind low ports.
+With it prog serves on port 80 and URLs carry no port. Without it, as after `make install`, the port is 8080. prog also takes port 80 where the machine lets every user bind low ports.
 
 ## Locks in git
 
@@ -328,24 +328,24 @@ Add `*.*.*.*-*.lock` and `*.*.*.*-*.LOCK` to `~/.config/git/ignore` so locks sta
 
 # Log
 
-www logs every action, always. There is no flag and no level to set, because a filter set before a mistake drops the entry that would explain it.
+prog logs every action, always. There is no flag and no level to set, because a filter set before a mistake drops the entry that would explain it.
 
-Entries go to the systemd journal, tagged `www`:
+Entries go to the systemd journal, tagged `prog`:
 
 ```
-journalctl --user -t www --since -1h
-journalctl --user -t www WWW_ENDPOINT=127.31.1.1-80
-journalctl --user -t www -p err
+journalctl --user -t prog --since -1h
+journalctl --user -t prog PROG_ENDPOINT=127.31.1.1-80
+journalctl --user -t prog -p err
 ```
 
-Each entry carries the endpoint it concerns in `WWW_ENDPOINT` and its priority in `PRIORITY`: 3 for faults, 6 for the rest. The journal also holds what explains a vanished server, such as a suspend, an OOM kill or a logout.
+Each entry carries the endpoint it concerns in `PROG_ENDPOINT` and its priority in `PRIORITY`: 3 for faults, 6 for the rest. The journal also holds what explains a vanished server, such as a suspend, an OOM kill or a logout.
 
-Where no journal socket exists, entries go to `~/.local/state/www/log` instead, or below `$XDG_STATE_HOME` when set. Its lines hold time, PID, endpoint, priority and the message. The file is mode 600 and rotates once to `log.1` at 1 MB. `www --help` names the place in use.
+Where no journal socket exists, entries go to `~/.local/state/prog/log` instead, or below `$XDG_STATE_HOME` when set. Its lines hold time, PID, endpoint, priority and the message. The file is mode 600 and rotates once to `log.1` at 1 MB. `prog --help` names the place in use.
 
 ## What is logged
 
-- Every run of `www`, with its arguments, working directory and binary, and its outcome when it fails. A run that joins a server or finds its tree already served says so.
-- Each server's start with its binary and commit, eg `/usr/bin/www 54cca2a`, and `+modified` for a build from uncommitted code. A stale binary is the first suspect when a page looks wrong.
+- Every run of `prog`, with its arguments, working directory and binary, and its outcome when it fails. A run that joins a server or finds its tree already served says so.
+- Each server's start with its binary and commit, eg `/usr/bin/prog 54cca2a`, and `+modified` for a build from uncommitted code. A stale binary is the first suspect when a page looks wrong.
 - Each tree served and withdrawn, with the cause: a deleted lock, a Delete lock or Kill server button, or a signal. Then the server's stop and exit.
 - Stale locks and registry links cleared after a crash, and the SIGTERM that `--kill` and `--restart` send.
 - Every page request, with method, path, status and time taken. Live reload streams, the stylesheet, fonts and the favicon come with every page and are left out. A shared server adds the visitor's address.
@@ -360,7 +360,7 @@ Your user journal is readable by you and by members of `adm` and `systemd-journa
 
 # Online repos
 
-The server on your default address also listens on the address after it, 127.31.N.2, on the same port. There a URL names a repo on a forge by its host and path, eg `http://127.31.1.2/github.com/junegunn/fzf/README.md`. The first visit fetches the repo into a cache. From then on www serves it as it serves a checkout: docs, code, listings, search and history.
+The server on your default address also listens on the address after it, 127.31.N.2, on the same port. There a URL names a repo on a forge by its host and path, eg `http://127.31.1.2/github.com/junegunn/fzf/README.md`. The first visit fetches the repo into a cache. From then on prog serves it as it serves a checkout: docs, code, listings, search and history.
 
 Home and the web never collide, since each has an address of its own.
 
@@ -370,9 +370,9 @@ The index at `/` on the default address links the web address. The web address's
 
 The index at `/` names the web address, but a reader seldom sees the index, so two ways in lie where a reader already is.
 
-A link in a doc to a repo on GitHub, GitLab, Codeberg or Bitbucket, or to a file or directory in one, is followed by a small www, raised like a footnote mark. It opens the same repo or file on the web address, and its title names the repo. The forge's own link stays as it was.
+A link in a doc to a repo on GitHub, GitLab, Codeberg or Bitbucket, or to a file or directory in one, is followed by a small prog, raised like a footnote mark. It opens the same repo or file on the web address, and its title names the repo. The forge's own link stays as it was.
 
-On the web address the link turns around. A reader there is already inside an online repo, so a link to another repo opens it in www, and the mark after it names the forge, eg github, and opens the forge's page. A link in your own docs still goes where it says.
+On the web address the link turns around. A reader there is already inside an online repo, so a link to another repo opens it in prog, and the mark after it names the forge, eg github, and opens the forge's page. A link in your own docs still goes where it says.
 
 A link to a forge page that is not a file, eg an issue or an account, gets no mark. A link to a file's bare bytes counts as a link to the file, eg on raw.githubusercontent.com. A link pinned to a commit by its hash opens that version, eg `fzf@26ff936`. A branch or tag drops, since the web address serves the commit it fetched. The copy button leaves the mark out.
 
@@ -384,27 +384,27 @@ Both appear wherever a server serves the web address: on its default address and
 
 ## The first visit
 
-A repo not yet cached opens a page that says "reading". It names each step as www takes it: the git command, the URL and where the files go, with git's progress below and its time. When the repo is ready the page turns into it on its own. For most repos that takes one to three seconds; git's own repo takes about 20.
+A repo not yet cached opens a page that says "reading". It names each step as prog takes it: the git command, the URL and where the files go, with git's progress below and its time. When the repo is ready the page turns into it on its own. For most repos that takes one to three seconds; git's own repo takes about 20.
 
-www first finds where the repo ends in the path. It asks `git ls-remote` on every prefix at once, with and without `.git`, and takes the longest that answers; the rest of the path lies inside the repo. GitHub, Bitbucket and Codeberg keep every repo at owner/name, so there it asks nothing and clones at once.
+prog first finds where the repo ends in the path. It asks `git ls-remote` on every prefix at once, with and without `.git`, and takes the longest that answers; the rest of the path lies inside the repo. GitHub, Bitbucket and Codeberg keep every repo at owner/name, so there it asks nothing and clones at once.
 
 A URL that ends in `.git` redirects to the one without, so a repo has one URL.
 
-When another website links to a repo not yet cached, the browser marks the request as cross-site, and www asks before fetching anything. The page's read link keeps the link's fragment, eg the lines `#L10-L12` marks, and the page never reloads on its own, so nothing is fetched until you follow it. A URL typed, bookmarked or followed from a www page fetches at once. So no site can make your browser fill the disk.
+When another website links to a repo not yet cached, the browser marks the request as cross-site, and prog asks before fetching anything. The page's read link keeps the link's fragment, eg the lines `#L10-L12` marks, and the page never reloads on its own, so nothing is fetched until you follow it. A URL typed, bookmarked or followed from a prog page fetches at once. So no site can make your browser fill the disk.
 
 ## The cache
 
-The cache lives in `~/.cache/www/`, or `$XDG_CACHE_HOME/www/`, one directory per repo named by its host and path. Each holds a bare clone without file contents, in `.git`, and one worktree of the commit served, such as `.wt-b412a450538e`, which the link `.tree` names.
+The cache lives in `~/.cache/prog/`, or `$XDG_CACHE_HOME/prog/`, one directory per repo named by its host and path. Each holds a bare clone without file contents, in `.git`, and one worktree of the commit served, such as `.wt-b412a450538e`, which the link `.tree` names.
 
 The worktree's checkout fetches every file of that commit in one request. Older file versions arrive when a page needs them: a commit's diff fetches the blobs it shows, which takes about half a second on GitHub. A version fetches a directory's files in one request, the first time its listing or one of its files opens, so its first page takes about the same.
 
-`--disk=SIZE` sets the cache's limit, 2G by default. When a fetch takes it over, www deletes the repos read longest ago until it fits. A repo larger than the limit on its own goes too, and its page says so.
+`--disk=SIZE` sets the cache's limit, 2G by default. When a fetch takes it over, prog deletes the repos read longest ago until it fits. A repo larger than the limit on its own goes too, and its page says so.
 
-Delete the directory any time; www fetches what it needs again.
+Delete the directory any time; prog fetches what it needs again.
 
 ## Staying current
 
-A visit to a repo fetched over five minutes ago serves the cached commit at once and fetches in the background. When the branch moved, www builds the new commit's worktree beside the old one and swaps the link, so no page sees a half-updated tree. Open pages reload onto the new commit.
+A visit to a repo fetched over five minutes ago serves the cached commit at once and fetches in the background. When the branch moved, prog builds the new commit's worktree beside the old one and swaps the link, so no page sees a half-updated tree. Open pages reload onto the new commit.
 
 The header of every page in the repo names the commit shown by its stardate, eg `@ 261029.3`, as a version's crumbs name a commit. Its hash and time show on hover. The stardate links the page in that commit's version, which stays put after the next fetch. A commit off the main line shows its hash instead.
 
@@ -416,11 +416,11 @@ A fetch takes the branches and tags. It leaves out GitHub's pull request refs, w
 
 A repo here has versions as a local tree has: `@` and a commit below the repo's address, eg `/github.com/junegunn/fzf@b412a45/main.go`, shows the repo as it was then, and its pages, history and share button link them. The clone holds every commit and tree, so a version's listings come at once; its files are fetched from the forge as a page first needs them.
 
-The share button here copies the forge's own link at the commit the page shows, eg `https://github.com/junegunn/fzf/blob/<commit>/main.go#L10-L12`, since a link to this address opens only on this machine. Lines take the forge's form: `#L10-L12` on GitHub and Codeberg, `#L10-12` on GitLab and `#lines-10:12` on Bitbucket. A host www knows no link form for gets the page's own address.
+The share button here copies the forge's own link at the commit the page shows, eg `https://github.com/junegunn/fzf/blob/<commit>/main.go#L10-L12`, since a link to this address opens only on this machine. Lines take the forge's form: `#L10-L12` on GitHub and Codeberg, `#L10-12` on GitLab and `#lines-10:12` on Bitbucket. A host prog knows no link form for gets the page's own address.
 
 ## Listings
 
-A path that names no repo lists the repos below it, eg `/github.com/junegunn` or `/git.suckless.org`. git cannot list an account, so here alone www asks something else, in this order:
+A path that names no repo lists the repos below it, eg `/github.com/junegunn` or `/git.suckless.org`. git cannot list an account, so here alone prog asks something else, in this order:
 
 - the forge's API: GitHub, GitLab, Bitbucket, and Forgejo or Gitea on any other host, such as Codeberg
 - a web frontend's index: gitweb's project index, or the front page of cgit or stagit
@@ -430,19 +430,19 @@ The listing names its source and the sources that failed first, so a partial lis
 
 ## On the open web
 
-`www-public --disk=SIZE -a ADDR` serves online repos to anyone who reaches the address, eg through Caddy in front of it. It serves no tree from the machine and no other address, and it runs in the foreground for a service manager. `--share=HOST` binds a public address directly instead. `--base=/www` puts every URL below `/www`, for a proxy that gives www only that part of a domain; the proxy passes the path on whole.
+`prog-public --disk=SIZE -a ADDR` serves online repos to anyone who reaches the address, eg through Caddy in front of it. It serves no tree from the machine and no other address, and it runs in the foreground for a service manager. `--share=HOST` binds a public address directly instead. `--base=/prog` puts every URL below `/prog`, for a proxy that gives prog only that part of a domain; the proxy passes the path on whole.
 
-`www-public` is an executable of its own, built from the code `www` uses for online repos. It does not contain the bug button, the stop buttons, the index of servers, the browser launch, `--restart`, `-l`, `--kill`, `-p` or locks, so no flag or request can reach them. `make test` reads the binary's symbols and fails if one of them is there. `www --public` is gone and says where it went.
+`prog-public` is an executable of its own, built from the code `prog` uses for online repos. It does not contain the bug button, the stop buttons, the index of servers, the browser launch, `--restart`, `-l`, `--kill`, `-p` or locks, so no flag or request can reach them. `make test` reads the binary's symbols and fails if one of them is there. `prog --public` is gone and says where it went.
 
 A visitor learns nothing of the machine or of what others read. `/` says only how to read a repo. A listing that no forge or web frontend gives is a 404, never the cache. Pages write the cache's paths from `cache/`, git's errors included. 
 
 No page has a stop or bug button, nothing opens a browser, and any Host header is answered, since nothing local is there to protect.
 
-`--disk` is required, since any visitor can make www clone. A clone, fetch or checkout stops once the repo outgrows it or after 10 minutes, so a forge that sends without end cannot fill the disk or hold a clone's place.
+`--disk` is required, since any visitor can make prog clone. A clone, fetch or checkout stops once the repo outgrows it or after 10 minutes, so a forge that sends without end cannot fill the disk or hold a clone's place.
 
-A visitor can name any host, so www fetches only from hosts whose every address is on the open internet: never loopback, a private or link-local range, or carrier-grade NAT. git connects only to the addresses checked and follows no redirect, and listings check each address they connect to. A repo's `.git` is hidden, and a link out of a repo is refused without saying where it leads, whatever marker lies there.
+A visitor can name any host, so prog fetches only from hosts whose every address is on the open internet: never loopback, a private or link-local range, or carrier-grade NAT. git connects only to the addresses checked and follows no redirect, and listings check each address they connect to. A repo's `.git` is hidden, and a link out of a repo is refused without saying where it leads, whatever marker lies there.
 
-The limits aim at a bot that makes www clone without end, not at a reader. A repo already in the cache opens at any time. A visit to an uncached path starts a read: a probe, a clone or a listing.
+The limits aim at a bot that makes prog clone without end, not at a reader. A repo already in the cache opens at any time. A visit to an uncached path starts a read: a probe, a clone or a listing.
 
 One address runs one read at a time and starts at most 20 within an hour. Over that it gets a 429 with `Retry-After`, and the log names the address. An IPv6 address counts by its /64. Behind a proxy on loopback, eg Caddy, the visitor is the last address in `X-Forwarded-For`.
 
@@ -460,11 +460,11 @@ A share never serves the web address.
 
 # Options and environment
 
-`www --help` prints the options in short. Here is each in full.
+`prog --help` prints the options in short. Here is each in full.
 
-- `-a ADDR`, `--addr=ADDR`: serve on another loopback address, an IP or IP:PORT; the port defaults to 80 where www may bind it, else 8080
+- `-a ADDR`, `--addr=ADDR`: serve on another loopback address, an IP or IP:PORT; the port defaults to 80 where prog may bind it, else 8080
 - `--share[=HOST]`: share the tree on the default route's address, or on the address or name given beyond loopback, with an optional port, such as `192.168.1.5`, `0.0.0.0` or `mate.peer.home`; see `doc/sharing.md`
-- `--secret`: serve a shared tree under the token in `WWW_SECRET`, or a random one, so only those holding the link reach it
+- `--secret`: serve a shared tree under the token in `PROG_SECRET`, or a random one, so only those holding the link reach it
 - `--foreground`: when no server runs on the address yet, serve in the foreground until Ctrl-C
 - `--no-open`: print the URL without opening a browser
 - `--no-bug`: hide the bug button at the foot of each page and refuse reports; `--restart` passes it to the new servers when given
@@ -472,38 +472,38 @@ A share never serves the web address.
 - `--debug`: show what serves debugging: above each page's header, the build stamp, see `doc/debugging.md`; on the index, each server's build and start time and each lock's time. `make run` sets it; `--restart` passes it to the new servers when given, and leaves it off otherwise
 - `--cache=SIZE`: memory a new server may spend on cached git answers, eg `64M`; `0` caches nothing. The default is `32M`, and `--restart` goes back to it
 - `--disk=SIZE`: disk a new server may fill with online repos, eg `4G`; it drops the repos read longest ago, but not one that another server is fetching, since every server shares the cache. The default is `2G`, and `--restart` goes back to it
-- `--base=PATH`: serve a new server's every URL below PATH, eg `--base=/www` for `http://127.31.1.1/www/notes/`; see `doc/servers.md`
+- `--base=PATH`: serve a new server's every URL below PATH, eg `--base=/prog` for `http://127.31.1.1/prog/notes/`; see `doc/servers.md`
 - `--restart`: replace every server this binary started with one running it now, serving the same trees, and print each tree's URL; an address with persistent trees and no server gets one, when this binary served it last; with `-a` or `--share`, only the server on that address, whichever binary runs it; with a directory, it also serves that directory there and opens it in the browser unless a page of it was open, and says which
 - `-f`, `--force`: with `--restart`, take the servers and persistent trees of other binaries too
 - `-l`, `--list`: print each served tree's directory, URL and binary as keyval, on every address; with `-a` or `--share`, on that address only; with a directory, only the trees at or below it. A directory that holds no served tree prints nothing; one that does not exist fails with `E2`
 - `--kill`: stop every server and print the trees it served, as `--list` does; with `-a` or `--share`, only the server on that address
-- `--commit=REV`: print as keyval the commit REV names in the repo of DIR, or of the current directory: its full hash, its stardate and its subject. REV is a stardate, eg `261024.4`, a hash or any name git takes, so `git show $(www --commit=261024.4 | sed -n 's/^hash //p')` shows a commit seen on a page. A day and x, eg `261026.x`, works while one commit alone holds it. A commit or repo that is not there fails with `E2`
-- `-V`, `--version`: print when the binary was built and the commit it came from, as the stamp says it, eg `www built 2026-10-21 12:49, from 1aa282c+modified`
+- `--commit=REV`: print as keyval the commit REV names in the repo of DIR, or of the current directory: its full hash, its stardate and its subject. REV is a stardate, eg `261024.4`, a hash or any name git takes, so `git show $(prog --commit=261024.4 | sed -n 's/^hash //p')` shows a commit seen on a page. A day and x, eg `261026.x`, works while one commit alone holds it. A commit or repo that is not there fails with `E2`
+- `-V`, `--version`: print when the binary was built and the commit it came from, as the stamp says it, eg `prog built 2026-10-21 12:49, from 1aa282c+modified`
 - `-h`, `--help`: print the options
 
-`www-public` takes six of these: `-a`, `--share`, `--disk`, which it requires, `--cache`, `--debug` and `--base`, with `-V` and `-h`. It takes no directory. `www-public --help` prints them, and `doc/online-repos.md` says what it serves.
+`prog-public` takes six of these: `-a`, `--share`, `--disk`, which it requires, `--cache`, `--debug` and `--base`, with `-V` and `-h`. It takes no directory. `prog-public --help` prints them, and `doc/online-repos.md` says what it serves.
 
-Options follow GNU style. Short ones combine, as in `-pa 127.31.1.2`, and options may follow the directory. Optional values go joined, as in `--share=192.168.1.5`; with a space the address would be read as the directory, and www says so. `-f` and `-n` mean force and dry run in every tool of the author's, so `--foreground` and `--no-open` have no short form. The help text is written in docopt notation, except that docopt has no way to write the optional `=HOST`.
+Options follow GNU style. Short ones combine, as in `-pa 127.31.1.2`, and options may follow the directory. Optional values go joined, as in `--share=192.168.1.5`; with a space the address would be read as the directory, and prog says so. `-f` and `-n` mean force and dry run in every tool of the author's, so `--foreground` and `--no-open` have no short form. The help text is written in docopt notation, except that docopt has no way to write the optional `=HOST`.
 
-`--list` and `--kill` print [keyval](https://unixfile.github.io/keyval/): three lines per tree, sorted, with every index the same width. The binary line is missing for a server that started before www recorded it.
+`--list` and `--kill` print [keyval](https://unixfile.github.io/keyval/): three lines per tree, sorted, with every index the same width. The binary line is missing for a server that started before prog recorded it.
 
 ```
-tree.0.binary /usr/bin/www
+tree.0.binary /usr/bin/prog
 tree.0.dir /home/t/keep/notes
 tree.0.url http://127.31.1.1/keep/notes/
-tree.1.binary /home/t/scratch/github.com/unixfile/www/build/www
-tree.1.dir /home/t/scratch/github.com/unixfile/www
-tree.1.url http://127.31.1.1:8080/scratch/github.com/unixfile/www/
+tree.1.binary /home/t/scratch/github.com/unixfile/prog/build/prog
+tree.1.dir /home/t/scratch/github.com/unixfile/prog
+tree.1.url http://127.31.1.1:8080/scratch/github.com/unixfile/prog/
 ```
 
 Two variables set the default addresses. `--help` shows each value and where it comes from, and an error from a bad value names its variable.
 
-- `WWW_SHARE`: the address or name for a bare `--share`, eg `mate.peer.home`, in a start and in `--kill`, `--restart` and `--list`. Without it a bare `--share` takes the default route's address
-- `WWW_ADDR`: the loopback address for a start without `-a`. `--list`, `--kill` and `--restart` without an address still cover every server
+- `PROG_SHARE`: the address or name for a bare `--share`, eg `mate.peer.home`, in a start and in `--kill`, `--restart` and `--list`. Without it a bare `--share` takes the default route's address
+- `PROG_ADDR`: the loopback address for a start without `-a`. `--list`, `--kill` and `--restart` without an address still cover every server
 
-A third sets how a start opens its URL. `WWW_OPEN` holds the command, split at spaces, with `%s` where the URL goes, or the URL appended when no `%s` is given. `WWW_OPEN='brave-browser --app=%s'` opens a tree in an app window and `WWW_OPEN=firefox` in Firefox. It applies to loopback starts only; a share opens through `xdg-open`, as every start does without the variable.
+A third sets how a start opens its URL. `PROG_OPEN` holds the command, split at spaces, with `%s` where the URL goes, or the URL appended when no `%s` is given. `PROG_OPEN='brave-browser --app=%s'` opens a tree in an app window and `PROG_OPEN=firefox` in Firefox. It applies to loopback starts only; a share opens through `xdg-open`, as every start does without the variable.
 
-A fourth holds a share's token. `WWW_SECRET` gives `--secret` a token of letters, digits, `-` and `_` instead of a random one. The token never goes on the command line, where `ps` shows it to every local user and the shell keeps it in its history, so `--secret=token` fails with `E22`. `--help` says whether the variable is set but never shows its value.
+A fourth holds a share's token. `PROG_SECRET` gives `--secret` a token of letters, digits, `-` and `_` instead of a random one. The token never goes on the command line, where `ps` shows it to every local user and the shell keeps it in its history, so `--secret=token` fails with `E22`. `--help` says whether the variable is set but never shows its value.
 
 # Pages
 
@@ -535,9 +535,9 @@ Docs follow CommonMark with GitHub's extensions, rendered by goldmark: tables, s
 
 Lines join into a paragraph, and a blank line starts the next. A line that starts with a dash begins a list even right after text. Straight quotes and dashes turn typographic.
 
-Text is hyphenated by the rules of its language, which the browser picks from a block's `lang`. www tells each block's language from its commonest words, eg `och`, `att` and `inte` for Swedish, and marks every block that is not English. It knows English, Swedish, Danish, Norwegian, German, Dutch, French, Spanish, Italian and Portuguese.
+Text is hyphenated by the rules of its language, which the browser picks from a block's `lang`. prog tells each block's language from its commonest words, eg `och`, `att` and `inte` for Swedish, and marks every block that is not English. It knows English, Swedish, Danish, Norwegian, German, Dutch, French, Spanish, Italian and Portuguese.
 
-A block is a paragraph, heading, list, quote or table at the doc's top level. One too short to tell, such as a heading, takes the language of the doc as a whole. A doc in a language www does not know counts as English. Code and raw HTML are neither read nor marked.
+A block is a paragraph, heading, list, quote or table at the doc's top level. One too short to tell, such as a heading, takes the language of the doc as a whole. A doc in a language prog does not know counts as English. Code and raw HTML are neither read nor marked.
 
 A quote whose first line is only `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]` or `[!CAUTION]` becomes an alert. The marker gives way to a small mono label that names its kind, and the alert keeps full strength where a plain quote fades. A marker with text after it on the same line stays a plain quote.
 
@@ -577,37 +577,37 @@ The server watches the directory of each open page and its repo's git directory 
 
 ## Look
 
-The stylesheet is www's own. It began as md2html-default's, whose light palette it keeps, and the page colours sit as variables on `:root`.
+The stylesheet is prog's own. It began as md2html-default's, whose light palette it keeps, and the page colours sit as variables on `:root`.
 
 A page turns dark when the OS asks for it, with a dark palette and syntax colours of its own. The dark palette is a first draft.
 
-The header's right end names the mode in force, eg `▸ system`, and opens like the menu of versions. The menu sets the mode by hand: `light`, `system` and `dark`. Each shows in its own colours: light as a light page, dark as a dark one, system as the OS has it now. The one in force has a border. A choice, a click outside the menu or Escape closes it. `system` follows the OS again. The browser keeps the choice per server address, so a server on another address starts with the system's mode, and nothing goes to the server. The stylesheet writes each colour as `light-dark(light, dark)`, which browsers know since 2024; an older one shows pages without www's colours.
+The header's right end names the mode in force, eg `▸ system`, and opens like the menu of versions. The menu sets the mode by hand: `light`, `system` and `dark`. Each shows in its own colours: light as a light page, dark as a dark one, system as the OS has it now. The one in force has a border. A choice, a click outside the menu or Escape closes it. `system` follows the OS again. The browser keeps the choice per server address, so a server on another address starts with the system's mode, and nothing goes to the server. The stylesheet writes each colour as `light-dark(light, dark)`, which browsers know since 2024; an older one shows pages without prog's colours.
 
-The browser loads the stylesheet once. Its URL names a hash of its content, eg `/_www/style.7b94a08e7731.css`, so it is kept for a year, and a changed stylesheet comes under a new URL.
+The browser loads the stylesheet once. Its URL names a hash of its content, eg `/_prog/style.7b94a08e7731.css`, so it is kept for a year, and a changed stylesheet comes under a new URL.
 
 The header names a tree by its base name and shows the full path on hover. Every tree page's breadcrumbs start at `index`, which links `/`.
 
-The header, listings and www's own messages are mono; documents keep the serif. Mono text shows no ligatures, so `<=` stays two characters in any font.
+The header, listings and prog's own messages are mono; documents keep the serif. Mono text shows no ligatures, so `<=` stays two characters in any font.
 
 Every page keeps one width, 58ch of the body font, and keeps space for a scrollbar, so the header holds still from page to page. Code is smaller than the body text and never under 11px. A code block in a document fits 99 columns in that width, and so does a diff, its leading sign included. A code page fits 104: a line number of up to four digits, a space and 99 columns of code. Longer lines scroll.
 
 ## Fonts
 
-Pages load no fonts from the network. STIX Two Text, the serif, and Iosevka, the mono, come from the machine when installed. Otherwise they come from subsets built into www, which the browser caches for a year.
+Pages load no fonts from the network. STIX Two Text, the serif, and Iosevka, the mono, come from the machine when installed. Otherwise they come from subsets built into prog, which the browser caches for a year.
 
-Each face has a core file for Latin text and www's own signs, about 25 KB for the serif and 15 KB for the mono, so a plain page fetches about 40 KB of font. A second file per face holds Greek, Cyrillic and symbols, and the browser fetches it only for a page that uses them.
+Each face has a core file for Latin text and prog's own signs, about 25 KB for the serif and 15 KB for the mono, so a plain page fetches about 40 KB of font. A second file per face holds Greek, Cyrillic and symbols, and the browser fetches it only for a page that uses them.
 
 Text shows at once in a fallback font and switches when the file arrives.
 
 # Safety
 
-www refuses to serve the home directory and every directory above it, such as `/home` and `/`. A tree exposes everything below it, and home holds `~/.ssh`, `~/.gnupg` and every token file.
+prog refuses to serve the home directory and every directory above it, such as `/home` and `/`. A tree exposes everything below it, and home holds `~/.ssh`, `~/.gnupg` and every token file.
 
 ## Symlinks
 
 Symlinks inside the tree are followed, absolute ones included.
 
-A link that leads out of the tree is followed only into a directory that holds a file named `.www-follow`, or below one, and only when other users could read the target. A file needs the others-read bit and a directory others-read and others-execute, checked from the marker's directory down. So nobody reads through www what `cat` would not show them.
+A link that leads out of the tree is followed only into a directory that holds a file named `.prog-follow`, or below one, and only when other users could read the target. A file needs the others-read bit and a directory others-read and others-execute, checked from the marker's directory down. So nobody reads through prog what `cat` would not show them.
 
 A store of private files linked into repos, such as lord's `~/.local/share/lord`, opens with one marker in its root. Secrets kept there at mode 600 stay refused.
 
@@ -617,11 +617,11 @@ Opening a refused link shows the link, its target and the reason. The listing ma
 
 A loopback server answers only to loopback addresses, `localhost` and names that `/etc/hosts` maps to loopback.
 
-Its Content-Security-Policy forbids every script but www's own, which it allows by hash. www's script reloads pages, marks changed blocks, walks listings by arrow and opens history folds. Raw HTML in a doc passes through, so a README in a cloned repo could otherwise run code on this origin.
+Its Content-Security-Policy forbids every script but prog's own, which it allows by hash. prog's script reloads pages, marks changed blocks, walks listings by arrow and opens history folds. Raw HTML in a doc passes through, so a README in a cloned repo could otherwise run code on this origin.
 
 ## Code in a tree
 
-www runs no code a tree supplies. It reads files and runs git with every option turned off that would start a program named in the repo's config: the pager, textconv, external diff, signature checks, fsmonitor and fetching.
+prog runs no code a tree supplies. It reads files and runs git with every option turned off that would start a program named in the repo's config: the pager, textconv, external diff, signature checks, fsmonitor and fetching.
 
 ## Other users
 
@@ -639,7 +639,7 @@ On a listing it searches the directory, nearest first. The directory's own names
 
 A line result takes one row, cut so the match shows, and opens a code page at its line. A file shows its first three matching lines, then `+N more`, which opens the file filtered by the query.
 
-What git ignores comes last, behind one link: `1 hit in 1 ignored file`. Following it shows the hits. A repo inside the tree counts its own ignores. www asks git what it ignores at most once every 10 seconds per directory, so a file that becomes ignored can show as ordinary for that long. A search started inside an ignored directory treats its contents as ordinary. Limits apply per level, so a deep directory full of hits cannot crowd out a shallower one.
+What git ignores comes last, behind one link: `1 hit in 1 ignored file`. Following it shows the hits. A repo inside the tree counts its own ignores. prog asks git what it ignores at most once every 10 seconds per directory, so a file that becomes ignored can show as ordinary for that long. A search started inside an ignored directory treats its contents as ordinary. Limits apply per level, so a deep directory full of hits cannot crowd out a shallower one.
 
 Any other page filters itself, and each match is marked:
 
@@ -676,7 +676,7 @@ Kill server and Delete lock take a second Enter. Files and directories are not c
 
 ## Copy buttons
 
-Beside the box, ⧉ copies the page's text: what lies below the box, without www's own lines and links or line numbers. A code page copies as its file and a listing as its names. A doc copies its Markdown, and lines a range marks, eg `#L3-L26`, copy alone. What a search hides stays out.
+Beside the box, ⧉ copies the page's text: what lies below the box, without prog's own lines and links or line numbers. A code page copies as its file and a listing as its names. A doc copies its Markdown, and lines a range marks, eg `#L3-L26`, copy alone. What a search hides stays out.
 
 Beside it, ⤴ copies a link to what is selected:
 
@@ -703,17 +703,17 @@ Once shown, they fade only 2 s after the last of these ends, never at once.
 
 # Servers and locks
 
-Run `www` in a directory. It prints the tree's URL, opens the browser and writes a lockfile named after the endpoint, such as `127.31.1.1-8080.lock`. `cat` the lockfile to see the URL, root, PID and start time.
+Run `prog` in a directory. It prints the tree's URL, opens the browser and writes a lockfile named after the endpoint, such as `127.31.1.1-8080.lock`. `cat` the lockfile to see the URL, root, PID and start time.
 
-The URL is all it prints, so `url=$(www --no-open)` works. Running `www` again in a served directory prints the same URL and starts nothing.
+The URL is all it prints, so `url=$(prog --no-open)` works. Running `prog` again in a served directory prints the same URL and starts nothing.
 
 Delete the lockfile to stop serving the tree. The Delete lock button on the tree's pages does the same.
 
 ## One server per address
 
-Trees on one address share one server. The first `www` starts it in the background, and later ones hand their tree to it and return.
+Trees on one address share one server. The first `prog` starts it in the background, and later ones hand their tree to it and return.
 
-When something other than your www on that address holds the port, `www` fails at once with `E98` and names the listeners there.
+When something other than your prog on that address holds the port, `prog` fails at once with `E98` and names the listeners there.
 
 The server exits when its last lock is gone. SIGTERM stops it at once and removes every lock but a persistent `.LOCK`, as does the Kill server button on the index at `/`.
 
@@ -721,7 +721,7 @@ Delete lock and Kill server answer 410 Gone. The page shows the code and "Gone" 
 
 ## Restarts
 
-A running server keeps the binary it started with. `www --restart` moves every server's trees to the current binary, and `make install` and `make install-deb` run it for you. Open tabs reload onto the new binary, and it says how many did.
+A running server keeps the binary it started with. `prog --restart` moves every server's trees to the current binary, and `make install` and `make install-deb` run it for you. Open tabs reload onto the new binary, and it says how many did.
 
 It moves only the servers its own binary started, so the package and a build from `make install` leave each other's servers alone. It names each server it leaves, and `-f` takes them too. `make install-deb` passes `-f`, since it removes the `make install` link.
 
@@ -737,76 +737,76 @@ The package's binary and the one `make install` links are listed under No server
 
 With `--debug`, each server also says when its binary was built, from which commit and when the server started, and each tree when its lock was written. These serve debugging, so they are hidden otherwise.
 
-To reach the server by name, add a line such as `127.31.1.1 www` to `/etc/hosts`. Type the name with its slash, eg `www/`, or the browser searches for it.
+To reach the server by name, add a line such as `127.31.1.1 prog` to `/etc/hosts`. Type the name with its slash, eg `prog/`, or the browser searches for it.
 
 ## Addresses
 
-Each user owns 127.31.N.0/24 with N = uid − 1000. www serves on 127.31.N.1 by default, on port 80 where it may bind it, else 8080, and online repos on 127.31.N.2.
+Each user owns 127.31.N.0/24 with N = uid − 1000. prog serves on 127.31.N.1 by default, on port 80 where it may bind it, else 8080, and online repos on 127.31.N.2.
 
 Uids from 1000 to 1255 fit; others need `--addr`. `-a` takes only loopback addresses; `--share` takes the others.
 
 ## Serving after reboot
 
-`www -p` writes a lock in capitals, such as `127.31.1.1-8080.LOCK`. It holds no PID, and it outlives its server: Kill server, `--kill`, SIGTERM and a reboot all stop the server but leave the `.LOCK` in place.
+`prog -p` writes a lock in capitals, such as `127.31.1.1-8080.LOCK`. It holds no PID, and it outlives its server: Kill server, `--kill`, SIGTERM and a reboot all stop the server but leave the `.LOCK` in place.
 
-The next server on that address serves the tree again. So does `www --restart`, which starts a server for every address whose persistent trees have none.
+The next server on that address serves the tree again. So does `prog --restart`, which starts a server for every address whose persistent trees have none.
 
-Deleting the `.LOCK`, or Delete lock on the tree's pages, ends the tree for good. `www -p` in a tree served by a plain `.lock` moves it to a `.LOCK`, and a plain `www` in a tree that holds a `.LOCK` keeps it.
+Deleting the `.LOCK`, or Delete lock on the tree's pages, ends the tree for good. `prog -p` in a tree served by a plain `.lock` moves it to a `.LOCK`, and a plain `prog` in a tree that holds a `.LOCK` keeps it.
 
 ## Systemd units
 
-A systemd user unit runs `www --restart` at login. Both ship disabled. They serve from login to logout, and linger stays off.
+A systemd user unit runs `prog --restart` at login. Both ship disabled. They serve from login to logout, and linger stays off.
 
-- The package puts `www.service` in `/usr/lib/systemd/user/`. Enable it with `systemctl --user enable www`.
-- `make install` puts `www-dev.service` in `~/.config/systemd/user/`. Enable it with `systemctl --user enable www-dev`.
+- The package puts `prog.service` in `/usr/lib/systemd/user/`. Enable it with `systemctl --user enable prog`.
+- `make install` puts `prog-dev.service` in `~/.config/systemd/user/`. Enable it with `systemctl --user enable prog-dev`.
 
 Each brings back only the trees its own binary served last, so with both installs both units run.
 
-The package also ships a system template, `www@.service`, which serves a user's trees from boot, before login, with the capability for port 80. Enable it with `sudo systemctl enable www@<user>`.
+The package also ships a system template, `prog@.service`, which serves a user's trees from boot, before login, with the capability for port 80. Enable it with `sudo systemctl enable prog@<user>`.
 
-While the template or the package's user unit runs for a user, the other stands aside, since both run one binary on the same trees. `www-dev` runs beside either.
+While the template or the package's user unit runs for a user, the other stands aside, since both run one binary on the same trees. `prog-dev` runs beside either.
 
 ## Registry
 
-Each endpoint has a registry directory such as `~/.local/state/www/127.31.1.1-8080/` with a symlink to each lock its server holds. `$XDG_STATE_HOME` replaces `~/.local/state` when set.
+Each endpoint has a registry directory such as `~/.local/state/prog/127.31.1.1-8080/` with a symlink to each lock its server holds. `$XDG_STATE_HOME` replaces `~/.local/state` when set.
 
-A joining `www` adds a link, and the server sees it through inotify, writes the lock and serves the tree. Where inotify fails the server polls every second. An flock on the directory keeps a tree from joining a server on its way out.
+A joining `prog` adds a link, and the server sees it through inotify, writes the lock and serves the tree. Where inotify fails the server polls every second. An flock on the directory keeps a tree from joining a server on its way out.
 
 A lock left by a crash is detected on the next start through its PID and the kernel boot ID, then removed. A new server also clears what a crashed server left in the registry.
 
-A lock also names the server's PID namespace. Inside a sandbox or container, another namespace's PID says nothing, so www takes that server to be running: it keeps the lock, lists the tree and refuses `--kill` and `--restart` with E1. If that server has crashed, its lock stays until a reboot or until you delete it. A lock written before locks named their namespace counts as the host's. A `www` that cannot read its own namespace from `/proc` treats every lock this way.
+A lock also names the server's PID namespace. Inside a sandbox or container, another namespace's PID says nothing, so prog takes that server to be running: it keeps the lock, lists the tree and refuses `--kill` and `--restart` with E1. If that server has crashed, its lock stays until a reboot or until you delete it. A lock written before locks named their namespace counts as the host's. A `prog` that cannot read its own namespace from `/proc` treats every lock this way.
 
 ## A base path
 
-`--base=PATH` puts every URL of a new server below PATH, eg `www --base=/www` serves `~/notes` at `/www/notes/`. It is for a proxy that gives www one part of a domain, eg `example.org/www/`, beside other sites. The proxy passes the path on whole, base included.
+`--base=PATH` puts every URL of a new server below PATH, eg `prog --base=/prog` serves `~/notes` at `/prog/notes/`. It is for a proxy that gives prog one part of a domain, eg `example.org/prog/`, beside other sites. The proxy passes the path on whole, base included.
 
-The base covers everything www writes and answers: trees, the index at `/www/`, the stylesheet and fonts, the stop and bug forms, redirects and the web address's repos. `/www` alone redirects to `/www/`. A path outside the base is a 404.
+The base covers everything prog writes and answers: trees, the index at `/prog/`, the stylesheet and fonts, the stop and bug forms, redirects and the web address's repos. `/prog` alone redirects to `/prog/`. A path outside the base is a 404.
 
 A base is one or more segments of letters, digits, `-`, `.` and `_`, and no segment starts with `_`.
 
-A base belongs to a server, not to a tree. A tree that joins a running server takes the server's base, and www says so when `--base` named another. `--restart` keeps each server's base, so it takes no `--base`; to change one, stop the server with `--kill` and start it again.
+A base belongs to a server, not to a tree. A tree that joins a running server takes the server's base, and prog says so when `--base` named another. `--restart` keeps each server's base, so it takes no `--base`; to change one, stop the server with `--kill` and start it again.
 
 # Sharing
 
-`www --share [DIR]` serves a tree on the address of the default route, so other machines on the LAN can read it. www asks the kernel which source address it would use to leave the machine, and the printed URL shows it. Over a full-tunnel VPN that is the tunnel's address.
+`prog --share [DIR]` serves a tree on the address of the default route, so other machines on the LAN can read it. prog asks the kernel which source address it would use to leave the machine, and the printed URL shows it. Over a full-tunnel VPN that is the tunnel's address.
 
-`WWW_SHARE`, eg `WWW_SHARE=mate.peer.home`, gives a bare `--share` another address, for `--kill --share` and `--restart --share` as well.
+`PROG_SHARE`, eg `PROG_SHARE=mate.peer.home`, gives a bare `--share` another address, for `--kill --share` and `--restart --share` as well.
 
-`--share=HOST` names the address instead, an IP or IP:PORT, joined with `=`: `--share 192.168.1.5` would read the address as the directory. Any IPv4 address the machine lets www bind will do, `0.0.0.0` included. A name will do too, such as `--share=mate.peer.home`: www binds the address it resolves to, which an interface here must hold.
+`--share=HOST` names the address instead, an IP or IP:PORT, joined with `=`: `--share 192.168.1.5` would read the address as the directory. Any IPv4 address the machine lets prog bind will do, `0.0.0.0` included. A name will do too, such as `--share=mate.peer.home`: prog binds the address it resolves to, which an interface here must hold.
 
-The printed URL carries the address's name when its reverse lookup resolves back to it, so a share on a WireGuard address with its own DNS prints `http://mate.peer.home/notes/`. Otherwise it carries the address. The port defaults to 80 where www may bind it, else 8080, as on loopback. `-a` takes only loopback addresses, so a typo there cannot share a tree.
+The printed URL carries the address's name when its reverse lookup resolves back to it, so a share on a WireGuard address with its own DNS prints `http://mate.peer.home/notes/`. Otherwise it carries the address. The port defaults to 80 where prog may bind it, else 8080, as on loopback. `-a` takes only loopback addresses, so a typo there cannot share a tree.
 
 A shared address gets a server of its own, apart from the loopback one. More trees join it with the same `--share` address. The lock is named after the address, such as `192.168.1.5-80.lock`, and deleting it stops the share.
 
-`www --kill --share` stops every tree on that address. `www --restart --share` moves the trees to a new binary. `www -l` lists shared trees with the rest.
+`prog --kill --share` stops every tree on that address. `prog --restart --share` moves the trees to a new binary. `prog -l` lists shared trees with the rest.
 
-On `0.0.0.0` the printed URL carries the machine's name, since the server answers on every address. `0.0.0.0` claims its port on every address, so it cannot bind a port that any listener holds, the loopback www included. www then fails with `E98` and names the listeners on that port. Share on one address, or give `0.0.0.0` another port.
+On `0.0.0.0` the printed URL carries the machine's name, since the server answers on every address. `0.0.0.0` claims its port on every address, so it cannot bind a port that any listener holds, the loopback prog included. prog then fails with `E98` and names the listeners on that port. Share on one address, or give `0.0.0.0` another port.
 
 ## What a visitor sees
 
 A shared tree mounts at its base name, eg `http://192.168.1.69/notes/`. The URL does not reveal where the tree lives on the machine.
 
-The server serves only what other users on the machine could read. A file needs the others-read bit, and every directory from the tree's root down to it needs others-read and others-execute. Links out of the tree follow the `.www-follow` rule as on loopback.
+The server serves only what other users on the machine could read. A file needs the others-read bit, and every directory from the tree's root down to it needs others-read and others-execute. Links out of the tree follow the `.prog-follow` rule as on loopback.
 
 Names that begin with a dot are neither listed nor served, at any depth, nor are links that lead to them inside the tree: `.git` holds the history and every deleted file.
 
@@ -827,7 +827,7 @@ note: other machines connect to 192.168.1.69:80; a firewall here may drop them u
       Check with: sudo tcpdump -ni wlp0s20f3 tcp port 80
 ```
 
-www cannot find out by itself. A firewall drops the connection before any socket sees it, reading the ruleset needs root, and a test from this machine goes through loopback and passes.
+prog cannot find out by itself. A firewall drops the connection before any socket sees it, reading the ruleset needs root, and a test from this machine goes through loopback and passes.
 
 Run the capture and load the URL on the other machine:
 
@@ -845,7 +845,7 @@ sudo nft insert rule inet <table> input ip saddr 192.168.1.0/24 tcp dport 80 acc
 
 ## Secret paths
 
-`--secret` mounts the tree under a random 128-bit token instead of its name, eg `http://192.168.1.5/lz7sjx3g2cvx54ev7ndbzf7i7q/`, and leaves it off the index. Only those holding the link reach it. `WWW_SECRET` sets a token of your own, of letters, digits, `-` and `_`. The command line takes none, since `ps` would show it to every local user.
+`--secret` mounts the tree under a random 128-bit token instead of its name, eg `http://192.168.1.5/lz7sjx3g2cvx54ev7ndbzf7i7q/`, and leaves it off the index. Only those holding the link reach it. `PROG_SECRET` sets a token of your own, of letters, digits, `-` and `_`. The command line takes none, since `ps` would show it to every local user.
 
 The token also guards against DNS rebinding. Without it, a hostile web page could read a share through the browser of a visitor on the same network.
 
@@ -853,7 +853,7 @@ The token lies in the tree's lockfile and in the private registry. `--restart` k
 
 # Speed
 
-www is fast. A page from a running server takes one to three milliseconds and a server starts in about 40 ms. A test in `make test` fails any page that takes over 5 ms.
+prog is fast. A page from a running server takes one to three milliseconds and a server starts in about 40 ms. A test in `make test` fails any page that takes over 5 ms.
 
 ## Git's answers
 
@@ -867,7 +867,7 @@ The cache holds only what someone has visited, with one exception. When a tree j
 
 In a large repo git can take a second for a history, because it reads every commit back to the ones that touched the path.
 
-When it takes over 100 ms, the history page says so and names `git commit-graph write --reachable --changed-paths`. That builds git's index of the paths each commit changed and makes such histories several times faster. www never writes to the repo itself.
+When it takes over 100 ms, the history page says so and names `git commit-graph write --reachable --changed-paths`. That builds git's index of the paths each commit changed and makes such histories several times faster. prog never writes to the repo itself.
 
 ## Benchmarks
 
@@ -904,7 +904,7 @@ Rules for the suite:
 
 - It reads the reader's binary from `TEST_BIN` and the public one from `TEST_PUBLIC_BIN`, and assumes nothing else about them
 - An HTTP or CLI case is a TOML file in `tests/cases/`: argv with expected stdout and exit code, or a request with the expected page. A parametrized test loads it
-- A case names the server forms it runs on: `public`, the public executable, or `default`, a reader's server, as wwwvm's unit runs it
+- A case names the server forms it runs on: `public`, the public executable, or `default`, a reader's server, as progvm's unit runs it
 - A case compares the page without its script and style, since a reader never sees their words
 - `tests/harness.py` seeds the cache on disk, since a public server clones only over https from the open internet. It is the one place the suite knows the cache's layout
 - Name each case after the decision it checks

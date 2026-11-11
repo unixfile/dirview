@@ -17,8 +17,9 @@ const pageBudget = 5 * time.Millisecond
 // cached: a doc of about 13,000 words, a code
 // page of render.go, a listing, histories and a commit's diff. Each takes
 // the median of 15 runs, so one slow run does not fail it. The doc is a
-// fixed text, www's README and doc/ as of 2026-11-11, so the measure
-// follows the code and not the growth of the docs.
+// fixed text, the README and doc/ as of 2026-11-11 with the program's
+// name replaced, since WORKING_NAME alone holds it. So the measure follows
+// the code and not the growth of the docs.
 func TestPageBudget(t *testing.T) {
 	if raceOn {
 		t.Skip("the race detector slows every page past the budget")
