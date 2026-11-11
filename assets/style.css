@@ -698,17 +698,20 @@ div.sourceCode
 @media screen {
 pre > code.sourceCode > span > a:first-child:hover::before { text-decoration: underline; }
 }
+/* Code has no italics: on this machine Firefox drew Iosevka's italic
+   with every letter blank whose italic shape differs, and the user
+   chose dropping them over chasing the cause. */
 code span.al { color: var(--syn-al); font-weight: bold; } /* Alert */
-code span.an { color: var(--syn-an); font-weight: bold; font-style: italic; } /* Annotation */
+code span.an { color: var(--syn-an); font-weight: bold; } /* Annotation */
 code span.at { color: var(--syn-at); } /* Attribute */
 code span.bn { color: var(--syn-bn); } /* BaseN */
 code span.bu { color: var(--syn-bu); } /* BuiltIn */
 code span.cf { color: var(--syn-cf); font-weight: bold; } /* ControlFlow */
 code span.ch { color: var(--syn-ch); } /* Char */
 code span.cn { color: var(--syn-cn); } /* Constant */
-code span.co { color: var(--syn-co); font-style: italic; } /* Comment */
-code span.cv { color: var(--syn-cv); font-weight: bold; font-style: italic; } /* CommentVar */
-code span.do { color: var(--syn-do); font-style: italic; } /* Documentation */
+code span.co { color: var(--syn-co); } /* Comment */
+code span.cv { color: var(--syn-cv); font-weight: bold; } /* CommentVar */
+code span.do { color: var(--syn-do); } /* Documentation */
 code span.dt { color: var(--syn-dt); } /* DataType */
 code span.dv { color: var(--syn-dv); } /* DecVal */
 code span.er { color: var(--syn-er); font-weight: bold; } /* Error */
@@ -716,7 +719,7 @@ code span.ex { } /* Extension */
 code span.fl { color: var(--syn-fl); } /* Float */
 code span.fu { color: var(--syn-fu); } /* Function */
 code span.im { color: var(--syn-im); font-weight: bold; } /* Import */
-code span.in { color: var(--syn-in); font-weight: bold; font-style: italic; } /* Information */
+code span.in { color: var(--syn-in); font-weight: bold; } /* Information */
 code span.kw { color: var(--syn-kw); font-weight: bold; } /* Keyword */
 code span.op { color: var(--syn-op); } /* Operator */
 code span.ot { color: var(--syn-ot); } /* Other */
@@ -726,7 +729,7 @@ code span.ss { color: var(--syn-ss); } /* SpecialString */
 code span.st { color: var(--syn-st); } /* String */
 code span.va { color: var(--syn-va); } /* Variable */
 code span.vs { color: var(--syn-vs); } /* VerbatimString */
-code span.wa { color: var(--syn-wa); font-weight: bold; font-style: italic; } /* Warning */
+code span.wa { color: var(--syn-wa); font-weight: bold; } /* Warning */
 /* Code in a document keeps the text colour: a document is read as prose,
-   and colour in it draws the eye from the words. Bold and italic stay. */
+   and colour in it draws the eye from the words. Bold stays. */
 body.doc code span[class] { color: inherit; }

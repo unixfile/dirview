@@ -149,6 +149,15 @@ def test_code_in_docs_carries_no_syntax_colour(servers, page):
     assert kw != text, (kw, text)
 
 
+# Code has no italics, since Firefox drew the installed Iosevka's italic
+# with letters missing. Named after "Fonts never come from the network",
+# whose commentary holds the evidence.
+def test_code_has_no_italics(origin, page):
+    page.goto(origin + PAGE, wait_until="load")
+    styles = page.evaluate("""[...new Set([...document.querySelectorAll("code span[class]")].map((s) => getComputedStyle(s).fontStyle))]""")
+    assert styles == ["normal"], styles
+
+
 # The lines below a 404 read at a listing's size. Named after "Error text
 # reads at listing size".
 def test_error_text_reads_at_listing_size(servers, page):
