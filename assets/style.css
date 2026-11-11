@@ -369,13 +369,14 @@ details.latest > div.versions { padding: 0.4em 0.8em; }
 ol.versions > li { padding: 0.15em 0.8em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 ol.versions > li.here { background: var(--target); }
 ol.versions > li.log { border-top: 1px solid var(--rule); margin-top: 0.3em; padding-top: 0.3em; }
-/* An error reads at a listing's size, not code's. It wraps, so it needs
-   no scroll box, which a pre has by default. */
-pre.error { white-space: pre-wrap; font-size: inherit; line-height: inherit; overflow: visible; }
+/* An error reads at a listing's size, not code's, and so do the lines
+   below a 404. It wraps, so it needs no scroll box, which a pre has by
+   default. */
+pre.error { white-space: pre-wrap; font-size: max(0.7em, 14px); line-height: inherit; overflow: visible; }
 /* A 404's table: a lead column of labels, then values that wrap beside
    it, so a long URL or subject keeps its column. Rows are spaced as a
    listing's. */
-table.gone { margin: 0; text-align: left; }
+table.gone { margin: 0; text-align: left; font-size: max(0.7em, 14px); }
 table.gone th, table.gone td { border: 0; padding: 0.075em 0; vertical-align: top; text-align: left; font-weight: normal; }
 table.gone th { padding-right: 1em; white-space: nowrap; }
 /* A missing path's 404 turns like a coin: the digits go edge-on and back,
@@ -726,3 +727,6 @@ code span.st { color: var(--syn-st); } /* String */
 code span.va { color: var(--syn-va); } /* Variable */
 code span.vs { color: var(--syn-vs); } /* VerbatimString */
 code span.wa { color: var(--syn-wa); font-weight: bold; font-style: italic; } /* Warning */
+/* Code in a document keeps the text colour: a document is read as prose,
+   and colour in it draws the eye from the words. Bold and italic stay. */
+body.doc code span[class] { color: inherit; }

@@ -54,3 +54,4 @@ func TestNoVisitedMark(t *testing.T) {
 		t.Error("the stylesheet styles visited links")
 	}
 }
+

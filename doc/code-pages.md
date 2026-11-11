@@ -1,6 +1,6 @@
 # Code pages
 
-Code in a fenced block with a known language is highlighted by chroma, as are code pages, whose language follows the file name.
+Code pages are highlighted by chroma, by the language the file name gives. A fenced block in a document is parsed the same way but shows in the text colour, since a document is read as prose; only bold keywords and italic comments remain.
 
 ## Highlighting speed
 

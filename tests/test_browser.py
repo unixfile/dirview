@@ -134,6 +134,33 @@ def test_a_document_s_code_fits_99_columns(servers, page):
     assert over > 0, (fits, over)
 
 
+# Code in a document keeps the text colour; a code page colours its
+# keywords. Named after "Code in docs carries no syntax colour".
+def test_code_in_docs_carries_no_syntax_colour(servers, page):
+    server = servers("public")
+    colours = """(() => [getComputedStyle(document.querySelector("code span.kw")).color,
+        getComputedStyle(document.body).color])()"""
+    server.get("/forge.invalid/acct/cols/code.md")
+    page.goto(server.origin + "/forge.invalid/acct/cols/code.md", wait_until="load")
+    kw, text = page.evaluate(colours)
+    assert kw == text, (kw, text)
+    page.goto(server.origin + PAGE, wait_until="load")
+    kw, text = page.evaluate(colours)
+    assert kw != text, (kw, text)
+
+
+# The lines below a 404 read at a listing's size. Named after "Error text
+# reads at listing size".
+def test_error_text_reads_at_listing_size(servers, page):
+    server = servers("public")
+    server.get("/forge.invalid/acct/r/")
+    page.goto(server.origin + "/forge.invalid/acct/r/", wait_until="load")
+    listing = page.evaluate("""getComputedStyle(document.querySelector("ul.listing")).fontSize""")
+    page.goto(server.origin + "/forge.invalid/acct/r/nope.md", wait_until="load")
+    gone = page.evaluate("""getComputedStyle(document.querySelector("table.gone")).fontSize""")
+    assert gone == listing, (gone, listing)
+
+
 # A code page holds 104 columns: 99 of code after a gutter of five cells,
 # which a four-digit line number and a space fill.
 def test_a_code_page_fits_99_columns_and_four_digits(servers, page):
