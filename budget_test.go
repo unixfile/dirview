@@ -14,26 +14,20 @@ import (
 const pageBudget = 5 * time.Millisecond
 
 // Every kind of page renders within pageBudget once its git answers are
-// cached: a doc of www's README and every file in doc/ joined, a code
+// cached: a doc of about 13,000 words, a code
 // page of render.go, a listing, histories and a commit's diff. Each takes
-// the median of 15 runs, so one slow run does not fail it.
+// the median of 15 runs, so one slow run does not fail it. The doc is a
+// fixed text, www's README and doc/ as of 2026-11-11, so the measure
+// follows the code and not the growth of the docs.
 func TestPageBudget(t *testing.T) {
 	if raceOn {
 		t.Skip("the race detector slows every page past the budget")
 	}
 	needGit(t)
 	dir := t.TempDir()
-	docs, err := filepath.Glob("doc/*.md")
+	readme, err := os.ReadFile("testdata/budget.md")
 	if err != nil {
 		t.Fatal(err)
-	}
-	var readme []byte
-	for _, name := range append([]string{"README.md"}, docs...) {
-		b, err := os.ReadFile(name)
-		if err != nil {
-			t.Fatal(err)
-		}
-		readme = append(append(readme, b...), '\n')
 	}
 	os.WriteFile(filepath.Join(dir, "README.md"), readme, 0o644)
 	b, err := os.ReadFile("render.go")
