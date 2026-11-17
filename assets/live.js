@@ -300,49 +300,88 @@
 		return t;
 	};
 	// A syntax tree arrives with its closed folds empty, each marked with
-	// its number, so a large file's page carries only what shows. A fold
-	// fetches its rows when it first opens. A search fetches the whole
-	// tree, swaps it in and filters again. Each request names the hash of
-	// the source the page showed; a file changed since gets 409, and the
-	// page reloads rather than mix two trees.
+	// its number, so a large file's page shows at once. A fold fetches its
+	// rows when it first opens. Once the page has loaded, it fetches the
+	// whole tree and fills each fold still empty in place, so the
+	// browser's own find reaches every row and the folds a reader opened
+	// stay open. A search waits for the fill. Each request names the hash
+	// of the source the page showed; a file changed since gets 409, and
+	// the page reloads rather than mix two trees. A tree still marked with
+	// its hash has folds to come.
 	const treePart = (tree, n) =>
 		fetch(location.pathname + "?tree&fold=" + n + "&sum=" + tree.dataset.sum).then((r) => {
 			if (r.status === 409) location.reload();
 			if (!r.ok) throw new Error("fold " + n + ": " + r.status);
 			return r.text();
 		});
-	let treeLoading = null;
-	const wholeTree = (tree) => {
-		if (treeLoading) return;
-		treeLoading = treePart(tree, "all")
+	// treeFill is the fill under way or done, and treeFailed says the last
+	// one failed. A failed fill is not tried again until the page reloads.
+	let treeFill = null;
+	let treeFailed = false;
+	const refilter = () => {
+		if (searching() && filters()) filterPage(box().value.trim());
+	};
+	const fillTree = (tree) => {
+		if (treeFill || treeFailed) return;
+		treeFill = treePart(tree, "all")
 			.then((h) => {
 				const t = document.createElement("template");
 				t.innerHTML = h;
-				tree.replaceWith(t.content);
-				const q = box() && !palOn() ? box().value.trim() : "";
-				if (q) filterPage(q);
+				// The whole tree's closed folds come in the order the
+				// page numbers them, and only its root is open.
+				const all = t.content.querySelectorAll("details:not([open])");
+				for (const d of tree.querySelectorAll("details[data-fold]")) {
+					const from = all[d.dataset.fold];
+					delete d.dataset.fold;
+					if (!from) continue;
+					const summary = from.querySelector(":scope > summary");
+					for (const n of [...from.childNodes]) if (n !== summary) d.append(n);
+				}
+				delete tree.dataset.sum;
+				refilter();
 			})
 			.catch(() => {
-				treeLoading = null;
+				treeFailed = true;
+				refilter();
 			});
 	};
+	document.addEventListener("DOMContentLoaded", () => {
+		const tree = document.querySelector("div.syntax[data-sum]");
+		if (!tree) return;
+		const idle = window.requestIdleCallback || ((f) => setTimeout(f, 0));
+		idle(() => fillTree(tree));
+	});
+	// A fold keeps its number until its rows are in, so the fill and the
+	// fold's own fetch never both put them there.
+	const foldLoading = new WeakSet();
 	// toggle does not bubble, so the listener captures it.
 	document.addEventListener(
 		"toggle",
 		(e) => {
 			const d = e.target;
-			if (!d.open || !d.matches("div.syntax details[data-fold]")) return;
+			if (!d.open || !d.matches("div.syntax details[data-fold]") || foldLoading.has(d)) return;
 			const n = d.dataset.fold;
-			delete d.dataset.fold;
+			foldLoading.add(d);
 			treePart(d.closest("div.syntax"), n)
-				.then((h) => d.insertAdjacentHTML("beforeend", h))
+				.then((h) => {
+					if (d.dataset.fold !== n) return;
+					delete d.dataset.fold;
+					d.insertAdjacentHTML("beforeend", h);
+				})
 				.catch(() => {
-					d.dataset.fold = n;
-					d.open = false;
-				});
+					if (d.dataset.fold === n) d.open = false;
+				})
+				.finally(() => foldLoading.delete(d));
 		},
 		true,
 	);
+	// treeNote says above a tree why a search over it is not whole.
+	const treeNote = (tree, text) => {
+		const p = document.createElement("p");
+		p.className = "unfound";
+		p.textContent = text;
+		tree.before(p);
+	};
 	// filterTree keeps each row of a syntax tree that holds q and the folds
 	// above it, opened so the row shows; unfilter closes them again. A kept
 	// fold with no match below it keeps all its rows, so opening it shows
@@ -378,10 +417,15 @@
 	// or goes whole. A file's name in a diff stays while its lines do.
 	const filter = (el, q, ranges) => {
 		let parts = null;
-		// A tree with folds still to come shows whole until it is in.
+		// A tree with folds still to come shows whole until they are in.
+		// If they cannot be had, the search covers the rows the page has.
 		if (el.matches("div.syntax[data-sum]")) {
-			wholeTree(el);
-			return true;
+			if (!treeFailed) {
+				fillTree(el);
+				treeNote(el, "fetching the folds not yet opened");
+				return true;
+			}
+			treeNote(el, "the folds not yet opened could not be fetched, so the search skips them");
 		}
 		if (el.matches("div.syntax")) {
 			const hide = [];
@@ -401,7 +445,7 @@
 		else if (el.matches("table")) parts = [...el.querySelectorAll(":scope > tbody > tr")];
 		else if (el.matches("main, div")) {
 			let any = false;
-			for (const c of el.children) if (filter(c, q, ranges)) any = true;
+			for (const c of [...el.children]) if (filter(c, q, ranges)) any = true;
 			for (const p of el.querySelectorAll(":scope > p.file")) {
 				const next = p.nextElementSibling;
 				if (p.hidden && next && next.matches("pre.diff") && !next.hidden) p.hidden = false;

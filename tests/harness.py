@@ -26,6 +26,7 @@ SEEDED = {
         "over.go": "package cols\n// " + "x" * 97 + "\n",
         "code.md": "# code\n\n```go\nfunc f() { return } // done\n```\n",
         "str.go": "package cols\n\n// f says hi.\nfunc f() string { return fmt.Sprint(\"hi\") }\n",
+        "tree.go": "package cols\n\nfunc outer() {\n\tif true {\n\t\tdeepName := 1\n\t\t_ = deepName\n\t}\n}\n\nfunc other() {\n\treturn\n}\n",
     },
 }
 

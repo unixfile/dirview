@@ -14,13 +14,13 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
-	"slices"
 	"strconv"
 	"strings"
 	"syscall"
 	"time"
 	"unicode"
 	"unicode/utf8"
+	"unsafe"
 )
 
 // A code page's syntax tree comes from a helper, <name>-syntax, built
@@ -186,17 +186,33 @@ func atoi(b []byte) (int, bool) {
 // codeCache keeps code pages, since a parse costs a process start.
 var syntaxCache = newCache(8 << 20)
 
-// synTree is a rendered syntax tree, its closed folds in document order,
-// and a hash of its source, which a request for a fold names.
+// synTree is a rendered syntax tree, where its root's rows start, its
+// closed folds in document order, and a hash of its source, which a
+// request for a fold names.
 type synTree struct {
 	html  string
+	root  int
 	folds []synFold
 	sum   string
 }
 
 // synFold is where a closed fold lies in a tree's rows: its opening tag,
-// its rows after its summary, and its closing tag.
-type synFold struct{ tag, body, end int }
+// its summary, its rows after the summary, and its closing tag.
+type synFold struct{ tag, summary, body, end int }
+
+// The tags that open a tree and a closed fold. page and lazy write them
+// again with a data attribute, at the offsets synRows notes after them.
+const (
+	synDiv     = `<div class="syntax"`
+	synDetails = `<details`
+)
+
+// syntaxSum names src in a request for a fold: the first six bytes of
+// its SHA-256, in hex.
+func syntaxSum(src []byte) string {
+	sum := sha256.Sum256(src)
+	return hex.EncodeToString(sum[:6])
+}
 
 // syntaxPage renders the syntax tree of src as nested folds: a node with
 // children folds them, and the root starts open, so the top-level
@@ -222,8 +238,10 @@ func syntaxPage(ctx context.Context, name, href string, src []byte) (*synTree, e
 		h = strings.Clone(h)
 		size = len(h)
 	}
-	t := &synTree{html: h, folds: slices.Clip(rows.folds), sum: hex.EncodeToString(sum[:6])}
-	syntaxCache.put(key, t, int64(size+len(t.folds)*24))
+	// append grows folds past its length, so the tree keeps an exact copy.
+	folds := append(make([]synFold, 0, len(rows.folds)), rows.folds...)
+	t := &synTree{html: h, root: rows.root, folds: folds, sum: hex.EncodeToString(sum[:6])}
+	syntaxCache.put(key, t, int64(size+cap(folds)*int(unsafe.Sizeof(synFold{}))))
 	return t, nil
 }
 
@@ -231,8 +249,7 @@ func syntaxPage(ctx context.Context, name, href string, src []byte) (*synTree, e
 // closed fold empty, marked with its number, so a large file's page
 // carries only the rows that show. A fold's rows come when it opens.
 func (t *synTree) page() string {
-	const div = `<div class="syntax">`
-	return `<div class="syntax" data-sum="` + t.sum + `">` + t.lazy(len(div), len(t.html), 0)
+	return synDiv + ` data-sum="` + t.sum + `"` + t.lazy(t.root, len(t.html), 0)
 }
 
 // fold is the rows of closed fold i, its own closed folds empty, or false
@@ -254,10 +271,10 @@ func (t *synTree) lazy(from, to, first int) string {
 	for i := first; i < len(t.folds) && t.folds[i].tag < to; {
 		f := t.folds[i]
 		b.WriteString(t.html[pos:f.tag])
-		b.WriteString(`<details data-fold="`)
+		b.WriteString(synDetails + ` data-fold="`)
 		b.WriteString(strconv.Itoa(i))
-		b.WriteString(`">`)
-		b.WriteString(t.html[f.tag+len("<details>") : f.body])
+		b.WriteString(`"`)
+		b.WriteString(t.html[f.summary:f.body])
 		// The fold's closing tag follows its rows, and the folds inside
 		// it are sent with it, when it opens.
 		pos = f.end
@@ -275,6 +292,7 @@ type synRows struct {
 	lines [][]byte
 	href  string
 	size  int // bytes of source
+	root  int // where synDiv ends in the rows, which page follows with its attribute
 	open  int // folds left open
 	held  synNode
 	any   bool // whether a node is held
@@ -287,7 +305,9 @@ type synRows struct {
 // newSynRows starts the rows of src's tree, with line links to href.
 func newSynRows(href string, src []byte) *synRows {
 	w := &synRows{lines: bytes.Split(src, []byte("\n")), href: href, size: len(src)}
-	w.b.WriteString("<div class=\"syntax\">\n")
+	w.b.WriteString(synDiv)
+	w.root = w.b.Len()
+	w.b.WriteString(">\n")
 	return w
 }
 
@@ -339,8 +359,8 @@ func (w *synRows) row(n synNode, folds bool) {
 		b.WriteString("<details open><summary>")
 	case folds:
 		w.stack = append(w.stack, len(w.folds))
-		w.folds = append(w.folds, synFold{tag: b.Len()})
-		b.WriteString("<details><summary>")
+		w.folds = append(w.folds, synFold{tag: b.Len(), summary: b.Len() + len(synDetails)})
+		b.WriteString(synDetails + "><summary>")
 	default:
 		b.WriteString("<div>")
 	}

@@ -64,7 +64,7 @@ func TestSyntaxFoldsComeWhenOpened(t *testing.T) {
 	} {
 		w.add(n)
 	}
-	tree := &synTree{html: w.done(), folds: w.folds, sum: "s"}
+	tree := &synTree{html: w.done(), root: w.root, folds: w.folds, sum: "s"}
 	if len(tree.folds) != 3 {
 		t.Fatalf("%d closed folds, want 3: %+v", len(tree.folds), tree.folds)
 	}
@@ -133,6 +133,21 @@ func TestSyntaxFoldRequests(t *testing.T) {
 	}
 	if rec := get(s.handler(), "/f.go?tree&fold=0&sum="+sum); strings.Contains(rec.Body.String(), "<html") {
 		t.Errorf("a fold came as a whole page: %s", rec.Body)
+	}
+	if sum != syntaxSum([]byte("func f() {\n\treturn\n}\n")) {
+		t.Errorf("the page's hash %s is not syntaxSum's", sum)
+	}
+	// A tree that cannot be had answers with an error, not a code page.
+	os.WriteFile(filepath.Join(dir, "f.txt"), []byte("text\n"), 0o644)
+	rec := get(s.handler(), "/f.txt?tree&fold=0&sum="+syntaxSum([]byte("text\n")))
+	if rec.Code != 500 || strings.Contains(rec.Body.String(), "<html") {
+		t.Errorf("a fold with no tree: %d %s", rec.Code, rec.Body)
+	}
+	// A stale request is answered from the hash alone, without the helper.
+	os.WriteFile(filepath.Join(dir, "f.go"), []byte("func g() {}\n"), 0o644)
+	t.Setenv("PATH", t.TempDir())
+	if rec := get(s.handler(), "/f.go?tree&fold=0&sum="+sum); rec.Code != 409 {
+		t.Errorf("a stale fold without the helper: %d %s", rec.Code, rec.Body)
 	}
 }
 

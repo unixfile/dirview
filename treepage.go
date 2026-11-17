@@ -189,6 +189,11 @@ func (t *tree) serveCode(w http.ResponseWriter, r *http.Request, name string, in
 		t.fail(w, r, name, http.StatusInternalServerError, err.Error())
 		return
 	}
+	q := r.URL.Query()
+	if q.Has("tree") && q.Has("fold") {
+		serveFold(w, r, name, b, q.Get("fold"), q.Get("sum"))
+		return
+	}
 	if !isText(b) {
 		t.serveRaw(w, r, name, info)
 		return
@@ -198,7 +203,6 @@ func (t *tree) serveCode(w http.ResponseWriter, r *http.Request, name string, in
 	// The links to the other views and to the raw file float over the
 	// code's top right corner; div.code bounds how far they follow the
 	// page down. A tree that cannot be had says why above the flat code.
-	q := r.URL.Query()
 	_, scoped := q["scopes"]
 	if _, ok := q["gron"]; ok && isJSON(name) {
 		out, err := gron(b)
@@ -223,10 +227,6 @@ func (t *tree) serveCode(w http.ResponseWriter, r *http.Request, name string, in
 	}
 	if _, ok := q["tree"]; ok {
 		tree, err := syntaxPage(r.Context(), name, pageHref(r.URL.Path), b)
-		if err == nil && q.Has("fold") {
-			serveFold(w, tree, q.Get("fold"), q.Get("sum"))
-			return
-		}
 		if err == nil {
 			rows := tree.page()
 			body.Grow(len(rows) + 1024)
@@ -253,14 +253,23 @@ func (t *tree) serveCode(w http.ResponseWriter, r *http.Request, name string, in
 	t.render(w, r, http.StatusOK, page{Title: name, Crumbs: t.crumbs(name), Kind: "code", Body: template.HTML(body.String())})
 }
 
-// serveFold sends the rows of a syntax tree's fold n, which a tree page
-// asks for when the fold first opens, or the whole tree for n "all",
-// which the page's search asks for before it filters. sum names the
-// source the page showed; a file changed since gets 409, and the page
-// reloads.
-func serveFold(w http.ResponseWriter, tree *synTree, n, sum string) {
-	if sum != tree.sum {
+// serveFold sends the rows of the syntax tree of src's fold n, which a
+// tree page asks for when the fold first opens, or the whole tree for n
+// "all", which the page asks for once it has loaded. sum names the source
+// the page showed; a file changed since gets 409, and the page reloads.
+// It answers before the rest of a code page's work, since the page that
+// asks has that already, and compares the hash before it parses, so a
+// stale request costs no parse. A tree that cannot be had gets 500, and
+// the page closes the fold again.
+func serveFold(w http.ResponseWriter, r *http.Request, name string, src []byte, n, sum string) {
+	if sum != syntaxSum(src) {
 		http.Error(w, "the file changed since the page was shown", http.StatusConflict)
+		return
+	}
+	tree, err := syntaxPage(r.Context(), name, pageHref(r.URL.Path), src)
+	if err != nil {
+		logErr("no syntax tree for %s: %v", name, err)
+		http.Error(w, "no syntax tree: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	rows := tree.html

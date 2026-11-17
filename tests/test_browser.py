@@ -1,5 +1,6 @@
 """Pages in a real browser, asserting layout and never pixels."""
 
+import re
 import shutil
 
 import pytest
@@ -142,11 +143,11 @@ def test_code_in_docs_carries_no_syntax_colour(servers, page):
         getComputedStyle(document.body).color])()"""
     server.get("/forge.invalid/acct/cols/code.md")
     page.goto(server.origin + "/forge.invalid/acct/cols/code.md", wait_until="load")
-    kw, text = page.evaluate(colours)
-    assert kw == text, (kw, text)
+    comment, text = page.evaluate(colours)
+    assert comment == text, (comment, text)
     page.goto(server.origin + PAGE, wait_until="load")
-    kw, text = page.evaluate(colours)
-    assert kw != text, (kw, text)
+    comment, text = page.evaluate(colours)
+    assert comment != text, (comment, text)
 
 
 # Code has no italics, since Firefox drew the installed Iosevka's italic
@@ -394,3 +395,50 @@ def test_the_versions_drop_over_the_view_links(servers, page):
         })"""
     )
     assert got == [True, True, True, True], got
+
+
+TREE = "/forge.invalid/acct/cols/tree.go?tree"
+TREE_STATE = """(() => {
+    const t = document.querySelector("div.syntax");
+    const fns = [...t.querySelectorAll("details")].filter((d) => d.querySelector(":scope > summary b").textContent === "function_declaration");
+    return { lazy: "sum" in t.dataset, empty: t.querySelectorAll("details[data-fold]").length,
+        deep: t.textContent.includes("deepName"), open: fns.map((d) => d.open),
+        note: [...document.querySelectorAll("p.unfound")].map((p) => p.textContent) };
+})()"""
+
+
+# A tree page arrives with its closed folds empty, then fills them in
+# place once it has loaded, so the browser's own find reaches every row.
+# A fold the reader opened stays open through a search and its end.
+def test_tree_fills_its_folds(servers, page):
+    server = servers("public")
+    server.get(TREE)
+    page.goto(server.origin + TREE, wait_until="load")
+    page.wait_for_selector("div.syntax:not([data-sum])", state="attached")
+    got = page.evaluate(TREE_STATE)
+    assert got["empty"] == 0 and got["deep"], got
+    assert got["open"] == [False, False], got
+    page.click("div.syntax details:has(> summary > b:text-is('function_declaration')) > summary > b")
+    page.click("input.search")
+    page.keyboard.type("deepName")
+    page.wait_for_selector("div.syntax [hidden]", state="attached")
+    page.keyboard.press("Escape")
+    got = page.evaluate(TREE_STATE)
+    assert got["open"] == [True, False], got
+
+
+# When the whole tree cannot be had, a search covers the rows the page
+# has and says so, rather than show the tree as if all of it matched.
+def test_tree_search_without_its_folds(servers, page):
+    server = servers("public")
+    server.get(TREE)
+    page.route(re.compile(r"fold=all"), lambda route: route.abort())
+    page.goto(server.origin + TREE, wait_until="load")
+    page.click("input.search")
+    page.keyboard.type("other")
+    page.wait_for_selector("p.unfound:has-text('could not')")
+    got = page.evaluate(TREE_STATE)
+    # A page closed with a route still in place hangs Playwright.
+    page.unroute_all(behavior="ignoreErrors")
+    assert got["lazy"] and got["note"] == ["the folds not yet opened could not be fetched, so the search skips them"], got
+
