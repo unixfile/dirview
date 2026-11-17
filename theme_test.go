@@ -21,7 +21,7 @@ func TestColourMode(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, w := range []string{`:root[data-theme="dark"] { color-scheme: dark; }`, `:root[data-theme="light"] { color-scheme: light; }`,
-		`--page: light-dark(#f6f6f6, #1c1c1c);`, `:root[data-theme="green"], header details.theme button[data-theme="green"] {`, `--page: #0b0f0b;`, `code span.kw { color: var(--syn-kw);`, `:root:not([data-theme]) summary > span[data-theme="system"]`, `button[data-theme="light"] { color-scheme: light; }`,
+		`--page: light-dark(#f6f6f6, #1c1c1c);`, `:root[data-theme="green"], header details.theme button[data-theme="green"] {`, `--page: #0b0f0b;`, `code span.st { color: var(--syn-string);`, `:root:not([data-theme]) summary > span[data-theme="system"]`, `button[data-theme="light"] { color-scheme: light; }`,
 		`button[data-theme="system"] { color-scheme: light dark; }`, `button[data-theme="dark"] { color-scheme: dark; }`} {
 		if !strings.Contains(string(css), w) {
 			t.Errorf("the stylesheet lacks %s", w)

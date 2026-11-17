@@ -30,35 +30,11 @@
   --shade: light-dark(#ebebeb, #111111);
   /* The syntax colours. Code needs few: strings in one colour, comments
      muted, keywords bold in the text colour, the rest text. Errors keep
-     their red. The user chose this on 2026-11-12 from a sketch of four. */
-  --syn-al: light-dark(#ff0000, #ff6b6b);
-  --syn-an: var(--muted);
-  --syn-at: currentColor;
-  --syn-bn: currentColor;
-  --syn-bu: currentColor;
-  --syn-cf: currentColor;
-  --syn-ch: light-dark(#4070a0, #8fb3d9);
-  --syn-cn: currentColor;
-  --syn-co: var(--muted);
-  --syn-cv: var(--muted);
-  --syn-do: var(--muted);
-  --syn-dt: currentColor;
-  --syn-dv: currentColor;
-  --syn-er: light-dark(#ff0000, #ff6b6b);
-  --syn-fl: currentColor;
-  --syn-fu: currentColor;
-  --syn-im: currentColor;
-  --syn-in: var(--muted);
-  --syn-kw: currentColor;
-  --syn-op: currentColor;
-  --syn-ot: currentColor;
-  --syn-pp: currentColor;
-  --syn-sc: light-dark(#4070a0, #8fb3d9);
-  --syn-ss: light-dark(#4070a0, #8fb3d9);
-  --syn-st: light-dark(#4070a0, #8fb3d9);
-  --syn-va: currentColor;
-  --syn-vs: light-dark(#4070a0, #8fb3d9);
-  --syn-wa: var(--muted);
+     their red. The user chose this on 2026-11-12 from a sketch of four.
+     A palette sets the two colours of its own; the rules for code spans
+     give the rest the text or the muted colour. */
+  --syn-alert: light-dark(#ff0000, #ff6b6b);
+  --syn-string: light-dark(#4070a0, #8fb3d9);
 }
 /* green is a palette of its own, picked only in the menu: green text on
    near black, soft rather than bright, so a long read does not glare.
@@ -83,34 +59,8 @@
   --shadow: #000000;
   --light: #1c2a1c;
   --shade: #060906;
-  --syn-al: #ff6b6b;
-  --syn-an: var(--muted);
-  --syn-at: currentColor;
-  --syn-bn: currentColor;
-  --syn-bu: currentColor;
-  --syn-cf: currentColor;
-  --syn-ch: #c8dc8a;
-  --syn-cn: currentColor;
-  --syn-co: var(--muted);
-  --syn-cv: var(--muted);
-  --syn-do: var(--muted);
-  --syn-dt: currentColor;
-  --syn-dv: currentColor;
-  --syn-er: #ff6b6b;
-  --syn-fl: currentColor;
-  --syn-fu: currentColor;
-  --syn-im: currentColor;
-  --syn-in: var(--muted);
-  --syn-kw: currentColor;
-  --syn-op: currentColor;
-  --syn-ot: currentColor;
-  --syn-pp: currentColor;
-  --syn-sc: #c8dc8a;
-  --syn-ss: #c8dc8a;
-  --syn-st: #c8dc8a;
-  --syn-va: currentColor;
-  --syn-vs: #c8dc8a;
-  --syn-wa: var(--muted);
+  --syn-alert: #ff6b6b;
+  --syn-string: #c8dc8a;
 }
 :root[data-theme="dark"] { color-scheme: dark; }
 :root[data-theme="light"] { color-scheme: light; }
@@ -703,35 +653,22 @@ pre > code.sourceCode > span > a:first-child:hover::before { text-decoration: un
 /* Code has no italics: on this machine Firefox drew Iosevka's italic
    with every letter blank whose italic shape differs, and the user
    chose dropping them over chasing the cause. */
-code span.al { color: var(--syn-al); font-weight: bold; } /* Alert */
-code span.an { color: var(--syn-an); } /* Annotation */
-code span.at { color: var(--syn-at); } /* Attribute */
-code span.bn { color: var(--syn-bn); } /* BaseN */
-code span.bu { color: var(--syn-bu); } /* BuiltIn */
-code span.cf { color: var(--syn-cf); font-weight: bold; } /* ControlFlow */
-code span.ch { color: var(--syn-ch); } /* Char */
-code span.cn { color: var(--syn-cn); } /* Constant */
-code span.co { color: var(--syn-co); } /* Comment */
-code span.cv { color: var(--syn-cv); } /* CommentVar */
-code span.do { color: var(--syn-do); } /* Documentation */
-code span.dt { color: var(--syn-dt); } /* DataType */
-code span.dv { color: var(--syn-dv); } /* DecVal */
-code span.er { color: var(--syn-er); font-weight: bold; } /* Error */
-code span.ex { } /* Extension */
-code span.fl { color: var(--syn-fl); } /* Float */
-code span.fu { color: var(--syn-fu); } /* Function */
-code span.im { color: var(--syn-im); } /* Import */
-code span.in { color: var(--syn-in); } /* Information */
-code span.kw { color: var(--syn-kw); font-weight: bold; } /* Keyword */
-code span.op { color: var(--syn-op); } /* Operator */
-code span.ot { color: var(--syn-ot); } /* Other */
-code span.pp { color: var(--syn-pp); } /* Preprocessor */
-code span.sc { color: var(--syn-sc); } /* SpecialChar */
-code span.ss { color: var(--syn-ss); } /* SpecialString */
-code span.st { color: var(--syn-st); } /* String */
-code span.va { color: var(--syn-va); } /* Variable */
-code span.vs { color: var(--syn-vs); } /* VerbatimString */
-code span.wa { color: var(--syn-wa); } /* Warning */
+/* Spans of other classes keep the text colour. */
+code span.al { color: var(--syn-alert); font-weight: bold; } /* Alert */
+code span.an { color: var(--muted); } /* Annotation */
+code span.cf { font-weight: bold; } /* ControlFlow */
+code span.ch { color: var(--syn-string); } /* Char */
+code span.co { color: var(--muted); } /* Comment */
+code span.cv { color: var(--muted); } /* CommentVar */
+code span.do { color: var(--muted); } /* Documentation */
+code span.er { color: var(--syn-alert); font-weight: bold; } /* Error */
+code span.in { color: var(--muted); } /* Information */
+code span.kw { font-weight: bold; } /* Keyword */
+code span.sc { color: var(--syn-string); } /* SpecialChar */
+code span.ss { color: var(--syn-string); } /* SpecialString */
+code span.st { color: var(--syn-string); } /* String */
+code span.vs { color: var(--syn-string); } /* VerbatimString */
+code span.wa { color: var(--muted); } /* Warning */
 /* Code in a document keeps the text colour: a document is read as prose,
    and colour in it draws the eye from the words. Bold stays. */
 body.doc code span[class] { color: inherit; }
