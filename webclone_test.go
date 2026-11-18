@@ -66,3 +66,32 @@ func TestWebCloneWaitsForASlot(t *testing.T) {
 		t.Errorf("clone after a slot frees: %d\n%s", rec.Code, rec.Body)
 	}
 }
+
+// A feed request on a copy over webRefresh old waits for the fetch it
+// starts and answers with the new commit, since a feed reader does not
+// reload. A page answers at once from the old copy.
+func TestWebFeedWaitsForFetch(t *testing.T) {
+	f := newForge(t, nil)
+	f.repo(t, "acct/r", map[string]string{"README.md": "one\n"})
+	w := testWeb(t, defaultDisk)
+	page, feed := "/"+f.host+"/acct/r/README.md", "/"+f.host+"/acct/r/?log=rss"
+	read(t, w, page)
+	f.repo(t, "acct/r", map[string]string{"README.md": "two\n"})
+	r := w.repos[f.host+"/acct/r"]
+	age := func() {
+		r.mu.Lock()
+		r.fetched, r.tried = time.Now().Add(-time.Hour), time.Now().Add(-time.Hour)
+		r.mu.Unlock()
+	}
+	age()
+	if body := webGet(w, page).Body.String(); !strings.Contains(body, "one") {
+		t.Fatalf("a page waited for the fetch:\n%s", body)
+	}
+	w.wg.Wait()
+	f.repo(t, "acct/r", map[string]string{"README.md": "three\n"})
+	age()
+	rec := webGet(w, feed)
+	if rec.Code != http.StatusOK || strings.Count(rec.Body.String(), "<item>") != 3 {
+		t.Fatalf("the feed did not wait for the fetch: %d\n%s", rec.Code, rec.Body)
+	}
+}

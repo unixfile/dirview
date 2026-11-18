@@ -84,8 +84,8 @@ func (t *tree) serve(w http.ResponseWriter, r *http.Request) {
 		t.serveBacklinks(w, r, name)
 		return
 	}
-	if log, ok := r.URL.Query()["log"]; ok {
-		if log[0] == "rss" {
+	if _, ok := r.URL.Query()["log"]; ok {
+		if isFeed(r) {
 			t.serveFeed(w, r, name, info.IsDir())
 			return
 		}

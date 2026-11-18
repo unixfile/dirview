@@ -46,7 +46,7 @@ Delete the directory any time; www fetches what it needs again.
 
 ## Staying current
 
-A visit to a repo fetched over five minutes ago serves the cached commit at once and fetches in the background. When the branch moved, www builds the new commit's worktree beside the old one and swaps the link, so no page sees a half-updated tree. Open pages reload onto the new commit.
+A visit to a repo fetched over five minutes ago serves the cached commit at once and fetches in the background. A feed request is the exception: it waits for the fetch, see `doc/history.md`. When the branch moved, www builds the new commit's worktree beside the old one and swaps the link, so no page sees a half-updated tree. Open pages reload onto the new commit.
 
 The header of every page in the repo names the commit shown by its stardate, eg `@ 261029.3`, as a version's crumbs name a commit. Its hash and time show on hover. The stardate links the page in that commit's version, which stays put after the next fetch. A commit off the main line shows its hash instead.
 

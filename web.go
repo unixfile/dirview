@@ -182,7 +182,8 @@ type webRepo struct {
 	fetched  time.Time // the last fetch that worked
 	tried    time.Time // the last fetch begun
 	fetching bool
-	failed   string // why the last fetch failed, or ""
+	fetchEnd chan struct{} // closed when the fetch under way ends
+	failed   string        // why the last fetch failed, or ""
 	used     time.Time
 	named    shownCommit // the worktree's commit as the header names it, read once per worktree
 }
@@ -247,8 +248,7 @@ func (w *web) serve(rw http.ResponseWriter, r *http.Request, t *tree) {
 		t = nil
 	}
 	if t != nil {
-		w.visit(t.web)
-		t.serve(rw, r)
+		w.serveRepo(rw, r, t)
 		return
 	}
 	// Below, p and every key are paths from the server's root; what is
@@ -301,8 +301,7 @@ func (w *web) serve(rw http.ResponseWriter, r *http.Request, t *tree) {
 			return
 		}
 		if t := w.srv.lookup(r.URL.Path); t != nil {
-			w.visit(t.web)
-			t.serve(rw, r)
+			w.serveRepo(rw, r, t)
 			return
 		}
 	}
@@ -391,9 +390,9 @@ func validHost(h string) bool {
 
 // visit notes a request for repo r, which keeps it in the cache, and
 // fetches it again in the background when its last fetch is old.
-func (w *web) visit(r *webRepo) {
+func (w *web) visit(r *webRepo) <-chan struct{} {
 	if r == nil {
-		return
+		return nil
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -402,9 +401,44 @@ func (w *web) visit(r *webRepo) {
 		touch(filepath.Join(r.dir, ".used"))
 	}
 	if !r.fetching && time.Since(r.fetched) > webRefresh && time.Since(r.tried) > webRefresh {
-		r.fetching, r.tried = true, time.Now()
+		r.fetching, r.tried, r.fetchEnd = true, time.Now(), make(chan struct{})
 		w.wg.Go(func() { w.refresh(r) })
 	}
+	if !r.fetching {
+		return nil
+	}
+	return r.fetchEnd
+}
+
+// feedWait bounds how long a feed request waits for a fetch. A feed
+// reader gives up on a slow answer, and a stale feed beats none.
+const feedWait = 30 * time.Second
+
+// serveRepo serves a page of a cached repo, after a visit that fetches
+// a copy over webRefresh old. A page answers at once from the copy and
+// marks the change on reload. A feed request waits for the fetch, up to
+// feedWait, then answers from the tree it brought: a feed reader does not
+// reload, so an answer from the old copy would lag one poll behind.
+func (w *web) serveRepo(rw http.ResponseWriter, r *http.Request, t *tree) {
+	end := w.visit(t.web)
+	if end != nil && isFeed(r) {
+		wait := time.NewTimer(feedWait)
+		select {
+		case <-end:
+		case <-wait.C:
+			logInfo("feed of %s answers from the old copy: the fetch took over %s", t.web.key, seconds(feedWait))
+		case <-r.Context().Done():
+			wait.Stop()
+			return
+		}
+		wait.Stop()
+		t.web.mu.Lock()
+		if t.web.tree != nil {
+			t = t.web.tree
+		}
+		t.web.mu.Unlock()
+	}
+	t.serve(rw, r)
 }
 
 func touch(p string) {

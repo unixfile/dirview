@@ -21,6 +21,12 @@ const feedLen = 50
 // feedQuery is the query that asks for a history as a feed.
 const feedQuery = "log=rss"
 
+// isFeed reports whether r asks for a history as a feed.
+func isFeed(r *http.Request) bool {
+	log, ok := r.URL.Query()["log"]
+	return ok && log[0] == "rss"
+}
+
 // serveFeed answers name's history as an RSS 2.0 feed: one item per
 // commit, newest first, its subject as title and its commit page as link.
 // The feed is the history in a second form, so it reads the same commits

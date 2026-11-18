@@ -46,7 +46,7 @@ Links are absolute, since a reader shows them away from the page. They take the 
 
 The feed has an ETag, so a reader that polls gets 304 until a commit changes it. A byte that XML forbids, eg a control character in a message, becomes U+FFFD, so one message cannot break the feed.
 
-On the web address a feed request is a visit, so it fetches a copy over five minutes old. It answers from the copy at hand and fetches afterwards, so a poll shows commits as of the fetch the poll before set going. `www-public` serves feeds too.
+On the web address a feed request is a visit, so it fetches a copy over five minutes old. A page answers from the copy at hand and reloads after the fetch, but a feed reader does not reload. So a feed request waits for the fetch, up to 30 seconds, and answers from the tree it brought. A fetch that takes longer, or fails, leaves the feed as the copy had it. `www-public` serves feeds too.
 
 ## Commit pages
 

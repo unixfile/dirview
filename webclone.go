@@ -209,6 +209,10 @@ func (w *web) refresh(r *webRepo) {
 	defer func() {
 		r.mu.Lock()
 		r.fetching, r.failed = false, failed
+		if r.fetchEnd != nil {
+			close(r.fetchEnd)
+			r.fetchEnd = nil
+		}
 		if failed == "" {
 			r.fetched = time.Now()
 		}
