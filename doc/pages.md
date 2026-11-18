@@ -66,7 +66,7 @@ A page outlives its server. After three seconds without it, a line over the page
 
 Each page holds a server-sent events stream while its tab is visible. A hidden tab lets go, since a browser opens at most six connections to one host, and checks again when shown.
 
-The server watches the directory of each open page and its repo's git directory through inotify, since editors save by renaming a new file over the old one. It polls every second where inotify fails.
+The server watches the directory of each open page and its repo's git directory through inotify, since editors save by renaming a new file over the old one. It polls every second where inotify fails, and while an open page is on a network mount, where inotify misses changes made on another host.
 
 ## Look
 

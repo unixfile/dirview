@@ -226,6 +226,27 @@ func TestPollingFallback(t *testing.T) {
 	}
 }
 
+// A tree on a network mount makes the server poll, so it sees its lock
+// change though inotify reports nothing. Rewriting the lock in place
+// stands in for a change made on the far host: lockMask holds no event
+// for a write.
+func TestPollsNetworkMount(t *testing.T) {
+	ep := testEndpoint(t)
+	dir := t.TempDir()
+	old := remoteFS
+	remoteFS = func(d string) (string, bool) { return "FUSE", d == dir }
+	t.Cleanup(func() { remoteFS = old })
+	_, served := start(t, config{dir: dir, ep: ep})
+	if err := os.WriteFile(filepath.Join(dir, lockName(ep)), []byte("url: x\npid: 1\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-served:
+	case <-time.After(3 * time.Second):
+		t.Fatal("server on a network mount missed its replaced lock")
+	}
+}
+
 // A server starting on an endpoint clears links and locks a crash left.
 func TestStartDropsLeftovers(t *testing.T) {
 	ep := testEndpoint(t)

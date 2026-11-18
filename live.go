@@ -100,7 +100,7 @@ func (l *live) subscribe(path string, dirs []string) (wake chan struct{}, releas
 }
 
 // loop wakes every page once a change has settled, and every second when
-// inotify is unavailable. Each page checks its own version.
+// inotify is unavailable or an open page is on a network mount. Each page checks its own version.
 func (l *live) loop() {
 	tick := time.NewTicker(time.Second)
 	defer tick.Stop()
@@ -119,7 +119,7 @@ func (l *live) loop() {
 			default:
 			}
 		case <-tick.C:
-			if !l.w.poll.Load() {
+			if !l.w.polling() {
 				continue
 			}
 		}

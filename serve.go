@@ -602,7 +602,7 @@ func (h *hub) sync() bool {
 }
 
 // loop syncs whenever the watcher sees a change, and every second when
-// inotify is unavailable.
+// inotify is unavailable or a tree is on a network mount.
 func (h *hub) loop() {
 	tick := time.NewTicker(time.Second)
 	defer tick.Stop()
@@ -610,7 +610,7 @@ func (h *hub) loop() {
 		select {
 		case <-h.w.wake:
 		case <-tick.C:
-			if !h.w.poll.Load() {
+			if !h.w.polling() {
 				continue
 			}
 		}
