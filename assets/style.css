@@ -273,9 +273,15 @@ ol.log { list-style: none; padding: 0; }
 ol.log > li { margin: 0 0 0.4em; }
 ol.log summary { cursor: pointer; text-align: left; }
 ol.log summary > .own { color: var(--muted); font-size: 0.8em; }
-/* A history is a list of subjects, scanned like a listing, so they take
-   the listing's size; the open fold's message stays prose. */
-ol.log summary > .subject { font-size: max(0.7em, 14px); }
+/* The stardate sits small on its own line above the subject, so the
+   subject keeps the column's full width at prose size. */
+ol.log summary > .lead { display: block; min-width: 0; margin: 0; line-height: 1.3; }
+/* The browser's marker would take a line of its own above the stardate,
+   so the stardate's line carries it: ▸ closed, ▾ open. */
+ol.log summary { list-style: none; }
+ol.log summary::-webkit-details-marker { display: none; }
+ol.log summary > .lead::before { content: "▸ "; }
+ol.log details[open] > summary > .lead::before { content: "▾ "; }
 ol.log details[open] { margin-bottom: 2em; }
 ol.log details > p { margin: 0.45em 0 0.45em 1.2em; text-align: left; }
 ol.log div.diffs > p.own:only-child, ol.log p.links { margin-left: 1.2em; }

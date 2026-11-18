@@ -216,14 +216,10 @@ func (t *tree) serveLog(w http.ResponseWriter, r *http.Request, name string, dir
 	// inside it. A local tree links each commit's version of the page:
 	// the file or directory as it was then.
 	browse := t.historyInVersions(r.Context(), name)
-	// Each row leads with its stardate, so they line up down the history.
-	// A pending commit's day and x stands alone, so the column stays a
-	// stardate wide; its hash is on hover and in the fold.
-	labels := make([]string, len(log))
-	for i := range log {
-		labels[i] = stars.label(&log[i])
-	}
-	body.WriteString("<ol class=\"log\"" + leadStyle(labels) + ">\n")
+	// Each row's stardate sits on its own line above the subject, so it
+	// takes no width from it. A pending commit's day and x stands alone;
+	// its hash is on hover and in the fold.
+	body.WriteString("<ol class=\"log\">\n")
 	for i := range log {
 		c := &log[i]
 		show := esc("?commit=" + c.hash)
@@ -233,7 +229,7 @@ func (t *tree) serveLog(w http.ResponseWriter, r *http.Request, name string, dir
 		}
 		fmt.Fprintf(&body, "<li><details data-diff=\"%s\">\n<summary><span class=\"own lead\">%s</span> <span class=\"subject\">%s</span></summary>\n"+
 			"<p class=\"own links\">commit <a href=\"%s\">%s</a>%s</p>\n",
-			show, commitLine(labels[i], c), esc(c.subject), show, esc(c.hash), then)
+			show, commitLine(stars.label(c), c), esc(c.subject), show, esc(c.hash), then)
 		for _, para := range paragraphs(c.body) {
 			body.WriteString("<p>" + para + "</p>\n")
 		}
