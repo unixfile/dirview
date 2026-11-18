@@ -99,8 +99,13 @@ func TestPendingVersion(t *testing.T) {
 	if body := get(h, "/a/b.go").Body.String(); !strings.Contains(body, `title="`+star+` · `) {
 		t.Errorf("top line names no %s:\n%s", star, body)
 	}
-	if body := get(h, "/a/b.go?log").Body.String(); !strings.Contains(body, ">"+star+" "+short+"</span>") {
-		t.Errorf("history names no %s %s:\n%s", star, short, body)
+	// The history keeps its stardate column narrow, so the hash waits on
+	// hover; the timeline's rows still show it.
+	if body := get(h, "/a/b.go?log").Body.String(); !strings.Contains(body, `<span class="date" title="`+short+` `) || !strings.Contains(body, ">"+star+"</span>") || strings.Contains(body, star+" "+short) {
+		t.Errorf("history does not name %s alone, with %s on hover:\n%s", star, short, body)
+	}
+	if body := get(h, "/a/b.go?timeline").Body.String(); !strings.Contains(body, ">"+star+" "+short+"</span>") {
+		t.Errorf("timeline names no %s %s:\n%s", star, short, body)
 	}
 	rec := get(h, "/@"+short+"/a/")
 	if rec.Code != 200 || !strings.Contains(rec.Body.String(), " @ "+star+"</a>") {

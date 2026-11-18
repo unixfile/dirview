@@ -273,6 +273,9 @@ ol.log { list-style: none; padding: 0; }
 ol.log > li { margin: 0 0 0.4em; }
 ol.log summary { cursor: pointer; text-align: left; }
 ol.log summary > .own { color: var(--muted); font-size: 0.8em; }
+/* A history is a list of subjects, scanned like a listing, so they take
+   the listing's size; the open fold's message stays prose. */
+ol.log summary > .subject { font-size: max(0.7em, 14px); }
 ol.log details[open] { margin-bottom: 2em; }
 ol.log details > p { margin: 0.45em 0 0.45em 1.2em; text-align: left; }
 ol.log div.diffs > p.own:only-child, ol.log p.links { margin-left: 1.2em; }

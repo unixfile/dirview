@@ -6,7 +6,7 @@ A listing whose directory has commits opens its history from `<(git log)` on its
 
 ## A history's lines
 
-The stardate leads each line, so the stardates line up, and the version menu orders its rows the same way. A commit with no message shows its day alone. Hover shows the hash and the exact time.
+The stardate leads each line, so the stardates line up, and the version menu orders its rows the same way. Subjects take a listing's size, since a history is scanned like one; an open fold's message reads at prose size. A commit with no message shows its day alone. Hover shows the hash and the exact time.
 
 A line opens to the commit's full message and its diff, limited to the path. The diff loads when the line first opens. Bodies wrapped by hand join into paragraphs; a list item or an indented line keeps its own line.
 
@@ -18,7 +18,7 @@ Each commit shows its stardate, eg 261024.4, the fourth commit of 24 Oct 2026 on
 
 A commit a merge brought in is named after the merge, eg 261024.4.2.
 
-A commit on the local main or master that origin's line has not reached yet shows its day and x, eg 261026.x. Its number comes with the push, so a rebase before it renames nothing. Several commits can share a day and x, so a history or the timeline adds each one's short hash, eg 261026.x 6376dd4. Its version's address uses the hash.
+A commit on the local main or master that origin's line has not reached yet shows its day and x, eg 261026.x. Its number comes with the push, so a rebase before it renames nothing. Several commits can share a day and x, so the timeline adds each one's short hash, eg 261026.x 6376dd4. A history shows the day and x alone, to keep its stardate column narrow; the hash is on hover and in the fold. Its version's address uses the hash.
 
 A commit on no main line, eg on another branch, shows its short hash.
 

@@ -217,9 +217,11 @@ func (t *tree) serveLog(w http.ResponseWriter, r *http.Request, name string, dir
 	// the file or directory as it was then.
 	browse := t.historyInVersions(r.Context(), name)
 	// Each row leads with its stardate, so they line up down the history.
+	// A pending commit's day and x stands alone, so the column stays a
+	// stardate wide; its hash is on hover and in the fold.
 	labels := make([]string, len(log))
 	for i := range log {
-		labels[i] = stars.rowLabel(&log[i])
+		labels[i] = stars.label(&log[i])
 	}
 	body.WriteString("<ol class=\"log\"" + leadStyle(labels) + ">\n")
 	for i := range log {
