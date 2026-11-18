@@ -39,7 +39,7 @@ origin, base = sys.argv[1], sys.argv[2]
 def fetch(url, *args, **kwargs):
     if url.startswith("data:") or url.startswith(origin + "/"):
         return weasyprint.default_url_fetcher(url, *args, **kwargs)
-    raise ValueError("www fetches nothing beyond its own server: " + url)
+    raise ValueError("the PDF takes nothing beyond its own server: " + url)
 weasyprint.HTML(string=sys.stdin.buffer.read().decode(), base_url=base, url_fetcher=fetch).write_pdf(sys.stdout.buffer)
 `
 
@@ -167,7 +167,7 @@ func interpreter(prog string) ([]string, error) {
 	if f := strings.Fields(cmd); ok && len(f) > 0 {
 		return f, nil
 	}
-	return nil, errors.New(prog + " is not a Python script, so www cannot run its module")
+	return nil, errors.New(prog + " is not a Python script, so " + progName + " cannot run its module")
 }
 
 // lastLine is the last line of s that holds text: a Python traceback
