@@ -47,7 +47,7 @@ www-public --disk=6G -a 127.0.0.1:8080
                             serve online repos to the web, behind a proxy
 ```
 
-Add `?log` to any page's URL for its history.
+Add `?log` to any page's URL for its history, or `?log=rss` for the same as a feed.
 
 To read a repo from GitHub, open `http://127.31.1.2/github.com/junegunn/fzf/`.
 
@@ -66,7 +66,7 @@ www needs git.
 - [Pages](doc/pages.md): URLs, how docs and listings render, links, live reload and the look
 - [Code pages](doc/code-pages.md): highlighting, line links, scope boxes, the syntax tree, gron and the switch between JSON, YAML and keyval
 - [Search and controls](doc/search.md): the search box, keys, the `:` command list, the copy buttons and when controls fade
-- [History](doc/history.md): histories, commits, stardates, the timeline and old versions of a tree
+- [History](doc/history.md): histories, their feeds, commits, stardates, the timeline and old versions of a tree
 - [Online repos](doc/online-repos.md): reading a forge's repos on the second address, or serving them to the web
 - [Sharing](doc/sharing.md): serving a tree to other machines
 - [Safety](doc/safety.md): what www refuses to serve, follow or run

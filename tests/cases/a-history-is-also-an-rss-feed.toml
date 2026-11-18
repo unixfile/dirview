@@ -1,0 +1,15 @@
+# A repo's history comes as an RSS feed, and the history page names it.
+# Only the default form: a public server looks up the forge's host before
+# each git command, and the suite's forge.invalid never resolves.
+servers = ["default"]
+
+[[request]]
+path = "/forge.invalid/acct/r/?log=rss"
+status = 200
+contains = ['<rss version="2.0"', "<item>", "?commit="]
+absent = ["cache"]
+
+[[request]]
+path = "/forge.invalid/acct/r/?log"
+status = 200
+contains = ['<link rel="alternate" type="application/rss+xml"', '<a href="?log=rss"']

@@ -238,7 +238,9 @@ func (t *tree) serveLog(w http.ResponseWriter, r *http.Request, name string, dir
 		fmt.Fprintf(&body, "<div class=\"diffs\"><p class=\"own\"><a href=\"%s\">diff</a></p></div>\n</details></li>\n", show)
 	}
 	body.WriteString("</ol>\n")
-	t.render(w, r, http.StatusOK, page{Title: title, Crumbs: crumbs, Kind: "log", Body: template.HTML(body.String())})
+	// The same history comes as a feed, which the page names in its head,
+	// for a reader to find, and in its header, for the user to see.
+	t.render(w, r, http.StatusOK, page{Title: title, Crumbs: crumbs, Kind: "log", Body: template.HTML(body.String()), Feed: "?" + feedQuery})
 }
 
 // pageCrumbs are the crumbs of the page at name, the last a link back to

@@ -36,6 +36,18 @@ The version shown is marked. The newest row leads to the current page and says c
 
 The menu loads when the pointer first passes over the line, so it opens full. Up and Down walk it, Enter opens a version, and Escape or a click outside closes it. On a share, where there are no versions, its rows open the commits.
 
+## The feed
+
+`?log=rss` serves the same history as an RSS feed, eg `/scratch/www/doc/?log=rss`. A history page names its feed in its head, where a feed reader finds it, and as rss in its header.
+
+The feed carries the 50 newest commits. Each item's title is the subject, its link the commit's page and its date the one the history shows. Its text is the stardate, the short hash and the message in paragraphs.
+
+Links are absolute, since a reader shows them away from the page. They take the host the request named. Behind a proxy on loopback, eg Caddy ending TLS, they take the scheme from `X-Forwarded-Proto`.
+
+The feed has an ETag, so a reader that polls gets 304 until a commit changes it. A byte that XML forbids, eg a control character in a message, becomes U+FFFD, so one message cannot break the feed.
+
+On the web address a feed request is a visit, so it fetches a copy over five minutes old. It answers from the copy at hand and fetches afterwards, so a poll shows commits as of the fetch the poll before set going. `www-public` serves feeds too.
+
 ## Commit pages
 
 A commit's hash in a history's fold, or commit at the right end of a version's top line, opens the commit on a page of its own. It shows the stardate and full hash as plain text, to select and give to git, then the message and the diff. The diff is limited to the file or directory the history was for, with a link to all the files the commit changed in the tree.

@@ -916,7 +916,8 @@
 	const sortWhat = { "": "details by name", r: "details by name, reversed", S: "details, largest first", rS: "details, smallest first",
 		t: "details, newest first", rt: "details, oldest first" };
 	const viewWhat = { flat: "the code", scopes: "the code with its scopes", tree: "the syntax tree", raw: "the file as it is on disk",
-		gron: "the JSON as one line per value", current: "this page as it is now", commit: "this version's commit" };
+		gron: "the JSON as one line per value", current: "this page as it is now", commit: "this version's commit",
+		rss: "this history as an RSS feed" };
 	const commands = () => {
 		const out = [];
 		const names = new Set();
