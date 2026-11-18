@@ -280,11 +280,12 @@ ol.log summary > .lead { display: block; min-width: 0; margin: 0; line-height: 1
    lines copy: the small stardate and hash, then the subject. */
 ol.log summary > .subject { font-weight: bold; }
 /* The browser's marker would take a line of its own above the stardate,
-   so the stardate's line carries it: ▸ closed, ▾ open. */
+   so the stardate's line carries it: ▶ closed, ▼ open, the shapes of the
+   header's own marker. The small ▸ and ▾ read as dots at this size. */
 ol.log summary { list-style: none; }
 ol.log summary::-webkit-details-marker { display: none; }
-ol.log summary > .lead::before { content: "▸ "; }
-ol.log details[open] > summary > .lead::before { content: "▾ "; }
+ol.log summary > .lead::before { content: "▶ "; }
+ol.log details[open] > summary > .lead::before { content: "▼ "; }
 ol.log details[open] { margin-bottom: 2em; }
 ol.log details > p { margin: 0.45em 0 0.45em 1.2em; text-align: left; }
 ol.log div.diffs > p.own:only-child, ol.log p.links { margin-left: 1.2em; }

@@ -6,7 +6,7 @@ A listing whose directory has commits opens its history from `<(git log)` on its
 
 ## A history's lines
 
-Each commit's stardate and full hash sit small on their own line above the subject, so the subject keeps the column's full width at prose size. The subject is bold, so a row reads as the top of the commit's own page. The hash is there to select and give to git. The stardate's line carries the fold's ▸, which turns to ▾ while open. A commit with no message shows its day alone. Hover shows the exact time.
+Each commit's stardate and full hash sit small on their own line above the subject, so the subject keeps the column's full width at prose size. The subject is bold, so a row reads as the top of the commit's own page. The hash is there to select and give to git. The stardate and hash are set apart by a space. The stardate's line carries the fold's ▶, which turns to ▼ while open, the shapes of the header's own marker. A commit with no message shows its day alone. Hover shows the exact time.
 
 A line opens to the commit's full message and its diff, limited to the path. The diff loads when the line first opens. Bodies wrapped by hand join into paragraphs; a list item or an indented line keeps its own line.
 

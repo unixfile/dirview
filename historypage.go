@@ -225,7 +225,7 @@ func (t *tree) serveLog(w http.ResponseWriter, r *http.Request, name string, dir
 		c := &log[i]
 		label := c.hash
 		if star := stars.label(c); star != c.short {
-			label = star + " · " + c.hash
+			label = star + " " + c.hash
 		}
 		show := esc("?commit=" + c.hash)
 		then := ""
@@ -430,7 +430,7 @@ func (t *tree) serveCommit(w http.ResponseWriter, r *http.Request, name string, 
 	var body strings.Builder
 	// The commit's full hash follows its stardate as plain text, so it
 	// can be selected and given to git.
-	fmt.Fprintf(&body, "<div class=\"commit\">\n<p class=\"own\">%s · <span class=\"hash\">%s</span></p>\n<p class=\"subject\">%s</p>\n", commitLine(t.starsFor(r.Context(), name).label(c), c), esc(c.hash), esc(c.subject))
+	fmt.Fprintf(&body, "<div class=\"commit\">\n<p class=\"own\">%s <span class=\"hash\">%s</span></p>\n<p class=\"subject\">%s</p>\n", commitLine(t.starsFor(r.Context(), name).label(c), c), esc(c.hash), esc(c.subject))
 	for _, para := range paragraphs(c.body) {
 		body.WriteString("<p>" + para + "</p>\n")
 	}

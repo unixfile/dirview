@@ -81,7 +81,7 @@ func (t *tree) serveFeed(w http.ResponseWriter, r *http.Request, name string, di
 		// stardate and hash as the history shows them, then the body
 		// in paragraphs.
 		var d strings.Builder
-		fmt.Fprintf(&d, "<p>%s · <code>%s</code></p>", template.HTMLEscapeString(stars.label(c)), c.short)
+		fmt.Fprintf(&d, "<p>%s <code>%s</code></p>", template.HTMLEscapeString(stars.label(c)), c.short)
 		for _, para := range paragraphs(c.body) {
 			d.WriteString("<p>" + para + "</p>")
 		}

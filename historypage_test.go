@@ -183,7 +183,7 @@ func TestCommitPage(t *testing.T) {
 	body := get(h, "/a/b.go?commit="+c).Body.String()
 	for _, want := range []string{
 		"Rename the package &lt;b&gt;",
-		`</span> · <span class="hash">` + c + `</span></p>`,
+		`</span> <span class="hash">` + c + `</span></p>`,
 		`<span class="del">-func F() {}</span><span class="add">+package b</span>`,
 		`<a href="/?commit=` + c + `">All files</a>`,
 		`<p class="own file"><a href="/a/b.go">a/b.go</a></p>`,
