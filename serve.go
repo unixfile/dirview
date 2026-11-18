@@ -66,6 +66,9 @@ func checkDir(path, home string) (string, error) {
 // run serves c.dir. It joins the server already on the endpoint, or becomes
 // that server.
 func run(c config, rep *reporter) int {
+	if c.dir == "" {
+		return runBare(c, rep)
+	}
 	home, _ := os.UserHomeDir()
 	dir, err := checkDir(c.dir, home)
 	if err != nil {
@@ -140,6 +143,41 @@ func run(c config, rep *reporter) int {
 	case errors.Is(err, syscall.EADDRINUSE):
 		baseNote(c, rep)
 		return join(c.ep, rep, reg, dir, lockPath, upgrade, c.token)
+	default:
+		reg.close()
+		return rep.fail(errnoOf(err), "cannot listen on "+c.ep.String()+": "+err.Error())
+	}
+}
+
+// runBare starts the server on the default address with no tree, for the
+// web address beside it, as --restart does at login. A server already
+// there is left alone.
+func runBare(c config, rep *reporter) int {
+	web, ok := webEndpoint(c.ep, os.Getuid())
+	if !ok {
+		return rep.fail(syscall.EINVAL, "a server with no tree runs only on the default address; "+c.ep.String()+" is not it")
+	}
+	home, _ := os.UserHomeDir()
+	reg, err := openRegistry(c.ep)
+	if err != nil {
+		return rep.fail(errnoOf(err), "cannot open the registry: "+err.Error())
+	}
+	if err := reg.lock(); err != nil {
+		reg.close()
+		return rep.fail(errnoOf(err), "cannot lock the registry "+reg.dir+": "+err.Error())
+	}
+	ln, err := net.Listen("tcp", c.ep.String())
+	switch {
+	case err == nil:
+		return serve(c, rep, ln, reg, "", home, origin(c.ep))
+	case errors.Is(err, syscall.EADDRINUSE) && reg.serves(c.ep):
+		reg.close()
+		rep.send("note", "a server already runs on "+c.ep.String()+"; online repos are at "+origin(web)+basePath+"/")
+		rep.finish()
+		return 0
+	case errors.Is(err, syscall.EADDRINUSE):
+		reg.close()
+		return rep.fail(syscall.EADDRINUSE, taken(c.ep))
 	default:
 		reg.close()
 		return rep.fail(errnoOf(err), "cannot listen on "+c.ep.String()+": "+err.Error())
@@ -275,9 +313,9 @@ func ifaceOf(a netip.Addr) string {
 	return "any"
 }
 
-// serve runs the server on ln with dir as its first tree. The caller holds
-// the registry lock, which serve releases once dir is adopted and a crashed
-// server's leftovers are gone.
+// serve runs the server on ln with dir as its first tree, or with none when
+// dir is "". The caller holds the registry lock, which serve releases once
+// dir is adopted and a crashed server's leftovers are gone.
 func serve(c config, rep *reporter, ln net.Listener, reg *registry, dir, home, origin string) int {
 	logInfo("server starts on %s: %s", c.ep, build())
 	go warmLexers()
@@ -304,14 +342,31 @@ func serve(c config, rep *reporter, ln net.Listener, reg *registry, dir, home, o
 	h.w.add(reg.dir)
 	h.srv.shared = shared(c.ep)
 	h.origin = origin
+	// The web address starts before the first tree, whose warm-up reads
+	// the cache's paths that startWeb sets. Its server stays up with no
+	// tree, since the web address answers at all times; only a signal or
+	// Kill server stops it.
+	webEP, onDefault := webEndpoint(c.ep, os.Getuid())
+	if onDefault {
+		h.startWeb(c, webEP)
+		h.stay = h.web != nil
+	}
 	first := lockName(c.ep)
 	if c.persist {
 		first = persistName(c.ep)
 	}
-	t, err := h.adopt(filepath.Join(dir, first), "", c.token)
+	var t *tree
+	var err error
+	if dir != "" {
+		t, err = h.adopt(filepath.Join(dir, first), "", c.token)
+	}
 	reg.unlock()
 	if err != nil {
 		ln.Close()
+		if h.web != nil {
+			h.webLn.Close()
+			h.webStop()
+		}
 		return rep.fail(errnoOf(err), "cannot serve "+dir+": "+err.Error())
 	}
 	h.srv.stop = h.stop
@@ -320,6 +375,17 @@ func serve(c config, rep *reporter, ln net.Listener, reg *registry, dir, home, o
 	defer h.srv.live.close()
 	h.httpd = &http.Server{Handler: h.srv.handler(), ReadHeaderTimeout: 10 * time.Second, ConnState: h.track,
 		ErrorLog: log.New(logWriter{}, "", 0)}
+
+	if t == nil && h.web == nil {
+		code := rep.fail(syscall.EADDRNOTAVAIL, "cannot serve online repos on "+webEP.String()+", so a server with no tree has nothing to serve; the log says why")
+		h.shutdown("it cannot serve online repos")
+		<-h.done
+		return code
+	}
+	if t == nil {
+		rep.send("note", "serves no tree; online repos are at "+h.srv.webURL+"/")
+		rep.finish()
+	}
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
@@ -333,12 +399,9 @@ func serve(c config, rep *reporter, ln net.Listener, reg *registry, dir, home, o
 	})
 	h.bg.Go(h.loop)
 
-	if ep, ok := webEndpoint(c.ep, os.Getuid()); ok {
-		h.startWeb(c, ep)
+	if t != nil {
+		report(rep, c.ep, h.origin+t.prefixURL())
 	}
-
-	url := h.origin + t.prefixURL()
-	report(rep, c.ep, url)
 	if err := h.httpd.Serve(ln); !h.halted.Load() {
 		h.shutdown("cannot serve: " + err.Error())
 		<-h.done
@@ -369,7 +432,7 @@ func signalName(sig os.Signal) string {
 
 // hub keeps the served trees in line with their locks and the registry. It
 // adopts a tree that joins, withdraws a tree whose lock is gone, and stops
-// the server with the last tree.
+// the server with the last tree, unless the server stays.
 type hub struct {
 	ep     netip.AddrPort
 	origin string // the URL of this server, a name where it has one
@@ -379,6 +442,9 @@ type hub struct {
 	srv    *server
 	ln     net.Listener
 	httpd  *http.Server
+	// stay keeps the server up with no tree: it serves the web address,
+	// which answers at all times.
+	stay bool
 	// mu orders changes to the trees within this process, as the registry
 	// flock does across processes.
 	mu     sync.Mutex
@@ -570,7 +636,7 @@ func (t *tree) ownsLink() bool {
 }
 
 // sync withdraws every tree whose lock is gone and adopts every new link.
-// When no tree is left it stops the server. It reports whether the server
+// When no tree is left it stops the server, unless the server stays. It reports whether the server
 // still runs.
 func (h *hub) sync() bool {
 	h.lock()
@@ -598,7 +664,7 @@ func (h *hub) sync() bool {
 			os.Remove(link)
 		}
 	}
-	if len(h.srv.list()) == 0 {
+	if len(h.srv.list()) == 0 && !h.stay {
 		h.halt("its last tree is gone")
 		return false
 	}
@@ -625,11 +691,15 @@ func (h *hub) loop() {
 }
 
 // stop withdraws trees at the press of a button. The loop then stops the
-// server if no tree is left.
-func (h *hub) stop(trees []*tree, why string) {
+// server if no tree is left. kill, from Kill server, stops it even when
+// it stays.
+func (h *hub) stop(trees []*tree, why string, kill bool) {
 	h.lock()
 	for _, t := range trees {
 		h.withdraw(t, why, false)
+	}
+	if kill && len(h.srv.list()) == 0 {
+		h.halt(why)
 	}
 	h.unlock()
 	h.w.signal()

@@ -19,6 +19,10 @@ import (
 // readyEnv names the descriptor a detached child reports its start on.
 var readyEnv = envPrefix + "READY_FD"
 
+// bareEnv, set by --restart, starts the server on the default address
+// with no tree, so the web address beside it answers.
+var bareEnv = envPrefix + "BARE"
+
 // Local runs the reader's executable on the process's arguments and
 // exits. It serves trees of this machine.
 func Local() {
@@ -67,6 +71,13 @@ func Local() {
 		}
 	}
 
+	if os.Getenv(bareEnv) != "" {
+		c.dir = ""
+		// The server itself starts nothing that should inherit it.
+		if os.Getenv(readyEnv) != "" {
+			os.Unsetenv(bareEnv)
+		}
+	}
 	fd := os.Getenv(readyEnv)
 	switch {
 	case c.restart:

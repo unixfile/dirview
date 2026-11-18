@@ -35,7 +35,7 @@ www-public -V | --version
 
 Run `www` in a directory. It prints the tree's URL and opens it with `xdg-open`, a tab in your default browser. To open it another way, set `WWW_OPEN`, eg `WWW_OPEN='brave-browser --app=%s'` for a window of its own; [options](doc/options.md) has more.
 
-It also writes a lockfile named after the endpoint, eg `127.31.1.1-8080.lock`. Delete the lockfile to stop serving the tree. Trees on one address share one server, which exits when its last lock is gone.
+It also writes a lockfile named after the endpoint, eg `127.31.1.1-8080.lock`. Delete the lockfile to stop serving the tree. Trees on one address share one server, which exits when its last lock is gone. The server on your default address stays up, since it also serves [online repos](doc/online-repos.md).
 
 ```
 www                         serve this directory and open it

@@ -1,4 +1,5 @@
-# The system template serves a user's .LOCK trees from boot, before login.
+# The system template serves a user's .LOCK trees from boot, before login,
+# and the web address beside the user's default address.
 # Enable it for one user with: sudo systemctl enable @NAME@@<user>
 # The capability lets it bind port 80, as the package's binary may.
 # While the user unit runs in that user's session it serves the same

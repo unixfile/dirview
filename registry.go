@@ -144,6 +144,13 @@ func splitTarget(target string) (lockPath, token string) {
 // serves reports whether a live server holds a tree in the registry of ep.
 // The caller holds the lock.
 func (r *registry) serves(ep netip.AddrPort) bool {
+	// The server on the default address stays up with no tree, so its
+	// record alone says it serves.
+	if _, ok := webEndpoint(ep, os.Getuid()); ok {
+		if srv, up := serverOf(ep); up && !srv.foreign() {
+			return true
+		}
+	}
 	links, _ := r.links()
 	for _, target := range links {
 		if _, ok := readTree(ep, target); ok {

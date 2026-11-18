@@ -2,7 +2,8 @@
 # name, from login to logout. Enable it with:
 # systemctl --user enable @NAME@-dev
 # --restart starts a server for each address whose registry links a .LOCK
-# and names this build. The package's units serve the trees its binary
+# and names this build, and one on the build's default address with no
+# tree, so the web address answers. The package's units serve the trees its binary
 # served last, so this unit runs beside them.
 # Stopping the unit sends its servers SIGTERM, which keeps every .LOCK.
 [Unit]

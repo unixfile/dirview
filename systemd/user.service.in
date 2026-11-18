@@ -1,6 +1,7 @@
 # The user unit serves the trees that .LOCK files name, from login to
 # logout. Enable it with: systemctl --user enable @NAME@
-# --restart starts a server for each address whose registry links a .LOCK.
+# --restart starts a server for each address whose registry links a .LOCK,
+# and one on the default address with no tree, so the web address answers.
 # Stopping the unit sends its servers SIGTERM, which keeps every .LOCK.
 # While the system template runs for this user it serves the same trees
 # from boot, so this unit stands aside.

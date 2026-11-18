@@ -87,7 +87,9 @@ Options:
                         and a restart keeps it
   --restart             replace every server this binary started with one
                         running it now, serving the same trees, and start
-                        one for its persistent trees that have none; with an
+                        one for its persistent trees that have none, and
+                        one on the default address with no tree, for online
+                        repos; with an
                         address from -a or --share, only the server there,
                         whichever binary runs it; with DIR, serve it too and
                         open it unless a page of it was open

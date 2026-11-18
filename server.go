@@ -69,7 +69,7 @@ var csp = "default-src 'none'; script-src " + scriptSrc(liveJS) + "; connect-src
 type server struct {
 	mu     sync.RWMutex
 	trees  []*tree
-	stop   func([]*tree, string) // withdraws trees for a cause; set by the hub
+	stop   func([]*tree, string, bool) // withdraws trees for a cause, and stops the server on kill; set by the hub
 	about  about
 	shared bool   // on an address beyond loopback: it shows the trees and nothing of the machine
 	public bool   // the web address of --public, which strangers reach by any name
@@ -88,7 +88,7 @@ type server struct {
 }
 
 func newServer() *server {
-	return &server{stop: func([]*tree, string) {}}
+	return &server{stop: func([]*tree, string, bool) {}}
 }
 
 // local gives s what only the reader's executable serves.
@@ -270,7 +270,7 @@ func (s *server) handleStop(w http.ResponseWriter, r *http.Request) {
 		// index returns there, and a tree's page links it.
 		if len(s.list()) > 1 {
 			if r.PostFormValue("from") == "index" {
-				s.stop(trees, why+" on the index")
+				s.stop(trees, why+" on the index", false)
 				http.Redirect(w, r, rooted("/"), http.StatusSeeOther)
 				return
 			}
@@ -289,7 +289,7 @@ func (s *server) handleStop(w http.ResponseWriter, r *http.Request) {
 	})
 	// stop only withdraws; the hub shuts down on its own goroutine, since
 	// Shutdown waits for this response to finish.
-	s.stop(trees, why)
+	s.stop(trees, why, kill)
 }
 
 // stoppedRows say what a stop ended, in a table as a 404's: each tree,

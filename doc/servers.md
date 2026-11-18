@@ -12,7 +12,7 @@ Trees on one address share one server. The first `www` starts it in the backgrou
 
 When something other than your www on that address holds the port, `www` fails at once with `E98` and names the listeners there.
 
-The server exits when its last lock is gone. SIGTERM stops it at once and removes every lock but a persistent `.LOCK`, as does the Kill server button on the index at `/`.
+The server exits when its last lock is gone, except on your default address. That server also serves the web address, which answers at all times, so it stays up with no tree. SIGTERM stops any server at once and removes every lock but a persistent `.LOCK`, as do the Kill server button on the index at `/` and `www --kill`.
 
 Delete lock and Kill server answer 410 Gone. The page shows the code and "Gone" on the line below it, then names each tree stopped, its lock removed or kept, and whether the server serves on.
 
@@ -23,6 +23,8 @@ A running server keeps the binary it started with. `www --restart` moves every s
 It moves only the servers its own binary started, so the package and a build from `make install` leave each other's servers alone. It names each server it leaves, and `-f` takes them too. `make install-deb` passes `-f`, since it removes the `make install` link.
 
 A binary without the capability for port 80, such as the one from `make install`, leaves a port-80 server on its old binary and says so.
+
+`www --restart` also starts a server on its binary's default address when none runs there, with no tree, so the web address answers. A server there with no tree is replaced by the current binary, as one with trees is. `-a` or `--share` limits it to that address and starts nothing else.
 
 ## The index
 
@@ -52,7 +54,7 @@ Deleting the `.LOCK`, or Delete lock on the tree's pages, ends the tree for good
 
 ## Systemd units
 
-A systemd user unit runs `www --restart` at login. Both ship disabled. They serve from login to logout, and linger stays off.
+A systemd user unit runs `www --restart` at login, which also starts the server on the default address with no tree. Both ship disabled. They serve from login to logout, and linger stays off.
 
 - The package puts `www.service` in `/usr/lib/systemd/user/`. Enable it with `systemctl --user enable www`.
 - `make install` puts `www-dev.service` in `~/.config/systemd/user/`. Enable it with `systemctl --user enable www-dev`.

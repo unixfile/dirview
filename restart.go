@@ -35,6 +35,15 @@ func restart(c config) int {
 	if named {
 		eps = []netip.AddrPort{c.ep}
 	}
+	// This binary's default address gets a server even with no tree, so
+	// the web address beside it answers at all times.
+	var bare netip.AddrPort
+	if def, ok := bareEndpoint(); ok && !named {
+		bare = def
+		if !slices.Contains(eps, def) {
+			eps = append(eps, def)
+		}
+	}
 	code := 0
 	var open []string // pages that were open on c.ep's old server
 	for _, ep := range eps {
@@ -49,6 +58,11 @@ func restart(c config) int {
 				continue
 			} else if len(kept) > 0 {
 				err = startTrees(ep, kept, c.debug, c.noBug, baseOf(ep))
+			} else if srv, up := serverOf(ep); ep == bare && up && other != "" {
+				say("the server on %s, pid %d, runs %s, so it stays; -f moves it to this binary", ep, srv.pid, other)
+				continue
+			} else if ep == bare {
+				err = restartBare(ep, c.debug, c.noBug)
 			} else if !named || c.dir != "" {
 				continue
 			}
@@ -200,6 +214,66 @@ func restartServer(ep netip.AddrPort, pid int, trees []servedTree, debug, noBug 
 		os.Remove(record)
 	}
 	return pages, startTrees(ep, trees, debug, noBug, base)
+}
+
+// bareEndpoint is where --restart keeps a server with no tree: this
+// binary's default address. Tests turn it off, since the server would
+// run the test binary.
+var bareEndpoint = func() (netip.AddrPort, bool) {
+	ep, err := endpointFor("", os.Getuid())
+	return ep, err == nil
+}
+
+// restartBare starts the server on ep with no tree, replacing one that
+// runs with no tree, so the current binary serves the web address.
+func restartBare(ep netip.AddrPort, debug, noBug bool) error {
+	base := baseOf(ep)
+	if srv, ok := strayServer(ep); ok {
+		if ep.Port() < 1024 && !lowPortOK() {
+			return &errno{syscall.EACCES, "this binary cannot bind port " + strconv.Itoa(int(ep.Port())) +
+				", so the server on " + ep.String() + " keeps its old one. Run the installed package's " + progName + ", which holds cap_net_bind_service"}
+		}
+		if err := stopServer(ep, srv.pid, nil); err != nil {
+			return err
+		}
+		say("the server on %s, which served no tree, is replaced", ep)
+	}
+	return startBare(ep, debug, noBug, base)
+}
+
+// startBare starts the server on ep with no tree through this binary.
+func startBare(ep netip.AddrPort, debug, noBug bool, base string) error {
+	if ep.Port() < 1024 && !lowPortOK() {
+		return &errno{syscall.EACCES, "this binary cannot bind port " + strconv.Itoa(int(ep.Port())) +
+			", so it cannot serve " + ep.String() + ". Run the installed package's " + progName + ", which holds cap_net_bind_service"}
+	}
+	exe, err := os.Executable()
+	if err != nil {
+		return &errno{errnoOf(err), "cannot find own executable: " + err.Error()}
+	}
+	args := []string{"--no-open", "-a", ep.String()}
+	if debug {
+		args = append(args, "--debug")
+	}
+	if noBug {
+		args = append(args, "--no-bug")
+	}
+	if base != "" {
+		args = append(args, "--base="+base)
+	}
+	cmd := exec.Command(exe, args...)
+	cmd.Env = append(os.Environ(), bareEnv+"=1")
+	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+	if err := cmd.Run(); err != nil {
+		code := syscall.EIO
+		var ee *exec.ExitError
+		if errors.As(err, &ee) {
+			code = syscall.Errno(ee.ExitCode())
+		}
+		// The child has printed its own error.
+		return &errno{code, "cannot start the server with no tree on " + ep.String()}
+	}
+	return nil
 }
 
 // startTrees serves each tree on ep through this binary, as a start from

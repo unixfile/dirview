@@ -94,7 +94,7 @@ func TestCacheHeaders(t *testing.T) {
 func TestStopRefusesOtherSites(t *testing.T) {
 	s, _, _ := serveTree(t)
 	stopped := make(chan struct{}, 1)
-	s.stop = func([]*tree, string) { stopped <- struct{}{} }
+	s.stop = func([]*tree, string, bool) { stopped <- struct{}{} }
 	h := s.handler()
 	if rec := do(h, "POST", ownPath+"stop", "Sec-Fetch-Site", "cross-site"); rec.Code != http.StatusForbidden {
 		t.Errorf("cross-site stop: status %d, want 403", rec.Code)
@@ -200,7 +200,7 @@ func TestStopWithdrawsOneTree(t *testing.T) {
 	s, tr, dir := serveTree(t)
 	other := addTree(t, s, filepath.Join(dir, "a"), "/other/", "~/other")
 	var got []*tree
-	s.stop = func(ts []*tree, _ string) { got = ts }
+	s.stop = func(ts []*tree, _ string, _ bool) { got = ts }
 	body := get(s.handler(), "/other/").Body.String()
 	if !strings.Contains(body, `<input type="hidden" name="tree" value="/other/">`) {
 		t.Fatalf("tree page lacks its stop form: %s", body)

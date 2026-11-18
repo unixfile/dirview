@@ -318,3 +318,107 @@ func TestOriginUnspecified(t *testing.T) {
 		t.Errorf("0.0.0.0:8080: %s, want %s", got, want)
 	}
 }
+
+// defaultTestEndpoint is a free port on the user's default address, with
+// the web address beside it free too, so a server there serves the web.
+func defaultTestEndpoint(t *testing.T) netip.AddrPort {
+	t.Helper()
+	t.Setenv("XDG_STATE_HOME", t.TempDir())
+	t.Setenv("XDG_CACHE_HOME", t.TempDir())
+	def, err := endpointFor("", os.Getuid())
+	if err != nil {
+		t.Skip(err)
+	}
+	for range 20 {
+		ln, err := net.Listen("tcp", netip.AddrPortFrom(def.Addr(), 0).String())
+		if err != nil {
+			t.Skip("cannot listen on the default address: ", err)
+		}
+		ep := netip.MustParseAddrPort(ln.Addr().String())
+		web, _ := webEndpoint(ep, os.Getuid())
+		wl, err := net.Listen("tcp", web.String())
+		ln.Close()
+		if err == nil {
+			wl.Close()
+			return ep
+		}
+	}
+	t.Skip("no port free on both the default and the web address")
+	return netip.AddrPort{}
+}
+
+// The server on the default address starts with no tree and stays up when
+// its last tree goes, so the web address beside it answers at all times. A
+// tree joins it as it joins any server, and --kill stops it.
+func TestDefaultServerStaysWithNoTree(t *testing.T) {
+	ep := defaultTestEndpoint(t)
+	web, _ := webEndpoint(ep, os.Getuid())
+	lines, served := start(t, config{ep: ep})
+	if len(lines) != 1 || !strings.HasPrefix(lines[0], "note serves no tree; online repos are at http://"+web.String()+"/") {
+		t.Fatalf("bare start report: %q", lines)
+	}
+	base := "http://" + ep.String()
+	if code := status(t, base+"/"); code != http.StatusOK {
+		t.Errorf("index of a server with no tree: status %d", code)
+	}
+	if code := status(t, "http://"+web.String()+"/"); code != http.StatusOK {
+		t.Errorf("web address: status %d", code)
+	}
+	lines, again := start(t, config{ep: ep})
+	if <-again != 0 || len(lines) != 1 || !strings.HasPrefix(lines[0], "note a server already runs on "+ep.String()) {
+		t.Errorf("second bare start: %q", lines)
+	}
+
+	dir := t.TempDir()
+	os.WriteFile(filepath.Join(dir, "a.txt"), []byte("a\n"), 0o644)
+	lines, joined := start(t, config{dir: dir, ep: ep})
+	if code := <-joined; code != 0 || lines[0] != "url "+base+dir+"/" {
+		t.Fatalf("join of a server with no tree: %d %q", code, lines)
+	}
+	os.Remove(filepath.Join(dir, lockName(ep)))
+	waitFor(t, "the tree to go", func() bool { return status(t, base+dir+"/a.txt?raw") == http.StatusNotFound })
+	select {
+	case code := <-served:
+		t.Fatalf("the server exited with its last tree: %d", code)
+	case <-time.After(300 * time.Millisecond):
+	}
+	if code := status(t, "http://"+web.String()+"/"); code != http.StatusOK {
+		t.Errorf("web address after the last tree: status %d", code)
+	}
+
+	if code := kill(config{ep: ep, addr: ep.String()}); code != 0 {
+		t.Errorf("kill exit %d", code)
+	}
+	select {
+	case <-served:
+	case <-time.After(5 * time.Second):
+		t.Fatal("--kill left the server with no tree")
+	}
+}
+
+// Kill server stops the server on the default address, which a lost last
+// tree does not.
+func TestKillServerStopsTheDefaultServer(t *testing.T) {
+	ep := defaultTestEndpoint(t)
+	dir := t.TempDir()
+	lines, served := start(t, config{dir: dir, ep: ep})
+	if !strings.HasPrefix(lines[0], "url ") {
+		t.Fatalf("start: %q", lines)
+	}
+	base := "http://" + ep.String()
+	req, _ := http.NewRequest(http.MethodPost, base+ownPath+"stop", nil)
+	req.Header.Set("Origin", base)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusGone {
+		t.Fatalf("Kill server: status %d", resp.StatusCode)
+	}
+	select {
+	case <-served:
+	case <-time.After(5 * time.Second):
+		t.Fatal("Kill server left the server on the default address")
+	}
+}

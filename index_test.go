@@ -19,7 +19,7 @@ func TestIndexDeleteReturns(t *testing.T) {
 	tr.prefix, tr.label = "/notes/", "~/notes"
 	addTree(t, s, filepath.Join(dir, "a"), "/other/", "~/other")
 	var got []*tree
-	s.stop = func(ts []*tree, _ string) {
+	s.stop = func(ts []*tree, _ string, _ bool) {
 		got = ts
 		for _, t := range ts {
 			s.remove(t)

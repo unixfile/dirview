@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
+	"net/netip"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,6 +24,7 @@ func TestMain(m *testing.M) {
 	os.Setenv("XDG_STATE_HOME", dir)
 	journalSocket = filepath.Join(dir, "no-journal")
 	journalStream = filepath.Join(dir, "no-journal-stream")
+	bareEndpoint = func() (netip.AddrPort, bool) { return netip.AddrPort{}, false }
 	code := m.Run()
 	os.RemoveAll(dir)
 	os.Exit(code)

@@ -1,6 +1,6 @@
 # Online repos
 
-The server on your default address also listens on the address after it, 127.31.N.2, on the same port. There a URL names a repo on a forge by its host and path, eg `http://127.31.1.2/github.com/junegunn/fzf/README.md`. The first visit fetches the repo into a cache. From then on www serves it as it serves a checkout: docs, code, listings, search and history.
+The server on your default address also listens on the address after it, 127.31.N.2, on the same port. That server stays up with no tree, and `www --restart`, which the login unit runs, starts it, so the web address answers at all times. There a URL names a repo on a forge by its host and path, eg `http://127.31.1.2/github.com/junegunn/fzf/README.md`. The first visit fetches the repo into a cache. From then on www serves it as it serves a checkout: docs, code, listings, search and history.
 
 Home and the web never collide, since each has an address of its own.
 
