@@ -50,7 +50,7 @@ func TestVersion(t *testing.T) {
 	if rec := get(h, "/@0000000/a/b.go"); rec.Code != 404 {
 		t.Errorf("unknown commit: %d", rec.Code)
 	}
-	if body := get(h, "/a/b.go?log").Body.String(); !strings.Contains(body, `<a class="then" href="`+at+`a/b.go">browse</a>`) {
+	if body := get(h, "/a/b.go?log").Body.String(); !strings.Contains(body, `<a class="then" href="`+at+`a/b.go">time warp</a>`) {
 		t.Errorf("history links no version:\n%s", body)
 	}
 	// The menu lists every version of the page, then the history. The

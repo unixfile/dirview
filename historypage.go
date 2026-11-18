@@ -217,24 +217,25 @@ func (t *tree) serveLog(w http.ResponseWriter, r *http.Request, name string, dir
 	// the file or directory as it was then.
 	browse := t.historyInVersions(r.Context(), name)
 	// Each row's stardate sits on its own line above the subject, so it
-	// takes no width from it, and the full hash follows it there, to
-	// select and give to git. A commit with no stardate is named by its
-	// hash alone.
+	// takes no width from it. The full hash ends that line at the right,
+	// to select and give to git, so the hashes line up down the list. A
+	// commit with no stardate shows its hash alone, which carries the
+	// exact time instead.
 	body.WriteString("<ol class=\"log\">\n")
 	for i := range log {
 		c := &log[i]
-		label := c.hash
+		lead := "<span class=\"hash\" title=\"" + esc(exact(c.date)) + "\">" + esc(c.hash) + "</span>"
 		if star := stars.label(c); star != c.short {
-			label = star + " " + c.hash
+			lead = commitLine(star, c) + " <span class=\"hash\">" + esc(c.hash) + "</span>"
 		}
 		show := esc("?commit=" + c.hash)
 		then := ""
 		if browse {
-			then = fmt.Sprintf(" · <a class=\"then\" href=\"%s\">browse</a>", esc(t.versionURL(stars, c, below(name, dir))))
+			then = fmt.Sprintf(" <a class=\"then\" href=\"%s\">time warp</a>", esc(t.versionURL(stars, c, below(name, dir))))
 		}
 		fmt.Fprintf(&body, "<li><details data-diff=\"%s\">\n<summary><span class=\"own lead\">%s</span> <span class=\"subject\">%s</span></summary>\n"+
-			"<p class=\"own links\"><a href=\"%s\">commit</a>%s</p>\n",
-			show, commitLine(label, c), esc(c.subject), show, then)
+			"<p class=\"own links\"><a href=\"%s\">permalink</a>%s</p>\n",
+			show, lead, esc(c.subject), show, then)
 		for _, para := range paragraphs(c.body) {
 			body.WriteString("<p>" + para + "</p>\n")
 		}

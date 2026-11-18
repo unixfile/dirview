@@ -6,11 +6,11 @@ A listing whose directory has commits opens its history from `<(git log)` on its
 
 ## A history's lines
 
-Each commit's stardate and full hash sit small on their own line above the subject, so the subject keeps the column's full width at prose size. The subject is bold, so a row reads as the top of the commit's own page. The hash is there to select and give to git. The stardate and hash are set apart by a space. The stardate's line carries the fold's ▶, which turns to ▼ while open, the shapes of the header's own marker. A commit with no message shows its day alone. Hover shows the exact time.
+Each commit's stardate and full hash sit small on their own line above the subject, so the subject keeps the column's full width at prose size. The hash ends that line at the right, so the hashes line up down the list. The subject is bold, so a row reads as the top of the commit's own page. The hash is there to select and give to git. The stardate's line carries the fold's ▶, which turns to ▼ while open, the shapes of the header's own marker. A commit with no message shows its day alone. Hover shows the exact time.
 
 A line opens to the commit's full message and its diff, limited to the path. The diff loads when the line first opens. Bodies wrapped by hand join into paragraphs; a list item or an indented line keeps its own line.
 
-A row is one target: a click anywhere on it opens or closes the fold. Inside, commit opens the commit's own page and browse its version.
+A row is one target: a click anywhere on it opens or closes the fold. Inside, permalink opens the commit's own page and time warp its version.
 
 ## Stardates
 
@@ -50,7 +50,7 @@ On the web address a feed request is a visit, so it fetches a copy over five min
 
 ## Commit pages
 
-commit in a history's fold, or commit at the right end of a version's top line, opens the commit on a page of its own. It shows the stardate and full hash as plain text, to select and give to git, then the message and the diff. The diff is limited to the file or directory the history was for, with a link to all the files the commit changed in the tree.
+permalink in a history's fold, or commit at the right end of a version's top line, opens the commit on a page of its own. It shows the stardate and full hash as plain text, to select and give to git, then the message and the diff. The diff is limited to the file or directory the history was for, with a link to all the files the commit changed in the tree.
 
 Added lines sit on a green tint and removed ones on a red. The diff stops at 1 MiB.
 
@@ -90,7 +90,7 @@ A share never shows git's errors, which name paths on the machine, and says only
 
 ## Old versions of a tree
 
-Each commit in a history has a browse link, inside its fold, to the page as it was in that commit.
+Each commit in a history has a time warp link, inside its fold, to the page as it was in that commit.
 
 `@` and a commit's hash on a tree's name serve the tree as of that commit, eg `/scratch/www@5430ac3/` for its root or `/scratch/www@5430ac3/doc/history.md` for one doc. The version qualifies the tree, so it sits on the name, not below it as an entry would. A tree served at `/` has no name, so its versions sit below it, eg `/@5430ac3/`.
 

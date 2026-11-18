@@ -101,7 +101,7 @@ func TestPendingVersion(t *testing.T) {
 	}
 	// A history's row names the commit by stardate and full hash, so
 	// pending commits that share a day and x stay apart.
-	if full := head(t, dir, "HEAD"); !strings.Contains(get(h, "/a/b.go?log").Body.String(), ">"+star+" "+full+"</span>") {
+	if full := head(t, dir, "HEAD"); !strings.Contains(get(h, "/a/b.go?log").Body.String(), ">"+star+"</span> <span class=\"hash\">"+full+"</span>") {
 		t.Errorf("history names no %s %s", star, full)
 	}
 	if body := get(h, "/a/b.go?timeline").Body.String(); !strings.Contains(body, ">"+star+" "+short+"</span>") {
