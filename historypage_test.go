@@ -183,7 +183,7 @@ func TestCommitPage(t *testing.T) {
 	body := get(h, "/a/b.go?commit="+c).Body.String()
 	for _, want := range []string{
 		"Rename the package &lt;b&gt;",
-		`</span> <span class="hash">` + c + `</span></p>`,
+		`</span> <span class="hash">` + c + `</span></span> <span class="subject">`,
 		`<span class="del">-func F() {}</span><span class="add">+package b</span>`,
 		`<a href="/?commit=` + c + `">All files</a>`,
 		`<p class="own file"><a href="/a/b.go">a/b.go</a></p>`,
@@ -194,6 +194,19 @@ func TestCommitPage(t *testing.T) {
 		if !strings.Contains(body, want) {
 			t.Errorf("no %q:\n%s", want, body)
 		}
+	}
+	// The page leads as its history row does, so it reads as that row
+	// opened: the same head and links, a paragraph where the row has its
+	// fold's summary.
+	row := get(h, "/a/b.go?log").Body.String()
+	from := strings.Index(row, "<summary>")
+	to := strings.Index(row, "</p>\n")
+	if from < 0 || to < from {
+		t.Fatalf("no history row:\n%s", row)
+	}
+	lead, links, _ := strings.Cut(row[from+len("<summary>"):to+len("</p>\n")], "</summary>\n")
+	if want := "<div class=\"entry\">\n<p class=\"head\">" + lead + "</p>\n" + links; !strings.Contains(body, want) {
+		t.Errorf("commit page does not lead as its row, no %q:\n%s", want, body)
 	}
 	if body := get(h, "/index.md?commit="+c).Body.String(); !strings.Contains(body, "It does not change index.md.") {
 		t.Errorf("commit that skips the file:\n%s", body)

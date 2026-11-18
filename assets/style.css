@@ -271,17 +271,20 @@ ul.listing li.refused span { color: var(--muted); font-size: 0.8em; }
 /* Each commit is a fold: one line closed, message and diff open. */
 ol.log { list-style: none; padding: 0; }
 ol.log > li { margin: 0 0 0.4em; }
-ol.log summary { cursor: pointer; text-align: left; }
-ol.log summary > .own { color: var(--muted); font-size: 0.8em; }
+ol.log summary { cursor: pointer; }
+/* A commit's own page leads with the row's head as a paragraph, so the
+   page reads as the row opened, the fold's marker aside. */
+:is(ol.log summary, div.entry > p.head) { text-align: left; }
+:is(ol.log summary, div.entry > p.head) > .own { color: var(--muted); font-size: 0.8em; }
 /* The stardate sits small on its own line above the subject, so the
    subject keeps the column's full width at prose size. */
-ol.log summary > .lead { display: block; min-width: 0; margin: 0; line-height: 1.3; }
+:is(ol.log summary, div.entry > p.head) > .lead { display: block; min-width: 0; margin: 0; line-height: 1.3; }
 /* The full hash ends the stardate's line at the right, so the hashes
    line up down the list. */
-ol.log summary > .lead > .hash { float: right; }
-/* The subject is bold, as on the commit's own page, which a row's two
-   lines copy: the small stardate and hash, then the subject. */
-ol.log summary > .subject { font-weight: bold; }
+:is(ol.log summary, div.entry > p.head) > .lead > .hash { float: right; }
+/* The subject is bold, as the top of the commit's own page: the small
+   stardate and hash, then the subject. */
+:is(ol.log summary, div.entry > p.head) > .subject { font-weight: bold; }
 /* The browser's marker would take a line of its own above the stardate,
    so the stardate's line carries it: ▶ closed, ▼ open, the shapes of the
    header's own marker. The small ▸ and ▾ read as dots at this size. */
@@ -290,9 +293,10 @@ ol.log summary::-webkit-details-marker { display: none; }
 ol.log summary > .lead::before { content: "▶ "; }
 ol.log details[open] > summary > .lead::before { content: "▼ "; }
 ol.log details[open] { margin-bottom: 2em; }
-ol.log details > p { margin: 0.45em 0 0.45em 1.2em; text-align: left; }
-ol.log div.diffs > p.own:only-child, ol.log p.links { margin-left: 1.2em; }
-ol.log p.links { color: var(--muted); font-size: max(0.5em, 11px); }
+:is(ol.log details, div.entry) > p { margin: 0.45em 0 0.45em 1.2em; text-align: left; }
+div.entry > p.head { margin: 0; }
+ol.log div.diffs > p.own:only-child, :is(ol.log, div.entry) p.links { margin-left: 1.2em; }
+:is(ol.log, div.entry) p.links { color: var(--muted); font-size: max(0.5em, 11px); }
 div.commit p.subject { font-weight: bold; margin-top: 0.2em; }
 div.commit p { text-align: left; }
 div.commit p.own { color: var(--muted); margin-bottom: 0; }
@@ -532,7 +536,7 @@ p.conn.fade { animation: conn 3s ease-in forwards; }
 /* Technical background, what a page says about its data rather than the
    data itself, is set at code size: half the body, never under 11px. It
    follows the rules above, which set these at 0.8em. */
-details.latest, ol.log summary > .own, div.commit > p.own, div.found p.note { font-size: max(0.5em, 11px); }
+details.latest, :is(ol.log summary, div.entry > p.head) > .own, div.commit > p.own, div.found p.note { font-size: max(0.5em, 11px); }
 
 /* the line a #L42 link points at, and the lines a range such as #L10-L20 marks */
 pre > code.sourceCode > span:target, pre > code.sourceCode > span.marked { background: var(--target); }

@@ -224,27 +224,38 @@ func (t *tree) serveLog(w http.ResponseWriter, r *http.Request, name string, dir
 	body.WriteString("<ol class=\"log\">\n")
 	for i := range log {
 		c := &log[i]
-		lead := "<span class=\"hash\" title=\"" + esc(exact(c.date)) + "\">" + esc(c.hash) + "</span>"
-		if star := stars.label(c); star != c.short {
-			lead = commitLine(star, c) + " <span class=\"hash\">" + esc(c.hash) + "</span>"
-		}
-		show := esc("?commit=" + c.hash)
-		then := ""
-		if browse {
-			then = fmt.Sprintf(" <a class=\"then\" href=\"%s\">time warp</a>", esc(t.versionURL(stars, c, below(name, dir))))
-		}
-		fmt.Fprintf(&body, "<li><details data-diff=\"%s\">\n<summary><span class=\"own lead\">%s</span> <span class=\"subject\">%s</span></summary>\n"+
-			"<p class=\"own links\"><a href=\"%s\">permalink</a>%s</p>\n",
-			show, lead, esc(c.subject), show, then)
+		lead, links := t.commitHead(stars, c, name, dir, browse)
+		fmt.Fprintf(&body, "<li><details data-diff=\"%s\">\n<summary>%s</summary>\n%s",
+			esc("?commit="+c.hash), lead, links)
 		for _, para := range paragraphs(c.body) {
 			body.WriteString("<p>" + para + "</p>\n")
 		}
-		fmt.Fprintf(&body, "<div class=\"diffs\"><p class=\"own\"><a href=\"%s\">diff</a></p></div>\n</details></li>\n", show)
+		fmt.Fprintf(&body, "<div class=\"diffs\"><p class=\"own\"><a href=\"%s\">diff</a></p></div>\n</details></li>\n", esc("?commit="+c.hash))
 	}
 	body.WriteString("</ol>\n")
 	// The same history comes as a feed, which the page names in its head,
 	// for a reader to find, and in its header, for the user to see.
 	t.render(w, r, http.StatusOK, page{Title: title, Crumbs: crumbs, Kind: "log", Body: template.HTML(body.String()), Feed: "?" + feedQuery})
+}
+
+// commitHead is how a commit leads both its history row and its own
+// page, so the page reads as the row opened: the stardate's line, the
+// subject, then the links to the commit's page and, where the tree has
+// versions, to its version of name. A commit with no stardate shows its
+// full hash alone, which carries the exact time instead.
+func (t *tree) commitHead(stars *stardates, c *commit, name string, dir, browse bool) (lead, links string) {
+	esc := template.HTMLEscapeString
+	line := "<span class=\"hash\" title=\"" + esc(exact(c.date)) + "\">" + esc(c.hash) + "</span>"
+	if star := stars.label(c); star != c.short {
+		line = commitLine(star, c) + " <span class=\"hash\">" + esc(c.hash) + "</span>"
+	}
+	lead = "<span class=\"own lead\">" + line + "</span> <span class=\"subject\">" + esc(c.subject) + "</span>"
+	then := ""
+	if browse {
+		then = fmt.Sprintf(" <a class=\"then\" href=\"%s\">time warp</a>", esc(t.versionURL(stars, c, below(name, dir))))
+	}
+	links = fmt.Sprintf("<p class=\"own links\"><a href=\"%s\">permalink</a>%s</p>\n", esc("?commit="+c.hash), then)
+	return lead, links
 }
 
 // pageCrumbs are the crumbs of the page at name, the last a link back to
@@ -429,9 +440,10 @@ func (t *tree) serveCommit(w http.ResponseWriter, r *http.Request, name string, 
 	crumbs[len(crumbs)-1].Label = c.short
 	esc := template.HTMLEscapeString
 	var body strings.Builder
-	// The commit's full hash follows its stardate as plain text, so it
-	// can be selected and given to git.
-	fmt.Fprintf(&body, "<div class=\"commit\">\n<p class=\"own\">%s <span class=\"hash\">%s</span></p>\n<p class=\"subject\">%s</p>\n", commitLine(t.starsFor(r.Context(), name).label(c), c), esc(c.hash), esc(c.subject))
+	// The commit leads its page as it leads its history row, so the page
+	// reads as that row opened.
+	lead, links := t.commitHead(t.starsFor(r.Context(), name), c, name, dir, t.historyInVersions(r.Context(), name))
+	fmt.Fprintf(&body, "<div class=\"entry\">\n<p class=\"head\">%s</p>\n%s", lead, links)
 	for _, para := range paragraphs(c.body) {
 		body.WriteString("<p>" + para + "</p>\n")
 	}
