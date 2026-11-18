@@ -27,6 +27,9 @@ var readerOnly = []string{
 	"(*hub).adopt",
 	"persistedTrees",
 	"parseArgs",
+	"ghToken",
+	"(*web).usePrivate",
+	"ownerOnly",
 }
 
 // The public executable does not contain the reader's features, so no

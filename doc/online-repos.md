@@ -94,7 +94,11 @@ One leak remains: a repo already in the cache opens at once, and one that is not
 
 ## What git may do
 
-Every git call against a forge runs without your credentials, without your git config and without prompts or hooks, and only over HTTPS. A forge that asks for a login gets none, so only public repos open. Loopback is open to every account on the machine, and a private repo fetched here would be open to them too.
+Every git call against a forge runs without your git config and without prompts or hooks, and only over HTTPS. A public repo is fetched without credentials.
+
+When github.com asks for a login, `www` asks `gh auth token` for gh's login and reads the repo again with it, into `~/.cache/www-private/`, or `$XDG_CACHE_HOME/www-private/`. git gets the login through its environment, never its arguments, and sends it to github.com alone. It opens every repo the gh account can read. Without gh, or with gh logged out, the reading page says which. A share and `www-public` never read private repos, and `www-public` contains none of this code.
+
+Loopback is open to every account on the machine, so the web address answers only the account that runs its server. The kernel names each connection's owner in `/proc/net/tcp`; another account, or a connection whose owner cannot be told, gets 403.
 
 Elsewhere git still may not fetch at all. git 2.44 and later honour `GIT_NO_LAZY_FETCH`; before it, `protocol.allow=never` alone holds that line.
 

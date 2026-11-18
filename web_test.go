@@ -28,6 +28,9 @@ type forge struct {
 	work map[string]string
 	// packs counts git's requests for objects
 	packs atomic.Int32
+	// Repos below the account private ask for the login auth, an
+	// Authorization header, as a forge asks for a private repo's.
+	private, auth string
 }
 
 func newForge(t *testing.T, api http.Handler) *forge {
@@ -39,6 +42,10 @@ func newForge(t *testing.T, api http.Handler) *forge {
 		Env: []string{"GIT_PROJECT_ROOT=" + f.root, "GIT_HTTP_EXPORT_ALL=1"}, Stderr: io.Discard}
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.Contains(r.URL.Path, "/info/refs") || strings.HasSuffix(r.URL.Path, "/git-upload-pack") {
+			if f.private != "" && strings.HasPrefix(r.URL.Path, "/"+f.private+"/") && r.Header.Get("Authorization") != f.auth {
+				http.Error(w, "login", http.StatusUnauthorized)
+				return
+			}
 			if strings.HasSuffix(r.URL.Path, "/git-upload-pack") {
 				f.packs.Add(1)
 			}

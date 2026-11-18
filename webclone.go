@@ -72,14 +72,44 @@ func (w *web) probe(j *webJob, segs []string) (key, cloneURL string, probed bool
 }
 
 // clone fetches the repo key from cloneURL into the cache and serves it.
+// A repo on privateHost that asks for a login is read again with gh's
+// login, into the private cache, where the reader's server has one.
 func (w *web) clone(j *webJob, key, cloneURL string) error {
+	err := w.cloneInto(j, key, cloneURL, w.root)
+	if err == nil || !loginAsked(err) || w.private == "" || strings.SplitN(key, "/", 2)[0] != privateHost {
+		return err
+	}
+	w.removeDir(w.root, key)
+	if _, terr := privateAuth(); terr != nil {
+		return &errno{syscall.ENOENT, "no repo answers at " + cloneURL + ": " + privateHost +
+			" asked for a login, which only a private or missing repo needs, and " + terr.Error()}
+	}
+	w.step(j, privateHost+" asked for a login, so the repo is private or missing: "+progName+" reads it again with gh's login, into "+w.where(w.private))
+	if err := w.cloneInto(j, key, cloneURL, w.private); err != nil {
+		if !exists(filepath.Join(w.private, filepath.FromSlash(key), ".git", "HEAD")) {
+			w.removeDir(w.private, key)
+		}
+		return err
+	}
+	return nil
+}
+
+// loginAsked reports whether git failed because the forge asked for a
+// login, which git may not prompt for.
+func loginAsked(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "could not read Username")
+}
+
+// cloneInto fetches the repo key from cloneURL into the cache at base and
+// serves it.
+func (w *web) cloneInto(j *webJob, key, cloneURL, base string) error {
 	w.mu.Lock()
 	r := w.repos[key]
 	w.mu.Unlock()
 	if r != nil {
 		return nil
 	}
-	dir := filepath.Join(w.root, filepath.FromSlash(key))
+	dir := filepath.Join(base, filepath.FromSlash(key))
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return err
 	}

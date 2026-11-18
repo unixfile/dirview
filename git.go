@@ -54,6 +54,7 @@ type commit struct {
 // In web's cache git may reach a forge, since a repo there is a partial
 // clone whose pages fetch what they show: by webScheme alone, without
 // credentials, a prompt, hooks or the user's and the system's git config.
+// In the private cache git sends gh's login to privateHost alone.
 // GIT_NO_LAZY_FETCH needs git 2.44; before it protocol.allow=never alone
 // keeps other repos from fetching.
 func git(ctx context.Context, dir string, args ...string) ([]byte, error) {
@@ -102,6 +103,9 @@ func gitRun(ctx context.Context, dir string, stdin io.Reader, progress func(stri
 	cmd.Env = append(cmd.Env, "GIT_OPTIONAL_LOCKS=0", "GIT_TERMINAL_PROMPT=0")
 	if remote {
 		cmd.Env = append(cmd.Env, "GIT_CONFIG_NOSYSTEM=1", "GIT_CONFIG_GLOBAL="+os.DevNull)
+		if inPrivate(dir) {
+			cmd.Env = append(cmd.Env, privateEnv()...)
+		}
 	} else {
 		cmd.Env = append(cmd.Env, "GIT_NO_LAZY_FETCH=1")
 	}

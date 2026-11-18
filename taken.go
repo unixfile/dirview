@@ -87,25 +87,60 @@ func holders(ep netip.AddrPort) []netip.AddrPort {
 }
 
 // listeners reads the sockets in LISTEN state from a /proc/net/tcp or tcp6
-// table. The kernel prints each 32-bit word of an address in host order.
+// table.
 func listeners(table string) []netip.AddrPort {
 	var out []netip.AddrPort
-	for _, line := range strings.Split(table, "\n") {
-		f := strings.Fields(line)
-		if len(f) < 4 || f[3] != "0A" {
-			continue
+	for _, sk := range sockets(table) {
+		if sk.state == "0A" {
+			out = append(out, sk.local)
 		}
-		addr, port, ok := strings.Cut(f[1], ":")
-		raw, err := hex.DecodeString(addr)
-		n, perr := strconv.ParseUint(port, 16, 16)
-		if !ok || err != nil || perr != nil || (len(raw) != 4 && len(raw) != 16) {
-			continue
-		}
-		for i := 0; i < len(raw); i += 4 {
-			binary.NativeEndian.PutUint32(raw[i:], binary.BigEndian.Uint32(raw[i:]))
-		}
-		a, _ := netip.AddrFromSlice(raw)
-		out = append(out, netip.AddrPortFrom(a.Unmap(), uint16(n)))
 	}
 	return out
+}
+
+// socket is one row of a /proc/net/tcp or tcp6 table.
+type socket struct {
+	local, remote netip.AddrPort
+	state         string // in hex, eg 0A for LISTEN
+	uid           int
+}
+
+// sockets reads the rows of a /proc/net/tcp or tcp6 table.
+func sockets(table string) []socket {
+	var out []socket
+	for _, line := range strings.Split(table, "\n") {
+		f := strings.Fields(line)
+		if len(f) < 4 {
+			continue
+		}
+		local, ok1 := procAddr(f[1])
+		remote, ok2 := procAddr(f[2])
+		if !ok1 || !ok2 {
+			continue
+		}
+		uid := -1
+		if len(f) >= 8 {
+			if n, err := strconv.Atoi(f[7]); err == nil {
+				uid = n
+			}
+		}
+		out = append(out, socket{local: local, remote: remote, state: f[3], uid: uid})
+	}
+	return out
+}
+
+// procAddr parses an address of a /proc/net/tcp table, eg 0100007F:1F90.
+// The kernel prints each 32-bit word of an address in host order.
+func procAddr(s string) (netip.AddrPort, bool) {
+	addr, port, ok := strings.Cut(s, ":")
+	raw, err := hex.DecodeString(addr)
+	n, perr := strconv.ParseUint(port, 16, 16)
+	if !ok || err != nil || perr != nil || (len(raw) != 4 && len(raw) != 16) {
+		return netip.AddrPort{}, false
+	}
+	for i := 0; i < len(raw); i += 4 {
+		binary.NativeEndian.PutUint32(raw[i:], binary.BigEndian.Uint32(raw[i:]))
+	}
+	a, _ := netip.AddrFromSlice(raw)
+	return netip.AddrPortFrom(a.Unmap(), uint16(n)), true
 }

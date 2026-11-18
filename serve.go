@@ -395,7 +395,8 @@ type hub struct {
 	webStop  context.CancelFunc
 }
 
-// startWeb serves the web address ep beside the default one. Where it
+// startWeb serves the web address ep beside the default one, to the
+// user's own account alone, with private repos read through gh. Where it
 // cannot, the server goes on without it, and the log says why.
 func (h *hub) startWeb(c config, ep netip.AddrPort) {
 	root, err := cacheDir()
@@ -420,10 +421,13 @@ func (h *hub) startWeb(c config, ep netip.AddrPort) {
 		logErr("E%d: cannot serve online repos from %s: %v", errnoOf(err), root, err)
 		return
 	}
+	if err := w.usePrivate(root); err != nil {
+		logErr("E%d: cannot read private repos: %v", errnoOf(err), err)
+	}
 	w.srv.local().live = newLive()
 	h.web, h.webLn, h.webStop = w, ln, cancel
-	h.webHTTPD = &http.Server{Handler: w.srv.handler(), ReadHeaderTimeout: 10 * time.Second, ConnState: h.track,
-		ErrorLog: log.New(logWriter{}, "", 0)}
+	h.webHTTPD = &http.Server{Handler: ownerOnly(w.srv.handler()), ConnContext: peerUID, ReadHeaderTimeout: 10 * time.Second,
+		ConnState: h.track, ErrorLog: log.New(logWriter{}, "", 0)}
 	h.srv.webURL = origin(ep) + basePath
 	w.srv.homeURL = h.origin + basePath
 	go h.webHTTPD.Serve(ln)

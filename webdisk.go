@@ -19,24 +19,30 @@ type cachedRepo struct {
 	used time.Time
 }
 
-// eachRepo calls fn for every repo in the cache, with its key and its
-// directory. It reads directory names alone, never a repo's files.
+// eachRepo calls fn for every repo in the cache and the private cache,
+// with its key and its directory. It reads directory names alone, never a
+// repo's files.
 func (w *web) eachRepo(fn func(key, dir string)) {
-	filepath.WalkDir(w.root, func(p string, d fs.DirEntry, err error) error {
-		if err != nil || !d.IsDir() {
+	for _, root := range []string{w.root, w.private} {
+		if root == "" {
+			continue
+		}
+		filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
+			if err != nil || !d.IsDir() {
+				return nil
+			}
+			name := d.Name()
+			if p != root && (strings.HasPrefix(name, ".wt-") || name == ".git" || name == ".git.tmp") {
+				return fs.SkipDir
+			}
+			if !exists(filepath.Join(p, ".git", "HEAD")) {
+				return nil
+			}
+			key, _ := filepath.Rel(root, p)
+			fn(filepath.ToSlash(key), p)
 			return nil
-		}
-		name := d.Name()
-		if p != w.root && (strings.HasPrefix(name, ".wt-") || name == ".git" || name == ".git.tmp") {
-			return fs.SkipDir
-		}
-		if !exists(filepath.Join(p, ".git", "HEAD")) {
-			return nil
-		}
-		key, _ := filepath.Rel(w.root, p)
-		fn(filepath.ToSlash(key), p)
-		return nil
-	})
+		})
+	}
 }
 
 // onDiskKeys names every repo in the cache. It costs a walk of the
@@ -143,7 +149,7 @@ func (w *web) trim(keep string) error {
 // on every address share the cache, and each knows only its own busy
 // repos.
 func (w *web) drop(key string) bool {
-	dir := filepath.Join(w.root, filepath.FromSlash(key))
+	dir := w.dirOf(key)
 	unlock, err := flockDir(dir, syscall.LOCK_EX|syscall.LOCK_NB)
 	if errors.Is(err, syscall.EWOULDBLOCK) {
 		return false
@@ -162,9 +168,19 @@ func (w *web) remove(key string) {
 	r := w.repos[key]
 	w.mu.Unlock()
 	w.forget(r)
-	dir := filepath.Join(w.root, filepath.FromSlash(key))
+	root := w.root
+	if dir := w.dirOf(key); inPrivate(dir) {
+		root = w.private
+	}
+	w.removeDir(root, key)
+}
+
+// removeDir deletes the directory of key in the cache at root, and the
+// parents it leaves empty.
+func (w *web) removeDir(root, key string) {
+	dir := filepath.Join(root, filepath.FromSlash(key))
 	os.RemoveAll(dir)
-	for d := filepath.Dir(dir); d != w.root && strings.HasPrefix(d, w.root); d = filepath.Dir(d) {
+	for d := filepath.Dir(dir); d != root && strings.HasPrefix(d, root); d = filepath.Dir(d) {
 		if os.Remove(d) != nil {
 			break
 		}

@@ -42,6 +42,10 @@ type web struct {
 	// public hides the cache from strangers: no listing of it, and no
 	// path of the machine on a page.
 	public bool
+	// private is the cache of repos read with gh's login, its links
+	// resolved, or "" where the server reads none: on a public server
+	// and in tests that do not set it.
+	private string
 
 	// loadMu makes taking a repo from the disk one step, so two visits,
 	// or a visit and a clone, never serve one repo twice.
@@ -99,9 +103,36 @@ const missFresh = 5 * time.Minute
 // git lets calls below it fetch from the repo's forge.
 var cacheRoot string
 
-// inCache reports whether dir lies in web's cache.
+// privateRoot is the private cache once the reader's server reads
+// private repos, its links resolved. git below it sends gh's login.
+var privateRoot string
+
+// inCache reports whether dir lies in web's cache, the private one
+// included.
 func inCache(dir string) bool {
-	return cacheRoot != "" && (dir == cacheRoot || strings.HasPrefix(dir, cacheRoot+"/"))
+	return underRoot(cacheRoot, dir) || inPrivate(dir)
+}
+
+// inPrivate reports whether dir lies in the private cache.
+func inPrivate(dir string) bool {
+	return underRoot(privateRoot, dir)
+}
+
+// underRoot reports whether dir is root or lies in it; an unset root holds
+// nothing.
+func underRoot(root, dir string) bool {
+	return root != "" && (dir == root || strings.HasPrefix(dir, root+"/"))
+}
+
+// dirOf is the directory of the repo key: in the private cache when the
+// repo is there, else in the cache.
+func (w *web) dirOf(key string) string {
+	if w.private != "" {
+		if d := filepath.Join(w.private, filepath.FromSlash(key)); exists(filepath.Join(d, ".git", "HEAD")) {
+			return d
+		}
+	}
+	return filepath.Join(w.root, filepath.FromSlash(key))
 }
 
 func cacheDir() (string, error) {
@@ -413,7 +444,7 @@ func (w *web) load(key string, mine bool) (*webRepo, error) {
 	if r != nil || busy && !mine {
 		return r, nil
 	}
-	dir := filepath.Join(w.root, filepath.FromSlash(key))
+	dir := w.dirOf(key)
 	wt, err := os.Readlink(filepath.Join(dir, ".tree"))
 	if errors.Is(err, fs.ErrNotExist) {
 		return nil, nil
@@ -636,7 +667,7 @@ func (w *web) run(j *webJob, key string, segs []string) {
 	start := time.Now()
 	if err := w.clone(j, repoKey, cloneURL); err != nil {
 		// A clone that failed leaves nothing behind.
-		if !exists(filepath.Join(w.root, filepath.FromSlash(repoKey), ".git", "HEAD")) {
+		if !exists(filepath.Join(w.dirOf(repoKey), ".git", "HEAD")) {
 			w.drop(repoKey)
 		}
 		// A forge asks for a login where no public repo is.
