@@ -81,9 +81,11 @@ type server struct {
 	homeURL string
 	// What only the reader's executable serves, set by local and nil in
 	// the public executable, which so does not contain their code: the
-	// stop buttons' form, the bug button's form and the index at /.
+	// stop buttons' form, the bug button's form, a page as PDF and the
+	// index at /.
 	stopForm http.HandlerFunc
 	bugForm  http.HandlerFunc
+	pdf      func(w http.ResponseWriter, r *http.Request, t *tree, name string)
 	index    func(w http.ResponseWriter, r *http.Request, status int, msg string)
 }
 
@@ -93,7 +95,7 @@ func newServer() *server {
 
 // local gives s what only the reader's executable serves.
 func (s *server) local() *server {
-	s.stopForm, s.bugForm, s.index = s.handleStop, s.handleBug, s.serveIndex
+	s.stopForm, s.bugForm, s.index, s.pdf = s.handleStop, s.handleBug, s.serveIndex, s.servePDF
 	return s
 }
 

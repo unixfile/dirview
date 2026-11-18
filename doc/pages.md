@@ -40,6 +40,14 @@ A fenced block marked `dot` or `graphviz` becomes a diagram, drawn by Graphviz's
 
 Every gap between blocks is the same, whether the block is a paragraph, list, table or code. Headings sit close to their text.
 
+## PDF
+
+pdf in a doc's header, beside raw, saves the doc as a PDF file, eg `README.pdf`. `?pdf` asks for it directly. weasyprint draws it from the page www renders, with the same stylesheet and fonts, on A4 pages and without the header, search row or buttons.
+
+weasyprint reaches only the server that asked, as a browser on the page may. An image from another host, or a `file:` URL, stays out of the PDF.
+
+The link shows only where weasyprint is installed. The Debian package depends on it, and with a build from `make install` it may be missing; then `?pdf` says so. A share offers no PDF, since each visitor would start weasyprint.
+
 ## Linked from
 
 Below a doc, linked from names each doc in the tree that links to it, by any relative spelling.

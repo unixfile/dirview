@@ -65,6 +65,7 @@ type page struct {
 	Kind    string
 	Body    template.HTML
 	Raw     bool
+	PDF     bool          // a link to the page as PDF, beside raw
 	Feed    string        // the URL of the page's RSS feed, which the head and the header name, or ""
 	Tree    string        // prefix the stop button withdraws, or "" for every tree
 	Search  string        // the tree's URL, which answers ?search=, or "" off a tree

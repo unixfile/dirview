@@ -30,6 +30,7 @@ var readerOnly = []string{
 	"ghToken",
 	"(*web).usePrivate",
 	"ownerOnly",
+	"(*server).servePDF",
 }
 
 // The public executable does not contain the reader's features, so no

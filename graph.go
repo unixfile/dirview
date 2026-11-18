@@ -84,7 +84,7 @@ type limited struct {
 
 func (l *limited) Write(p []byte) (int, error) {
 	if l.w.Len()+len(p) > l.n {
-		return 0, errors.New("graph larger than 4 MB")
+		return 0, errors.New("output larger than " + sizeText(int64(l.n)))
 	}
 	return l.w.Write(p)
 }

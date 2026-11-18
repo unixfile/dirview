@@ -3,7 +3,7 @@ Version: @VERSION@
 Architecture: @ARCH@
 Maintainer: unixfile <unixfile@users.noreply.github.com>
 Installed-Size: @SIZE@
-Depends: git, libcap2-bin
+Depends: git, libcap2-bin, weasyprint
 Recommends: xdg-utils, @NAME@-syntax (= @VERSION@)
 Suggests: graphviz
 Section: text

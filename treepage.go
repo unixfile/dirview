@@ -108,6 +108,10 @@ func (t *tree) serve(w http.ResponseWriter, r *http.Request) {
 		t.serveDir(w, r, name)
 		return
 	}
+	if _, ok := r.URL.Query()[pdfQuery]; ok && isMarkdown(name) && t.srv != nil && t.srv.pdf != nil {
+		t.srv.pdf(w, r, t, name)
+		return
+	}
 	if _, raw := r.URL.Query()["raw"]; raw {
 		t.serveRaw(w, r, name, info)
 		return
@@ -146,7 +150,7 @@ func (t *tree) serveMarkdown(w http.ResponseWriter, r *http.Request, name string
 		return
 	}
 	body = template.HTML(t.logLine(r.Context(), name, b)) + body
-	t.render(w, r, http.StatusOK, page{Title: name, Crumbs: t.crumbs(name), Kind: "doc", Body: body, Raw: true})
+	t.render(w, r, http.StatusOK, page{Title: name, Crumbs: t.crumbs(name), Kind: "doc", Body: body, Raw: true, PDF: t.pdfOffered()})
 }
 
 // webBase is where t's docs send a link to a forge: the web address, the
