@@ -67,9 +67,11 @@ While the template or the package's user unit runs for a user, the other stands 
 
 Each endpoint has a registry directory such as `~/.local/state/www/127.31.1.1-8080/` with a symlink to each lock its server holds. `$XDG_STATE_HOME` replaces `~/.local/state` when set.
 
-A joining `www` adds a link, and the server sees it through inotify, writes the lock and serves the tree. Where inotify fails the server polls every second. An flock on the directory keeps a tree from joining a server on its way out.
+A joining `www` adds a link, and the server sees it through inotify, writes the lock and serves the tree. Where inotify fails the server polls every second. It also polls while it serves a tree on a network mount, eg sshfs, NFS or SMB, since inotify there misses what another host changes, such as a lock deleted on the far side. An flock on the directory keeps a tree from joining a server on its way out.
 
 A lock left by a crash is detected on the next start through its PID and the kernel boot ID, then removed. A new server also clears what a crashed server left in the registry.
+
+A server that holds its address but serves no live tree, eg one that missed its last lock going, makes a new `www` there fail with `E98`, naming the server's PID. `www --kill -a ADDR` stops it.
 
 A lock also names the server's PID namespace. Inside a sandbox or container, another namespace's PID says nothing, so www takes that server to be running: it keeps the lock, lists the tree and refuses `--kill` and `--restart` with E1. If that server has crashed, its lock stays until a reboot or until you delete it. A lock written before locks named their namespace counts as the host's. A `www` that cannot read its own namespace from `/proc` treats every lock this way.
 

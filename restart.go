@@ -273,6 +273,17 @@ func kill(c config) int {
 	code := 0
 	for _, ep := range eps {
 		pid, trees, err := servedTrees(ep)
+		if errors.Is(err, syscall.ESRCH) {
+			// A server that lost its last tree unseen still holds ep.
+			if srv, ok := strayServer(ep); ok {
+				if err = stopServer(ep, srv.pid, nil); err == nil {
+					fmt.Fprintf(os.Stderr, "stopped the %s on %s, pid %d, which served no live tree\n", progName, ep, srv.pid)
+				} else {
+					code = failNow(errnoOf(err), err.Error())
+				}
+				continue
+			}
+		}
 		if errors.Is(err, syscall.ESRCH) && !named {
 			continue
 		}
