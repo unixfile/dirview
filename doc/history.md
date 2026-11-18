@@ -6,11 +6,11 @@ A listing whose directory has commits opens its history from `<(git log)` on its
 
 ## A history's lines
 
-Each commit's stardate and short hash sit small on their own line above the subject, eg 261024.4 · 5430ac3, so the subject keeps the column's full width at prose size. The stardate's line carries the fold's ▸, which turns to ▾ while open. A commit with no message shows its day alone. Hover shows the hash and the exact time.
+Each commit's stardate and full hash sit small on their own line above the subject, so the subject keeps the column's full width at prose size. The hash is there to select and give to git. The stardate's line carries the fold's ▸, which turns to ▾ while open. A commit with no message shows its day alone. Hover shows the exact time.
 
 A line opens to the commit's full message and its diff, limited to the path. The diff loads when the line first opens. Bodies wrapped by hand join into paragraphs; a list item or an indented line keeps its own line.
 
-A row is one target: a click anywhere on it opens or closes the fold. Inside, the full hash links the commit's own page and browse links its version. Neither is labelled; a hash names a commit.
+A row is one target: a click anywhere on it opens or closes the fold. Inside, commit opens the commit's own page and browse its version.
 
 ## Stardates
 
@@ -18,7 +18,7 @@ Each commit shows its stardate, eg 261024.4, the fourth commit of 24 Oct 2026 on
 
 A commit a merge brought in is named after the merge, eg 261024.4.2.
 
-A commit on the local main or master that origin's line has not reached yet shows its day and x, eg 261026.x. Its number comes with the push, so a rebase before it renames nothing. Several commits can share a day and x, so the timeline adds each one's short hash, eg 261026.x 6376dd4, and a history shows every commit's. Its version's address uses the hash.
+A commit on the local main or master that origin's line has not reached yet shows its day and x, eg 261026.x. Its number comes with the push, so a rebase before it renames nothing. Several commits can share a day and x, so the timeline adds each one's short hash, eg 261026.x 6376dd4, and a history shows every commit's full hash. Its version's address uses the hash.
 
 A commit on no main line, eg on another branch, shows its short hash.
 
@@ -50,7 +50,7 @@ On the web address a feed request is a visit, so it fetches a copy over five min
 
 ## Commit pages
 
-A commit's hash in a history's fold, or commit at the right end of a version's top line, opens the commit on a page of its own. It shows the stardate and full hash as plain text, to select and give to git, then the message and the diff. The diff is limited to the file or directory the history was for, with a link to all the files the commit changed in the tree.
+commit in a history's fold, or commit at the right end of a version's top line, opens the commit on a page of its own. It shows the stardate and full hash as plain text, to select and give to git, then the message and the diff. The diff is limited to the file or directory the history was for, with a link to all the files the commit changed in the tree.
 
 Added lines sit on a green tint and removed ones on a red. The diff stops at 1 MiB.
 
