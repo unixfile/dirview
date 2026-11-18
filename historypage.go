@@ -217,19 +217,23 @@ func (t *tree) serveLog(w http.ResponseWriter, r *http.Request, name string, dir
 	// the file or directory as it was then.
 	browse := t.historyInVersions(r.Context(), name)
 	// Each row's stardate sits on its own line above the subject, so it
-	// takes no width from it. A pending commit's day and x stands alone;
-	// its hash is on hover and in the fold.
+	// takes no width from it, and the short hash follows it there. A
+	// commit with no stardate is named by its hash alone.
 	body.WriteString("<ol class=\"log\">\n")
 	for i := range log {
 		c := &log[i]
+		label := stars.label(c)
+		if label != c.short {
+			label += " · " + c.short
+		}
 		show := esc("?commit=" + c.hash)
 		then := ""
 		if browse {
 			then = fmt.Sprintf(" · <a class=\"then\" href=\"%s\">browse</a>", esc(t.versionURL(stars, c, below(name, dir))))
 		}
 		fmt.Fprintf(&body, "<li><details data-diff=\"%s\">\n<summary><span class=\"own lead\">%s</span> <span class=\"subject\">%s</span></summary>\n"+
-			"<p class=\"own links\">commit <a href=\"%s\">%s</a>%s</p>\n",
-			show, commitLine(stars.label(c), c), esc(c.subject), show, esc(c.hash), then)
+			"<p class=\"own links\"><a href=\"%s\">%s</a>%s</p>\n",
+			show, commitLine(label, c), esc(c.subject), show, esc(c.hash), then)
 		for _, para := range paragraphs(c.body) {
 			body.WriteString("<p>" + para + "</p>\n")
 		}

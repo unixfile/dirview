@@ -6,11 +6,11 @@ A listing whose directory has commits opens its history from `<(git log)` on its
 
 ## A history's lines
 
-Each commit's stardate sits small on its own line above the subject, so the subject keeps the column's full width at prose size. The stardate's line carries the fold's ▸, which turns to ▾ while open. A commit with no message shows its day alone. Hover shows the hash and the exact time.
+Each commit's stardate and short hash sit small on their own line above the subject, eg 261024.4 · 5430ac3, so the subject keeps the column's full width at prose size. The stardate's line carries the fold's ▸, which turns to ▾ while open. A commit with no message shows its day alone. Hover shows the hash and the exact time.
 
 A line opens to the commit's full message and its diff, limited to the path. The diff loads when the line first opens. Bodies wrapped by hand join into paragraphs; a list item or an indented line keeps its own line.
 
-A row is one target: a click anywhere on it opens or closes the fold. Inside, the full hash links the commit's own page and browse links its version.
+A row is one target: a click anywhere on it opens or closes the fold. Inside, the full hash links the commit's own page and browse links its version. Neither is labelled; a hash names a commit.
 
 ## Stardates
 
@@ -18,7 +18,7 @@ Each commit shows its stardate, eg 261024.4, the fourth commit of 24 Oct 2026 on
 
 A commit a merge brought in is named after the merge, eg 261024.4.2.
 
-A commit on the local main or master that origin's line has not reached yet shows its day and x, eg 261026.x. Its number comes with the push, so a rebase before it renames nothing. Several commits can share a day and x, so the timeline adds each one's short hash, eg 261026.x 6376dd4. A history shows the day and x alone; the hash is on hover and in the fold. Its version's address uses the hash.
+A commit on the local main or master that origin's line has not reached yet shows its day and x, eg 261026.x. Its number comes with the push, so a rebase before it renames nothing. Several commits can share a day and x, so the timeline adds each one's short hash, eg 261026.x 6376dd4, and a history shows every commit's. Its version's address uses the hash.
 
 A commit on no main line, eg on another branch, shows its short hash.
 

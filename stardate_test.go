@@ -99,10 +99,10 @@ func TestPendingVersion(t *testing.T) {
 	if body := get(h, "/a/b.go").Body.String(); !strings.Contains(body, `title="`+star+` · `) {
 		t.Errorf("top line names no %s:\n%s", star, body)
 	}
-	// The history keeps its stardate column narrow, so the hash waits on
-	// hover; the timeline's rows still show it.
-	if body := get(h, "/a/b.go?log").Body.String(); !strings.Contains(body, `<span class="date" title="`+short+` `) || !strings.Contains(body, ">"+star+"</span>") || strings.Contains(body, star+" "+short) {
-		t.Errorf("history does not name %s alone, with %s on hover:\n%s", star, short, body)
+	// A history's row names the commit by stardate and short hash, so
+	// pending commits that share a day and x stay apart.
+	if body := get(h, "/a/b.go?log").Body.String(); !strings.Contains(body, ">"+star+" · "+short+"</span>") {
+		t.Errorf("history names no %s · %s:\n%s", star, short, body)
 	}
 	if body := get(h, "/a/b.go?timeline").Body.String(); !strings.Contains(body, ">"+star+" "+short+"</span>") {
 		t.Errorf("timeline names no %s %s:\n%s", star, short, body)
