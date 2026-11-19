@@ -80,7 +80,7 @@ A visitor learns nothing of the machine or of what others read. `/` says only ho
 
 No page has a stop or bug button, nothing opens a browser, and any Host header is answered, since nothing local is there to protect.
 
-`--disk` is required, since any visitor can make drvu clone. A clone, fetch or checkout stops once the repo outgrows it or after 10 minutes, so a forge that sends without end cannot fill the disk or hold a clone's place.
+`--disk` is required, since any visitor can make drvu clone. A clone, fetch or checkout stops once the repo outgrows it or after 10 minutes, so a forge that sends without end cannot fill the disk or hold a clone's place. A stop kills every git process the fetch started. git in the cache runs no automatic gc or maintenance, since a full repack of a large repo can hold the server at its memory limit for hours.
 
 A visitor can name any host, so drvu fetches only from hosts whose every address is on the open internet: never loopback, a private or link-local range, or carrier-grade NAT. git connects only to the addresses checked and follows no redirect, and listings check each address they connect to. A repo's `.git` is hidden, and a link out of a repo is refused without saying where it leads, whatever marker lies there.
 

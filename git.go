@@ -15,12 +15,17 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"syscall"
 	"time"
 )
 
 // logLabel names the history in a listing, at a page's top and in the
 // crumbs: the command that makes it.
 const logLabel = "<(git log)"
+
+// waitPipes is how long a git call whose context ended waits for its
+// helpers to close its output
+const waitPipes = 5 * time.Second
 
 // maxLog caps the commits a history page lists.
 const maxLog = 500
@@ -79,6 +84,13 @@ func gitRun(ctx context.Context, dir string, stdin io.Reader, progress func(stri
 	if remote {
 		pre = append(pre, "-c", "protocol."+webScheme+".allow=always", "-c", "credential.helper=", "-c", "core.askPass=",
 			"-c", "core.hooksPath="+os.DevNull)
+		// No automatic gc or maintenance: every lazy fetch of a page's
+		// blobs writes a pack, and past gc.autoPackLimit's 50 packs a fetch
+		// starts a full repack of the repo, detached, so no context ends it.
+		// On a public server one held a 2.1G repo's unit at its memory
+		// limit for 13 hours on 2026-11-19. -c reaches the git processes
+		// this one starts, eg a lazy fetch.
+		pre = append(pre, "-c", "gc.auto=0", "-c", "maintenance.auto=false")
 		// git may fetch here, even for a page's blob, so a public server
 		// checks where it would connect first.
 		if publicNet.Load() {
@@ -94,6 +106,18 @@ func gitRun(ctx context.Context, dir string, stdin io.Reader, progress func(stri
 	args = append(append(pre, "-c", "core.fsmonitor=false", "-c", "core.quotePath=false", "--no-pager", "--literal-pathspecs"), args...)
 	cmd := exec.CommandContext(ctx, "git", args...)
 	cmd.Dir = dir
+	// git runs helpers, eg git-remote-https for a fetch, which hold its
+	// stdout and stderr. When ctx ends, kill the whole group, so no helper
+	// outlives the bound, and stop waiting on the pipes after waitPipes
+	// even if a helper still holds them.
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	cmd.Cancel = func() error {
+		if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL); err != syscall.ESRCH {
+			return err
+		}
+		return os.ErrProcessDone
+	}
+	cmd.WaitDelay = waitPipes
 	cmd.Stdin = stdin
 	for _, kv := range os.Environ() {
 		if !strings.HasPrefix(kv, "GIT_") && !strings.HasPrefix(kv, "SSH_ASKPASS=") {

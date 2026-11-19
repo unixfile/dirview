@@ -1,12 +1,16 @@
 package dirview
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"syscall"
 	"testing"
+	"time"
 )
 
 func needGit(t *testing.T) {
@@ -116,5 +120,53 @@ func TestGitRunsNoFsmonitor(t *testing.T) {
 	git(t.Context(), dir, "status")
 	if _, err := os.Stat(ran); err == nil {
 		t.Error("git ran the repo's fsmonitor")
+	}
+}
+
+// When a git call's context ends, the helpers git started die with it,
+// and the call returns without waiting for them: on 2026-11-19 a fetch's
+// git-remote-https outlived its bound by 13 hours.
+func TestGitCancelKillsHelpers(t *testing.T) {
+	_, dir := repoTree(t)
+	pidFile := filepath.Join(t.TempDir(), "pid")
+	ctx, cancel := context.WithTimeout(t.Context(), 300*time.Millisecond)
+	defer cancel()
+	start := time.Now()
+	git(ctx, dir, "-c", "alias.hang=!echo $$ >"+pidFile+"; exec sleep 30", "hang")
+	if d := time.Since(start); d >= waitPipes {
+		t.Errorf("git returned after %v, want before the helper closed its pipes", d)
+	}
+	b, err := os.ReadFile(pidFile)
+	if err != nil {
+		t.Fatalf("helper never started: %v", err)
+	}
+	pid, _ := strconv.Atoi(strings.TrimSpace(string(b)))
+	for i := 0; ; i++ {
+		if syscall.Kill(pid, 0) == syscall.ESRCH {
+			break
+		}
+		if i == 40 {
+			t.Fatalf("helper %d still runs after the call returned", pid)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+}
+
+// git in the cache starts no automatic gc or maintenance, and the git
+// processes it starts, eg a lazy fetch, inherit that.
+func TestCacheGitRunsNoAutoGc(t *testing.T) {
+	old := cacheRoot
+	cacheRoot = t.TempDir()
+	t.Cleanup(func() { cacheRoot = old })
+	dir := filepath.Join(cacheRoot, "repo")
+	if out, err := exec.Command("git", "init", "-q", dir).CombinedOutput(); err != nil {
+		t.Fatalf("git init: %v\n%s", err, out)
+	}
+	out, err := git(t.Context(), dir, "-c", "alias.child=!git config --get gc.auto; git config --get maintenance.auto", "child")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := string(out); got != "0\nfalse\n" {
+		t.Errorf("child git sees gc.auto and maintenance.auto as %q, want \"0\\nfalse\\n\"", got)
 	}
 }
