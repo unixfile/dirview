@@ -2,6 +2,6 @@
 // repos fetched from a forge, never a tree of this machine.
 package main
 
-import "www"
+import "dirview"
 
-func main() { www.Public() }
+func main() { dirview.Public() }

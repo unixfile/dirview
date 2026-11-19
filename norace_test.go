@@ -1,5 +1,5 @@
 //go:build !race
 
-package www
+package dirview
 
 const raceOn = false

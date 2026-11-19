@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-// stray makes a www of this user that holds ep with no live tree: a
+// stray makes a drvu of this user that holds ep with no live tree: a
 // sleeping child stands in for the server, its record names the child,
 // and the test listens on ep in its place.
 func stray(t *testing.T) (ep netip.AddrPort, pid string, done chan error) {
@@ -42,7 +42,7 @@ func stray(t *testing.T) (ep netip.AddrPort, pid string, done chan error) {
 	return ep, fmt.Sprint(cmd.Process.Pid), done
 }
 
-// A www of the user that lost its last tree unseen is named as such, with
+// A drvu of the user that lost its last tree unseen is named as such, with
 // its PID and a command that stops it, never as the address itself.
 func TestTakenNamesStrayServer(t *testing.T) {
 	ep, pid, _ := stray(t)
@@ -57,7 +57,7 @@ func TestTakenNamesStrayServer(t *testing.T) {
 	}
 }
 
-// A listener on the address that is no www of the user is not named as
+// A listener on the address that is no drvu of the user is not named as
 // the address itself either.
 func TestTakenByStranger(t *testing.T) {
 	e := testEndpoint(t)
@@ -72,7 +72,7 @@ func TestTakenByStranger(t *testing.T) {
 	}
 }
 
-// --kill on the address stops a www that serves no live tree.
+// --kill on the address stops a drvu that serves no live tree.
 func TestKillStopsStrayServer(t *testing.T) {
 	ep, _, done := stray(t)
 	if code := kill(config{ep: ep, addr: ep.String()}); code != 0 {

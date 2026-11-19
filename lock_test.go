@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"fmt"
@@ -86,7 +86,7 @@ func setPIDNS(t *testing.T, ns string) {
 }
 
 // A PID from another namespace says nothing here. Deleting its lock stopped
-// a live server when `www -l` ran inside a sandbox. A lock written before
+// a live server when `drvu -l` ran inside a sandbox. A lock written before
 // locks named their namespace counts as the host's, so a sandbox keeps it
 // and the host still clears it once its server is gone. A reader that
 // cannot name its own namespace can check no PID.

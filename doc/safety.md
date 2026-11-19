@@ -1,12 +1,12 @@
 # Safety
 
-www refuses to serve the home directory and every directory above it, such as `/home` and `/`. A tree exposes everything below it, and home holds `~/.ssh`, `~/.gnupg` and every token file.
+drvu refuses to serve the home directory and every directory above it, such as `/home` and `/`. A tree exposes everything below it, and home holds `~/.ssh`, `~/.gnupg` and every token file.
 
 ## Symlinks
 
 Symlinks inside the tree are followed, absolute ones included.
 
-A link that leads out of the tree is followed only into a directory that holds a file named `.www-follow`, or below one, and only when other users could read the target. A file needs the others-read bit and a directory others-read and others-execute, checked from the marker's directory down. So nobody reads through www what `cat` would not show them.
+A link that leads out of the tree is followed only into a directory that holds a file named `.drvu-follow`, or below one, and only when other users could read the target. A file needs the others-read bit and a directory others-read and others-execute, checked from the marker's directory down. So nobody reads through drvu what `cat` would not show them.
 
 A store of private files linked into repos, such as lord's `~/.local/share/lord`, opens with one marker in its root. Secrets kept there at mode 600 stay refused.
 
@@ -16,11 +16,11 @@ Opening a refused link shows the link, its target and the reason. The listing ma
 
 A loopback server answers only to loopback addresses, `localhost` and names that `/etc/hosts` maps to loopback.
 
-Its Content-Security-Policy forbids every script but www's own, which it allows by hash. www's script reloads pages, marks changed blocks, walks listings by arrow and opens history folds. Raw HTML in a doc passes through, so a README in a cloned repo could otherwise run code on this origin.
+Its Content-Security-Policy forbids every script but drvu's own, which it allows by hash. drvu's script reloads pages, marks changed blocks, walks listings by arrow and opens history folds. Raw HTML in a doc passes through, so a README in a cloned repo could otherwise run code on this origin.
 
 ## Code in a tree
 
-www runs no code a tree supplies. It reads files and runs git with every option turned off that would start a program named in the repo's config: the pager, textconv, external diff, signature checks, fsmonitor and fetching.
+drvu runs no code a tree supplies. It reads files and runs git with every option turned off that would start a program named in the repo's config: the pager, textconv, external diff, signature checks, fsmonitor and fetching.
 
 ## Other users
 

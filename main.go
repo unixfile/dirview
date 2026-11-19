@@ -1,8 +1,8 @@
-// Package www browses trees of Markdown docs in the browser. It renders
+// Package dirview browses trees of Markdown docs in the browser. It renders
 // each page with goldmark when requested and mirrors the file tree in its
 // URLs. Trees on one address share a server, which lives while their locks
 // exist. The executables under cmd/ share it.
-package www
+package dirview
 
 import (
 	"bufio"
@@ -104,7 +104,7 @@ func noteRun() {
 	}
 }
 
-// errno is an error with the code www exits with.
+// errno is an error with the code drvu exits with.
 type errno struct {
 	code syscall.Errno
 	msg  string
@@ -158,7 +158,7 @@ func show(kind, text string, noopen bool) {
 	}
 }
 
-// detach re-runs www in a new session and relays its start report.
+// detach re-runs drvu in a new session and relays its start report.
 // Go cannot fork safely, so a re-exec is the way to background itself.
 func detach(c config) int {
 	r, w, err := os.Pipe()

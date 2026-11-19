@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"fmt"
@@ -24,7 +24,7 @@ func openBrowser(url string) {
 	go cmd.Wait()
 }
 
-// openArgs is the command that opens url. A loopback URL takes WWW_OPEN,
+// openArgs is the command that opens url. A loopback URL takes DRVU_OPEN,
 // split at spaces, with each %s replaced by the URL, or the URL appended
 // when none holds %s; eg 'brave-browser --app=%s' opens an app window. A
 // shared URL, and any URL without the variable, goes to xdg-open.

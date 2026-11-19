@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"io/fs"
@@ -13,8 +13,8 @@ import (
 
 // TestOwnLexersMatchChroma compares the program's own lexers with
 // chroma's, byte by byte, by the class each byte gets on a page.
-// WWW_LEXCHECK names the files and directories to compare, eg
-// WWW_LEXCHECK=/usr/lib/python3.11; without it the test is skipped. It
+// DRVU_LEXCHECK names the files and directories to compare, eg
+// DRVU_LEXCHECK=/usr/lib/python3.11; without it the test is skipped. It
 // reports the share of bytes that agree per language and the first lines
 // that differ.
 func TestOwnLexersMatchChroma(t *testing.T) {

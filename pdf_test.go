@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"bytes"
@@ -92,7 +92,7 @@ func TestInterpreter(t *testing.T) {
 	}
 }
 
-// weasyprint draws the page from www's own HTML and fetches through this
+// weasyprint draws the page from drvu's own HTML and fetches through this
 // server alone: a doc's image from the tree arrives, while an image on
 // another host and a file: URL are never fetched.
 func TestPDFDrawsThroughThisServerAlone(t *testing.T) {

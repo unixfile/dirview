@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"net/http"
@@ -124,7 +124,7 @@ func TestStopRefusesOtherSites(t *testing.T) {
 	}
 }
 
-// The fonts come from www, cached for a year: every file the stylesheet
+// The fonts come from drvu, cached for a year: every file the stylesheet
 // names, and nothing else from the font directory.
 func TestFonts(t *testing.T) {
 	s, _, _ := serveTree(t)

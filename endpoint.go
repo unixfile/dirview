@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"context"
@@ -56,7 +56,7 @@ var (
 	secretEnv = envPrefix + "SECRET"
 )
 
-// secretToken returns the token in WWW_SECRET, or a random one when it is
+// secretToken returns the token in DRVU_SECRET, or a random one when it is
 // unset. A bad token's error names the variable but not its value, which
 // is a secret.
 func secretToken() (string, error) {
@@ -70,9 +70,9 @@ func secretToken() (string, error) {
 	return v, nil
 }
 
-// endpointOf returns where c serves. A bare --share takes WWW_SHARE,
-// and a start without -a takes WWW_ADDR; --list, --kill and --restart
-// without an address cover every server, so WWW_ADDR leaves them be.
+// endpointOf returns where c serves. A bare --share takes DRVU_SHARE,
+// and a start without -a takes DRVU_ADDR; --list, --kill and --restart
+// without an address cover every server, so DRVU_ADDR leaves them be.
 // An error from a variable's value names the variable.
 func endpointOf(c config, uid int) (netip.AddrPort, error) {
 	if c.sharing {

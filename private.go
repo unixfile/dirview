@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"encoding/base64"
@@ -79,7 +79,7 @@ func privateEnv() []string {
 }
 
 // usePrivate lets w read private repos into the cache beside root, eg
-// ~/.cache/www-private beside ~/.cache/www. A public server shares root
+// ~/.cache/drvu-private beside ~/.cache/drvu. A public server shares root
 // when it runs as the same user, but never opens this one.
 func (w *web) usePrivate(root string) error {
 	dir := filepath.Join(filepath.Dir(root), progName+"-private")

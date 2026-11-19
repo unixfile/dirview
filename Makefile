@@ -1,14 +1,16 @@
 .PHONY: all build syntax fonts run test blackbox bench clean install uninstall deb deb-syntax install-deb uninstall-deb
 
-# WORKING_NAME holds the program's name, provisional until a final one is
-# chosen. The binary, the package and the paths below take it.
-NAME := $(shell cat WORKING_NAME)
+# NAME holds the program's name, which the binaries, units and paths
+# below take. The project's name is the module's, which the Debian
+# packages take.
+NAME := $(shell cat NAME)
 
 all: build
 
 # The root is a library package and each executable has its main under
 # cmd/. MODULE is the library's import path, which -X needs.
 MODULE := $(shell go list -m)
+PACKAGE := $(notdir $(MODULE))
 
 # build names this checkout in the reader's binary, so its bug button files
 # into csi/bugs here; the package is built without it. The public binary
@@ -33,7 +35,7 @@ fonts:
 # an installed server on port 80. A server already there is replaced by
 # this build, serving the same trees, so its open pages go on under the
 # new code; the browser opens only when no page of this directory was
-# open, and www says which happened.
+# open, and drvu says which happened.
 RUNADDR := 127.31.$(shell expr $$(id -u) - 1000).1:8080
 
 run: build syntax
@@ -94,36 +96,36 @@ uninstall:
 VERSION ?= 0~git$(shell TZ=UTC git log -1 --format=%cd --date=format-local:%Y%m%d%H%M%S).$(shell git rev-parse --short HEAD)
 ARCH ?= $(shell go env GOARCH)
 STAGE := build/deb
-DEB := build/$(NAME)_$(VERSION)_$(ARCH).deb
+DEB := build/$(PACKAGE)_$(VERSION)_$(ARCH).deb
 
 deb:
 	rm -rf $(STAGE)
 	CGO_ENABLED=0 GOARCH=$(ARCH) go build -trimpath -ldflags='-s -w' -o $(STAGE)/usr/bin/$(NAME) ./cmd/local
 	CGO_ENABLED=0 GOARCH=$(ARCH) go build -trimpath -ldflags='-s -w' -o $(STAGE)/usr/bin/$(NAME)-public ./cmd/public
-	install -D -m 0644 README.md $(STAGE)/usr/share/doc/$(NAME)/README.md
-	{ sed '/^@EXPAT@$$/,$$d; s/@NAME@/$(NAME)/g' deb/copyright.in; sed '1,4d; s/^$$/./; s/^/ /' LICENSE; \
+	install -D -m 0644 README.md $(STAGE)/usr/share/doc/$(PACKAGE)/README.md
+	{ sed '/^@EXPAT@$$/,$$d; s/@NAME@/$(NAME)/g; s/@PACKAGE@/$(PACKAGE)/g' deb/copyright.in; sed '1,4d; s/^$$/./; s/^/ /' LICENSE; \
 	  sed '1,/^@EXPAT@$$/d' deb/copyright.in; sed 's/^$$/./; s/^/ /' assets/fonts/STIXTwoText-OFL.txt; } > $(STAGE)/copyright
-	install -D -m 0644 $(STAGE)/copyright $(STAGE)/usr/share/doc/$(NAME)/copyright
+	install -D -m 0644 $(STAGE)/copyright $(STAGE)/usr/share/doc/$(PACKAGE)/copyright
 	rm $(STAGE)/copyright
 	mkdir -p $(STAGE)/usr/share/lintian/overrides
-	sed 's/@NAME@/$(NAME)/g' deb/lintian-overrides.in > $(STAGE)/usr/share/lintian/overrides/$(NAME)
+	sed 's/@NAME@/$(NAME)/g; s/@PACKAGE@/$(PACKAGE)/g' deb/lintian-overrides.in > $(STAGE)/usr/share/lintian/overrides/$(PACKAGE)
 	mkdir -p $(STAGE)/usr/lib/systemd/user $(STAGE)/usr/lib/systemd/system
 	sed 's/@NAME@/$(NAME)/g; s|@BIN@|/usr/bin/$(NAME)|' systemd/user.service.in > $(STAGE)/usr/lib/systemd/user/$(NAME).service
 	sed 's/@NAME@/$(NAME)/g; s|@BIN@|/usr/bin/$(NAME)|' systemd/system@.service.in > $(STAGE)/usr/lib/systemd/system/$(NAME)@.service
-	printf '$(NAME) (%s) unstable; urgency=low\n\n  * Build of commit %s.\n\n -- %s  %s\n' \
+	printf '$(PACKAGE) (%s) unstable; urgency=low\n\n  * Build of commit %s.\n\n -- %s  %s\n' \
 		'$(VERSION)' "$$(git rev-parse --short HEAD)" "$$(sed -n 's/^Maintainer: //p' deb/control.in)" \
 		"$$(git log -1 --format=%cD)" | gzip -9n > $(STAGE)/changelog.gz
-	install -D -m 0644 $(STAGE)/changelog.gz $(STAGE)/usr/share/doc/$(NAME)/changelog.gz
+	install -D -m 0644 $(STAGE)/changelog.gz $(STAGE)/usr/share/doc/$(PACKAGE)/changelog.gz
 	rm $(STAGE)/changelog.gz
 	mkdir -p $(STAGE)/DEBIAN
 	sed 's/@NAME@/$(NAME)/g' deb/postinst.in > $(STAGE)/DEBIAN/postinst
-	sed -e 's/@NAME@/$(NAME)/g' -e 's/@VERSION@/$(VERSION)/' -e 's/@ARCH@/$(ARCH)/' \
+	sed -e 's/@NAME@/$(NAME)/g' -e 's/@PACKAGE@/$(PACKAGE)/g' -e 's/@VERSION@/$(VERSION)/' -e 's/@ARCH@/$(ARCH)/' \
 		-e "s/@SIZE@/$$(du -sk $(STAGE)/usr | cut -f1)/" deb/control.in > $(STAGE)/DEBIAN/control
 	chmod -R u=rwX,go=rX $(STAGE)
 	chmod 0755 $(STAGE)/DEBIAN/postinst
 	dpkg-deb --root-owner-group --build $(STAGE) $(DEB)
 
-# deb-syntax packages the tree-sitter helper as NAME-syntax. It is a
+# deb-syntax packages the tree-sitter helper NAME-syntax as PACKAGE-syntax. It is a
 # package of its own because it needs cgo and libc, while the main binary
 # is static. The main package recommends it and it depends on the main
 # package, each at the same version, since the main binary reads the
@@ -131,18 +133,18 @@ deb:
 # the helper uses. A build for another ARCH needs a C cross compiler, eg
 # CC=aarch64-linux-gnu-gcc.
 SYNSTAGE := build/deb-syntax
-SYNDEB := build/$(NAME)-syntax_$(VERSION)_$(ARCH).deb
-SYNDOC := $(SYNSTAGE)/usr/share/doc/$(NAME)-syntax
+SYNDEB := build/$(PACKAGE)-syntax_$(VERSION)_$(ARCH).deb
+SYNDOC := $(SYNSTAGE)/usr/share/doc/$(PACKAGE)-syntax
 
 deb-syntax:
 	rm -rf $(SYNSTAGE)
 	cd syntax && CGO_ENABLED=1 GOARCH=$(ARCH) go build -trimpath -buildmode=pie -ldflags='-s -w' -o ../$(SYNSTAGE)/usr/bin/$(NAME)-syntax .
 	mkdir -p $(SYNDOC) $(SYNSTAGE)/DEBIAN
-	{ sed '/^@EXPAT@$$/,$$d; s/@NAME@/$(NAME)/g' deb/syntax-copyright.in; sed '1,4d; s/^$$/./; s/^/ /' LICENSE; } > $(SYNDOC)/copyright
-	printf '$(NAME)-syntax (%s) unstable; urgency=low\n\n  * Build of commit %s.\n\n -- %s  %s\n' \
+	{ sed '/^@EXPAT@$$/,$$d; s/@NAME@/$(NAME)/g; s/@PACKAGE@/$(PACKAGE)/g' deb/syntax-copyright.in; sed '1,4d; s/^$$/./; s/^/ /' LICENSE; } > $(SYNDOC)/copyright
+	printf '$(PACKAGE)-syntax (%s) unstable; urgency=low\n\n  * Build of commit %s.\n\n -- %s  %s\n' \
 		'$(VERSION)' "$$(git rev-parse --short HEAD)" "$$(sed -n 's/^Maintainer: //p' deb/control.in)" \
 		"$$(git log -1 --format=%cD)" | gzip -9n > $(SYNDOC)/changelog.gz
-	sed -e 's/@NAME@/$(NAME)/g' -e 's/@VERSION@/$(VERSION)/g' -e 's/@ARCH@/$(ARCH)/' \
+	sed -e 's/@NAME@/$(NAME)/g' -e 's/@PACKAGE@/$(PACKAGE)/g' -e 's/@VERSION@/$(VERSION)/g' -e 's/@ARCH@/$(ARCH)/' \
 		-e "s/@LIBC@/$$(objdump -T $(SYNSTAGE)/usr/bin/$(NAME)-syntax | grep -o 'GLIBC_[0-9.]*' | sed 's/GLIBC_//' | sort -V | tail -1)/" \
 		-e "s/@SIZE@/$$(du -sk $(SYNSTAGE)/usr | cut -f1)/" deb/syntax-control.in > $(SYNSTAGE)/DEBIAN/control
 	chmod -R u=rwX,go=rX $(SYNSTAGE)
@@ -166,4 +168,4 @@ install-deb: uninstall
 	-/usr/bin/$(NAME) --restart --force
 
 uninstall-deb:
-	sudo apt remove $(NAME) $(NAME)-syntax
+	sudo apt remove $(PACKAGE) $(PACKAGE)-syntax

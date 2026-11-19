@@ -6,7 +6,7 @@ Code pages are highlighted by chroma, by the language the file name gives, in fe
 
 Go is lexed by Go's own scanner from the standard library instead, about 150 times faster, with the same colours. A Go page of 1,400 lines takes 2 ms.
 
-Python, JavaScript and shell have lexers of www's own. They follow chroma's rules and give every byte the class chroma gives it. chroma took 180 ms to lex argparse.py, 2,633 lines, and they take under 2 ms. A whole page of it renders in about 3 ms, and jquery.js, 10,907 lines, in about 20 ms instead of 400.
+Python, JavaScript and shell have lexers of drvu's own. They follow chroma's rules and give every byte the class chroma gives it. chroma took 180 ms to lex argparse.py, 2,633 lines, and they take under 2 ms. A whole page of it renders in about 3 ms, and jquery.js, 10,907 lines, in about 20 ms instead of 400.
 
 Other languages go through chroma, at about 70 µs a line.
 
@@ -40,11 +40,11 @@ In the same corner, flat goes back to the plain page.
 
 Add `?tree`, or follow tree, for the syntax tree: one row per named node, with its field in its parent, its kind, its text on one line and a link to its lines. It is folded so the file's top-level declarations show first.
 
-A helper parses it with tree-sitter: `www-syntax`, which the package of that name installs and `make syntax` builds beside www with a C compiler. It knows Go, Python, JavaScript, TypeScript, Rust, C, C++, shell, Java, C#, JSON, HTML, CSS and Ruby. Without the helper, or for another language, the page says so above the plain code.
+A helper parses it with tree-sitter: `drvu-syntax`, which the package dirview-syntax installs and `make syntax` builds beside drvu with a C compiler. It knows Go, Python, JavaScript, TypeScript, Rust, C, C++, shell, Java, C#, JSON, HTML, CSS and Ruby. Without the helper, or for another language, the page says so above the plain code.
 
 The page carries only the folds that show. A closed fold arrives empty and fetches its rows when it opens, its own folds empty in turn. jquery.js's tree is 4.8 MB, and its page sends 413 bytes of it, since the file is one function; server.go's sends 9 KB of 266. Once the page has loaded, it fetches the whole tree and fills each fold still empty, so the browser's find reaches every row and the folds already opened stay open. A search waits for that, then filters. When the whole tree cannot be had, the search covers the rows the page has and says so. A request for a fold names the hash of the file the page showed; when the file changed since, the page reloads instead of mixing two trees.
 
-A first view of a 1,400-line file takes about 20 ms; one of jquery.js, 10,900 lines, takes about 85 ms, most of it in the parse. www renders the rows as the helper prints them. The server keeps the tree, so a later view takes a few milliseconds.
+A first view of a 1,400-line file takes about 20 ms; one of jquery.js, 10,900 lines, takes about 85 ms, most of it in the parse. drvu renders the rows as the helper prints them. The server keeps the tree, so a later view takes a few milliseconds.
 
 ## Gron
 

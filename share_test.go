@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"encoding/binary"
@@ -286,7 +286,7 @@ func TestSpacedShareHint(t *testing.T) {
 	}
 }
 
-// WWW_SHARE fills a bare --share and WWW_ADDR a start without -a.
+// DRVU_SHARE fills a bare --share and DRVU_ADDR a start without -a.
 // Flags win, --list, --kill and --restart keep covering every server, and
 // a bad value names its variable.
 func TestEnvironmentDefaults(t *testing.T) {

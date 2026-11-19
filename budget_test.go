@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"net/http"
@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// pageBudget is the time www promises for any page from a warm server.
+// pageBudget is the time drvu promises for any page from a warm server.
 const pageBudget = 5 * time.Millisecond
 
 // Every kind of page renders within pageBudget once its git answers are

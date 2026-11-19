@@ -1,6 +1,6 @@
 # Speed
 
-www is fast. A page from a running server takes one to three milliseconds and a server starts in about 40 ms. A test in `make test` fails any page that takes over 5 ms.
+drvu is fast. A page from a running server takes one to three milliseconds and a server starts in about 40 ms. A test in `make test` fails any page that takes over 5 ms.
 
 ## Git's answers
 
@@ -14,7 +14,7 @@ The cache holds only what someone has visited, with one exception. When a tree j
 
 In a large repo git can take a second for a history, because it reads every commit back to the ones that touched the path.
 
-When it takes over 100 ms, the history page says so and names `git commit-graph write --reachable --changed-paths`. That builds git's index of the paths each commit changed and makes such histories several times faster. www never writes to the repo itself.
+When it takes over 100 ms, the history page says so and names `git commit-graph write --reachable --changed-paths`. That builds git's index of the paths each commit changed and makes such histories several times faster. drvu never writes to the repo itself.
 
 ## Benchmarks
 

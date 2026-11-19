@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"fmt"
@@ -112,7 +112,7 @@ func guard(next http.Handler, anyHost bool) http.Handler {
 var hostsFile = "/etc/hosts"
 
 // localHost accepts a loopback address, localhost, or a name that the hosts
-// file maps to loopback, eg an www instance named there. DNS is never
+// file maps to loopback, eg a drvu instance named there. DNS is never
 // asked: a DNS name that resolves to loopback is the rebinding attack itself.
 func localHost(host string) bool {
 	if strings.EqualFold(host, "localhost") {

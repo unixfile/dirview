@@ -1,14 +1,14 @@
-Package: @NAME@
+Package: @PACKAGE@
 Version: @VERSION@
 Architecture: @ARCH@
 Maintainer: unixfile <unixfile@users.noreply.github.com>
 Installed-Size: @SIZE@
 Depends: git, libcap2-bin, weasyprint
-Recommends: xdg-utils, @NAME@-syntax (= @VERSION@)
+Recommends: xdg-utils, @PACKAGE@-syntax (= @VERSION@)
 Suggests: graphviz
 Section: text
 Priority: optional
-Homepage: https://github.com/unixfile/@NAME@
+Homepage: https://github.com/unixfile/@PACKAGE@
 Description: browse trees of Markdown docs in the browser
  Run @NAME@ in a directory and it serves the tree on a loopback address
  of the user's own, rendered on each request. Links follow into

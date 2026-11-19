@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"context"
@@ -173,7 +173,7 @@ func (s *server) byPrefix(prefix string) *tree {
 }
 
 // lookup returns the tree that serves path, or a version of, eg
-// /x/www@261024.4/. A tree inside another wins, so it keeps its own label
+// /x/dirview@261024.4/. A tree inside another wins, so it keeps its own label
 // and lock.
 func (s *server) lookup(path string) *tree {
 	s.mu.RLock()
@@ -257,7 +257,7 @@ func (s *server) handler() http.Handler {
 // localhost, so the request must come from a page of this server.
 func (s *server) handleStop(w http.ResponseWriter, r *http.Request) {
 	if !sameOrigin(r) {
-		http.Error(w, "stop must come from an "+progName+" page", http.StatusForbidden)
+		http.Error(w, "stop must come from a "+progName+" page", http.StatusForbidden)
 		return
 	}
 	trees, crumbs, why, kill := s.list(), []crumb{{Label: progName}}, "Kill server button", true

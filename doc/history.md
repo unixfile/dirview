@@ -26,7 +26,7 @@ A commit on no main line, eg on another branch, shows its short hash.
 
 A doc or code page with commits opens with a line that says where the reader is: current when the page matches its last commit, changed when it has edits since. Hover names the commit by stardate and subject.
 
-www compares git's id for the file with the one HEAD keeps, which takes microseconds, and asks `git status` only when they differ.
+drvu compares git's id for the file with the one HEAD keeps, which takes microseconds, and asks `git status` only when they differ.
 
 ## The timeline
 
@@ -38,7 +38,7 @@ The menu loads when the pointer first passes over the line, so it opens full. Up
 
 ## The feed
 
-`?log=rss` serves the same history as an RSS feed, eg `/scratch/www/doc/?log=rss`. A history page names its feed in its head, where a feed reader finds it, and as rss in its header.
+`?log=rss` serves the same history as an RSS feed, eg `/scratch/dirview/doc/?log=rss`. A history page names its feed in its head, where a feed reader finds it, and as rss in its header.
 
 The feed carries the 50 newest commits. Each item's title is the subject, its link the commit's page and its date the one the history shows. Its text is the stardate, the short hash and the message in paragraphs.
 
@@ -46,7 +46,7 @@ Links are absolute, since a reader shows them away from the page. They take the 
 
 The feed has an ETag, so a reader that polls gets 304 until a commit changes it. A byte that XML forbids, eg a control character in a message, becomes U+FFFD, so one message cannot break the feed.
 
-On the web address a feed request is a visit, so it fetches a copy over five minutes old. A page answers from the copy at hand and reloads after the fetch, but a feed reader does not reload. So a feed request waits for the fetch, up to 30 seconds, and answers from the tree it brought. A fetch that takes longer, or fails, leaves the feed as the copy had it. `www-public` serves feeds too.
+On the web address a feed request is a visit, so it fetches a copy over five minutes old. A page answers from the copy at hand and reloads after the fetch, but a feed reader does not reload. So a feed request waits for the fetch, up to 30 seconds, and answers from the tree it brought. A fetch that takes longer, or fails, leaves the feed as the copy had it. `drvu-public` serves feeds too.
 
 ## Commit pages
 
@@ -54,7 +54,7 @@ permalink in a history's fold, or commit at the right end of a version's top lin
 
 Added lines sit on a green tint and removed ones on a red. The diff stops at 1 MiB.
 
-From the terminal, `www --commit=261024.4` prints a commit's full hash, stardate and subject as keyval.
+From the terminal, `drvu --commit=261024.4` prints a commit's full hash, stardate and subject as keyval.
 
 ## Semantic diffs
 
@@ -70,9 +70,9 @@ A first view of a commit that touches 12 files took about 190 ms. The server kee
 
 ## Git's safety
 
-www runs `git log`, `git show` and `git rev-parse` in the directory of what the page shows, after links resolve.
+drvu runs `git log`, `git show` and `git rev-parse` in the directory of what the page shows, after links resolve.
 
-A cloned repo's `.git/config` can name programs for git to run. So www turns off external diff, textconv, signature checks and fetches, and drops `GIT_` variables from its environment. git's own `safe.directory` check refuses repos that other users own.
+A cloned repo's `.git/config` can name programs for git to run. So drvu turns off external diff, textconv, signature checks and fetches, and drops `GIT_` variables from its environment. git's own `safe.directory` check refuses repos that other users own.
 
 No history page shows authors, on a share or on loopback.
 
@@ -80,7 +80,7 @@ No history page shows authors, on a share or on loopback.
 
 A shared server shows history and diffs as loopback does, with four differences.
 
-History appears only when other users could read the repo's git directory, its `HEAD`, `objects` and `refs`. Nobody reads through www what git run as another user would not show them.
+History appears only when other users could read the repo's git directory, its `HEAD`, `objects` and `refs`. Nobody reads through drvu what git run as another user would not show them.
 
 Each message loses its trailer block, which carries emails and session links in lines such as `Signed-off-by:` and `Claude-Session:`. As in git, the last paragraph is a trailer block when a quarter of its lines are `Key: value` lines, so a cherry-pick note or a wrapped trailer does not keep it.
 
@@ -92,15 +92,15 @@ A share never shows git's errors, which name paths on the machine, and says only
 
 Each commit in a history has a time warp link, inside its fold, to the page as it was in that commit.
 
-`@` and a commit's hash on a tree's name serve the tree as of that commit, eg `/scratch/www@5430ac3/` for its root or `/scratch/www@5430ac3/doc/history.md` for one doc. The version qualifies the tree, so it sits on the name, not below it as an entry would. A tree served at `/` has no name, so its versions sit below it, eg `/@5430ac3/`.
+`@` and a commit's hash on a tree's name serve the tree as of that commit, eg `/scratch/dirview@5430ac3/` for its root or `/scratch/dirview@5430ac3/doc/history.md` for one doc. The version qualifies the tree, so it sits on the name, not below it as an entry would. A tree served at `/` has no name, so its versions sit below it, eg `/@5430ac3/`.
 
-The address below the tree, eg `/scratch/www/@5430ac3/`, is the old form and redirects. A tree that holds an entry named like a version, eg a directory `@cafe`, serves that entry at `/scratch/www/@cafe/`, and the old form does not redirect there.
+The address below the tree, eg `/scratch/dirview/@5430ac3/`, is the old form and redirects. A tree that holds an entry named like a version, eg a directory `@cafe`, serves that entry at `/scratch/dirview/@cafe/`, and the old form does not redirect there.
 
-A stardate works the same, eg `www@261024.4/`, and a hash of a commit with a stardate redirects to it. A day alone, eg `www@261024/`, names no commit and says so, though its six digits would also read as a hash. Any length of hash from four characters up works and redirects to git's short form.
+A stardate works the same, eg `dirview@261024.4/`, and a hash of a commit with a stardate redirects to it. A day alone, eg `dirview@261024/`, names no commit and says so, though its six digits would also read as a hash. Any length of hash from four characters up works and redirects to git's short form.
 
-Docs, code pages, listings and search work there as on the tree itself, read from git rather than the disk. Relative links stay in the same version. www's script still runs there, so keys, the search box and line marks work as on the tree.
+Docs, code pages, listings and search work there as on the tree itself, read from git rather than the disk. Relative links stay in the same version. drvu's script still runs there, so keys, the search box and line marks work as on the tree.
 
-The top line names the commit that last changed the page as of that version, stardate first as in histories, and opens the same timeline with that version marked. At the line's right end, commit opens the commit's page, and current leads to the page as it is, as does the timeline's first row. The breadcrumbs and the tab title carry the hash, eg `www @ 5430ac3`.
+The top line names the commit that last changed the page as of that version, stardate first as in histories, and opens the same timeline with that version marked. At the line's right end, commit opens the commit's page, and current leads to the page as it is, as does the timeline's first row. The breadcrumbs and the tab title carry the hash, eg `drvu @ 5430ac3`.
 
 A version never changes, so it has no live reload, no Delete lock button and no path to copy, and its docs list no backlinks.
 

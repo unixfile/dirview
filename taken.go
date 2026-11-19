@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"encoding/binary"
@@ -10,9 +10,9 @@ import (
 	"strings"
 )
 
-// taken explains why ep cannot be bound when no www of this user serves
+// taken explains why ep cannot be bound when no drvu of this user serves
 // a live tree there: it names the listeners that hold the port, marking
-// the ones that are www servers on other addresses. A www of the user
+// the ones that are drvu servers on other addresses. A drvu of the user
 // that holds ep with no live tree, eg after its tree's lock went
 // unseen, is named with its PID and the command that stops it.
 func taken(ep netip.AddrPort) string {

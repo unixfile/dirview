@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"bytes"
@@ -202,7 +202,7 @@ func (t *tree) serveLog(w http.ResponseWriter, r *http.Request, name string, dir
 	}
 	// git walks every commit back to the ones that touched name, unless
 	// the repo's commit-graph tells it which paths each commit changed.
-	// www leaves the repo alone and names the command instead. A share
+	// drvu leaves the repo alone and names the command instead. A share
 	// says nothing, since its viewer cannot run it.
 	if took > slowGit && !t.shared && t.lacksPathFilters(r.Context(), name) {
 		fmt.Fprintf(&body, "<p class=\"own\">git took %d ms for this history. "+

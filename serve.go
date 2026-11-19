@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"context"
@@ -75,7 +75,7 @@ func run(c config, rep *reporter) int {
 		return rep.fail(errnoOf(err), err.Error())
 	}
 	// A share's name comes from DNS, which may take a second; asked
-	// before the registry is locked, it holds up no other www.
+	// before the registry is locked, it holds up no other drvu.
 	origin := shareOrigin(c.ep)
 	reg, err := openRegistry(c.ep)
 	if err != nil {
@@ -269,7 +269,7 @@ func originHost(host string, port uint16) string {
 
 // report ends a start with the tree's URL alone, the same whether this run
 // started the tree or found it served. A share adds a note on stderr: a
-// firewall drops other machines before www sees them, and a test from
+// firewall drops other machines before drvu sees them, and a test from
 // this machine passes through loopback, so only a capture tells.
 func report(rep *reporter, ep netip.AddrPort, url string) {
 	rep.send("url", url)
@@ -544,7 +544,7 @@ func (h *hub) dropLeftovers() {
 }
 
 // adopt serves the tree whose lock is lockPath and writes the lock. link is
-// the registry entry a joining www made, or "" to make one. token puts
+// the registry entry a joining drvu made, or "" to make one. token puts
 // a shared tree under a secret path.
 func (h *hub) adopt(lockPath, link, token string) (*tree, error) {
 	if !filepath.IsAbs(lockPath) || !lockNames(h.ep, filepath.Base(lockPath)) {
@@ -717,7 +717,7 @@ func (h *hub) shutdown(why string) {
 }
 
 // halt closes the listener while the registry is locked, so a joining
-// www finds the address free and starts a new server instead of
+// drvu finds the address free and starts a new server instead of
 // linking into this one. Open connections drain in the background. The
 // caller holds the lock.
 func (h *hub) halt(why string) {

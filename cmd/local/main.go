@@ -2,6 +2,6 @@
 // machine and, on a second address, online repos.
 package main
 
-import "www"
+import "dirview"
 
-func main() { www.Local() }
+func main() { dirview.Local() }

@@ -8,7 +8,7 @@ On a listing it searches the directory, nearest first. The directory's own names
 
 A line result takes one row, cut so the match shows, and opens a code page at its line. A file shows its first three matching lines, then `+N more`, which opens the file filtered by the query.
 
-What git ignores comes last, behind one link: `1 hit in 1 ignored file`. Following it shows the hits. A repo inside the tree counts its own ignores. www asks git what it ignores at most once every 10 seconds per directory, so a file that becomes ignored can show as ordinary for that long. A search started inside an ignored directory treats its contents as ordinary. Limits apply per level, so a deep directory full of hits cannot crowd out a shallower one.
+What git ignores comes last, behind one link: `1 hit in 1 ignored file`. Following it shows the hits. A repo inside the tree counts its own ignores. drvu asks git what it ignores at most once every 10 seconds per directory, so a file that becomes ignored can show as ordinary for that long. A search started inside an ignored directory treats its contents as ordinary. Limits apply per level, so a deep directory full of hits cannot crowd out a shallower one.
 
 Any other page filters itself, and each match is marked:
 
@@ -45,7 +45,7 @@ Kill server and Delete lock take a second Enter. Files and directories are not c
 
 ## Copy buttons
 
-Beside the box, ⧉ copies the page's text: what lies below the box, without www's own lines and links or line numbers. A code page copies as its file and a listing as its names. A doc copies its Markdown, and lines a range marks, eg `#L3-L26`, copy alone. What a search hides stays out.
+Beside the box, ⧉ copies the page's text: what lies below the box, without drvu's own lines and links or line numbers. A code page copies as its file and a listing as its names. A doc copies its Markdown, and lines a range marks, eg `#L3-L26`, copy alone. What a search hides stays out.
 
 Beside it, ⤴ copies a link to what is selected:
 

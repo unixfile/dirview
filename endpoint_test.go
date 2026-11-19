@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"strings"
@@ -19,7 +19,7 @@ func TestHasCap(t *testing.T) {
 	}
 }
 
-// A chosen token comes from WWW_SECRET, never the command line, and a bad
+// A chosen token comes from DRVU_SECRET, never the command line, and a bad
 // one's error names the variable without echoing the secret.
 func TestSecretToken(t *testing.T) {
 	t.Setenv(secretEnv, "k3x9")

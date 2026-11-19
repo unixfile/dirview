@@ -28,9 +28,9 @@ Docs follow CommonMark with GitHub's extensions, rendered by goldmark: tables, s
 
 Lines join into a paragraph, and a blank line starts the next. A line that starts with a dash begins a list even right after text. Straight quotes and dashes turn typographic.
 
-Text is hyphenated by the rules of its language, which the browser picks from a block's `lang`. www tells each block's language from its commonest words, eg `och`, `att` and `inte` for Swedish, and marks every block that is not English. It knows English, Swedish, Danish, Norwegian, German, Dutch, French, Spanish, Italian and Portuguese.
+Text is hyphenated by the rules of its language, which the browser picks from a block's `lang`. drvu tells each block's language from its commonest words, eg `och`, `att` and `inte` for Swedish, and marks every block that is not English. It knows English, Swedish, Danish, Norwegian, German, Dutch, French, Spanish, Italian and Portuguese.
 
-A block is a paragraph, heading, list, quote or table at the doc's top level. One too short to tell, such as a heading, takes the language of the doc as a whole. A doc in a language www does not know counts as English. Code and raw HTML are neither read nor marked.
+A block is a paragraph, heading, list, quote or table at the doc's top level. One too short to tell, such as a heading, takes the language of the doc as a whole. A doc in a language drvu does not know counts as English. Code and raw HTML are neither read nor marked.
 
 A quote whose first line is only `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]` or `[!CAUTION]` becomes an alert. The marker gives way to a small mono label that names its kind, and the alert keeps full strength where a plain quote fades. A marker with text after it on the same line stays a plain quote.
 
@@ -42,7 +42,7 @@ Every gap between blocks is the same, whether the block is a paragraph, list, ta
 
 ## PDF
 
-pdf in a doc's header, beside raw, saves the doc as a PDF file, eg `README.pdf`. `?pdf` asks for it directly. weasyprint draws it from the page www renders, with the same stylesheet and fonts, on A4 pages and without the header, search row or buttons.
+pdf in a doc's header, beside raw, saves the doc as a PDF file, eg `README.pdf`. `?pdf` asks for it directly. weasyprint draws it from the page drvu renders, with the same stylesheet and fonts, on A4 pages and without the header, search row or buttons.
 
 weasyprint reaches only the server that asked, as a browser on the page may. An image from another host, or a `file:` URL, stays out of the PDF.
 
@@ -78,24 +78,24 @@ The server watches the directory of each open page and its repo's git directory 
 
 ## Look
 
-The stylesheet is www's own. It began as md2html-default's, whose light palette it keeps, and the page colours sit as variables on `:root`.
+The stylesheet is drvu's own. It began as md2html-default's, whose light palette it keeps, and the page colours sit as variables on `:root`.
 
 A page turns dark when the OS asks for it, with a grey palette. The dark palette is a first draft.
 
-The header's right end names the mode in force, eg `▸ system`, and opens like the menu of versions. The menu sets the mode by hand: `light`, `system`, `dark` and `green`. Green is green text on near black, and only the menu or `:green` turns it on. Diffs and the kill button keep their red and green in it, since those colours carry meaning. Each mode shows in its own colours: light as a light page, dark as a dark one, green as a green one, system as the OS has it now. The one in force has a border. A choice, a click outside the menu or Escape closes it. `system` follows the OS again. The browser keeps the choice per server address, so a server on another address starts with the system's mode, and nothing goes to the server. The light, dark and system modes write each colour as `light-dark(light, dark)`, which browsers know since 2024; an older one shows pages without www's colours. Green sets plain colours.
+The header's right end names the mode in force, eg `▸ system`, and opens like the menu of versions. The menu sets the mode by hand: `light`, `system`, `dark` and `green`. Green is green text on near black, and only the menu or `:green` turns it on. Diffs and the kill button keep their red and green in it, since those colours carry meaning. Each mode shows in its own colours: light as a light page, dark as a dark one, green as a green one, system as the OS has it now. The one in force has a border. A choice, a click outside the menu or Escape closes it. `system` follows the OS again. The browser keeps the choice per server address, so a server on another address starts with the system's mode, and nothing goes to the server. The light, dark and system modes write each colour as `light-dark(light, dark)`, which browsers know since 2024; an older one shows pages without drvu's colours. Green sets plain colours.
 
-The browser loads the stylesheet once. Its URL names a hash of its content, eg `/_www/style.7b94a08e7731.css`, so it is kept for a year, and a changed stylesheet comes under a new URL.
+The browser loads the stylesheet once. Its URL names a hash of its content, eg `/_drvu/style.7b94a08e7731.css`, so it is kept for a year, and a changed stylesheet comes under a new URL.
 
 The header names a tree by its base name and shows the full path on hover. Every tree page's breadcrumbs start at `index`, which links `/`.
 
-The header, listings and www's own messages are mono; documents keep the serif. Mono text shows no ligatures, so `<=` stays two characters in any font.
+The header, listings and drvu's own messages are mono; documents keep the serif. Mono text shows no ligatures, so `<=` stays two characters in any font.
 
 Every page keeps one width, 58ch of the body font, and keeps space for a scrollbar, so the header holds still from page to page. Code is smaller than the body text and never under 11px. A code block in a document fits 99 columns in that width, and so does a diff, its leading sign included. A code page fits 104: a line number of up to four digits, a space and 99 columns of code. Longer lines scroll.
 
 ## Fonts
 
-Pages load no fonts from the network. STIX Two Text, the serif, and Iosevka, the mono, come from the machine when installed. Otherwise they come from subsets built into www, which the browser caches for a year.
+Pages load no fonts from the network. STIX Two Text, the serif, and Iosevka, the mono, come from the machine when installed. Otherwise they come from subsets built into drvu, which the browser caches for a year.
 
-Each face has a core file for Latin text and www's own signs, about 25 KB for the serif and 15 KB for the mono, so a plain page fetches about 40 KB of font. A second file per face holds Greek, Cyrillic and symbols, and the browser fetches it only for a page that uses them.
+Each face has a core file for Latin text and drvu's own signs, about 25 KB for the serif and 15 KB for the mono, so a plain page fetches about 40 KB of font. A second file per face holds Greek, Cyrillic and symbols, and the browser fetches it only for a page that uses them.
 
 Text shows at once in a fallback font and switches when the file arrives.

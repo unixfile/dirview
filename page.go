@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"bytes"
@@ -56,7 +56,7 @@ type crumb struct {
 }
 
 // indexCrumb leads every tree page's breadcrumbs to the index, the parent
-// of all trees. Its label is not www, which a tree may be called.
+// of all trees. Its label is not drvu, which a tree may be called.
 var indexCrumb = crumb{Label: "index", Href: "/"}
 
 type page struct {

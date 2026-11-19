@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"bytes"
@@ -137,7 +137,7 @@ func markAlerts(doc ast.Node, src []byte) {
 	})
 }
 
-// renderAlertLabel writes the label as text of www's own.
+// renderAlertLabel writes the label as text of drvu's own.
 func renderAlertLabel(w util.BufWriter, src []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
 	if entering {
 		w.WriteString(`<p class="own alert">` + node.(*alertLabel).kind + "</p>\n")
@@ -164,7 +164,7 @@ func (n *webMark) Dump(src []byte, level int) { ast.DumpHelper(n, src, level, ni
 // markWeb puts a webMark after each link, bare URLs included, that names a
 // repo on a forge or a file in one. On the web address itself, base is ""
 // and the link turns around: it reads the repo there, so a reader in an
-// online repo stays in www, and the mark leads to the forge.
+// online repo stays in drvu, and the mark leads to the forge.
 func markWeb(doc ast.Node, src []byte, base string) {
 	type found struct {
 		link ast.Node
@@ -245,7 +245,7 @@ func relativePath(dest string) string {
 }
 
 // nodeRenderer replaces goldmark's rendering of fenced code and task list
-// checkboxes, and renders the nodes www adds.
+// checkboxes, and renders the nodes drvu adds.
 type nodeRenderer struct{}
 
 func (nodeRenderer) RegisterFuncs(r renderer.NodeRendererFuncRegisterer) {

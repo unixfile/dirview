@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"bytes"
@@ -48,7 +48,7 @@ type commit struct {
 // run, so the options that would start one are off, fsmonitor among them
 // whichever command runs, and git may not fetch a partial clone's missing
 // objects. Pathspecs are literal, and no GIT_
-// variable from www's own environment leaks in. git's safe.directory
+// variable from drvu's own environment leaks in. git's safe.directory
 // check refuses repos that other users own.
 //
 // In web's cache git may reach a forge, since a repo there is a partial

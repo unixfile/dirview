@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"bytes"
@@ -97,7 +97,7 @@ func (t *tree) serveFeed(w http.ResponseWriter, r *http.Request, name string, di
 
 // linkOrigin is the scheme and host r reached, eg http://127.31.1.1, for links
 // that leave the page. A proxy on loopback that ends TLS, such as Caddy
-// before www-public, names the scheme in X-Forwarded-Proto; any other
+// before drvu-public, names the scheme in X-Forwarded-Proto; any other
 // peer's header is ignored, since it could claim anything.
 func linkOrigin(r *http.Request) string {
 	scheme := "http"

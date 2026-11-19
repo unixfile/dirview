@@ -1,49 +1,49 @@
-# www
+# dirview
 
-www reads directories and repos in the browser: Markdown as pages, code as code, history beside both.
+dirview reads directories and repos in the browser: Markdown as pages, code as code, history beside both. Its command is `drvu`.
 
 It is for anyone who keeps notes, docs and code in plain files and wants to read them as linked pages. It runs on your machine. Nothing needs a build step, and nothing needs a push first.
 
-A repo on GitHub, GitLab or Codeberg reads the same way, once www has fetched it.
+A repo on GitHub, GitLab or Codeberg reads the same way, once drvu has fetched it.
 
 It is fast. A page takes one to three milliseconds and a server starts in about 40 ms. `make test` fails any page that takes over 5 ms.
 
 ## Usage
 
 ```
-www [-p] [--foreground] [--no-open] [-a ADDR] [--debug] [--no-bug]
+drvu [-p] [--foreground] [--no-open] [-a ADDR] [--debug] [--no-bug]
     [--cache=SIZE] [--disk=SIZE] [--base=PATH] [--] [DIR]
-www [-p] [--foreground] [--no-open] --share[=HOST] [--secret] [--debug]
+drvu [-p] [--foreground] [--no-open] --share[=HOST] [--secret] [--debug]
     [--no-bug] [--cache=SIZE] [--disk=SIZE] [--base=PATH] [--] [DIR]
-www --restart [-f] [--no-open] [--debug] [--no-bug]
+drvu --restart [-f] [--no-open] [--debug] [--no-bug]
     [-a ADDR | --share[=HOST]] [--] [DIR]
-www -l [-a ADDR | --share[=HOST]] [--] [DIR]
-www --kill [-a ADDR | --share[=HOST]]
-www --commit=REV [--] [DIR]
-www -h | --help
-www -V | --version
+drvu -l [-a ADDR | --share[=HOST]] [--] [DIR]
+drvu --kill [-a ADDR | --share[=HOST]]
+drvu --commit=REV [--] [DIR]
+drvu -h | --help
+drvu -V | --version
 ```
 
-A second executable, `www-public`, serves online repos to the web and nothing else:
+A second executable, `drvu-public`, serves online repos to the web and nothing else:
 
 ```
-www-public --disk=SIZE (-a ADDR | --share[=HOST]) [--debug] [--cache=SIZE]
+drvu-public --disk=SIZE (-a ADDR | --share[=HOST]) [--debug] [--cache=SIZE]
     [--base=PATH]
-www-public -h | --help
-www-public -V | --version
+drvu-public -h | --help
+drvu-public -V | --version
 ```
 
-Run `www` in a directory. It prints the tree's URL and opens it with `xdg-open`, a tab in your default browser. To open it another way, set `WWW_OPEN`, eg `WWW_OPEN='brave-browser --app=%s'` for a window of its own; [options](doc/options.md) has more.
+Run `drvu` in a directory. It prints the tree's URL and opens it with `xdg-open`, a tab in your default browser. To open it another way, set `DRVU_OPEN`, eg `DRVU_OPEN='brave-browser --app=%s'` for a window of its own; [options](doc/options.md) has more.
 
 It also writes a lockfile named after the endpoint, eg `127.31.1.1-8080.lock`. Delete the lockfile to stop serving the tree. Trees on one address share one server, which exits when its last lock is gone. The server on your default address stays up, since it also serves [online repos](doc/online-repos.md).
 
 ```
-www                         serve this directory and open it
-www -p ~/notes              serve ~/notes, and again after a reboot
-www --share=192.168.1.5     serve this directory to the LAN
-www -l                      list every served tree as keyval
-www --restart               move every server to the current binary
-www-public --disk=6G -a 127.0.0.1:8080
+drvu                         serve this directory and open it
+drvu -p ~/notes              serve ~/notes, and again after a reboot
+drvu --share=192.168.1.5     serve this directory to the LAN
+drvu -l                      list every served tree as keyval
+drvu --restart               move every server to the current binary
+drvu-public --disk=6G -a 127.0.0.1:8080
                             serve online repos to the web, behind a proxy
 ```
 
@@ -53,11 +53,11 @@ To read a repo from GitHub, open `http://127.31.1.2/github.com/junegunn/fzf/`.
 
 ## Install
 
-www needs git.
+drvu needs git.
 
-`make install` links `build/www` and `build/www-public` into `~/.local/bin` and serves on port 8080.
+`make install` links `build/drvu` and `build/drvu-public` into `~/.local/bin` and serves on port 8080.
 
-`make install-deb` builds and installs two Debian packages: www and its syntax tree helper. The package's binary may bind port 80, so URLs carry no port.
+`make install-deb` builds and installs two Debian packages: dirview and dirview-syntax, its syntax tree helper. The package's binary may bind port 80, so URLs carry no port.
 
 ## Documentation
 
@@ -69,9 +69,9 @@ www needs git.
 - [History](doc/history.md): histories, their feeds, commits, stardates, the timeline and old versions of a tree
 - [Online repos](doc/online-repos.md): reading a forge's repos on the second address, or serving them to the web
 - [Sharing](doc/sharing.md): serving a tree to other machines
-- [Safety](doc/safety.md): what www refuses to serve, follow or run
-- [Speed](doc/speed.md): what www caches and how it is timed
-- [Log](doc/log.md): what www writes to the journal
+- [Safety](doc/safety.md): what drvu refuses to serve, follow or run
+- [Speed](doc/speed.md): what drvu caches and how it is timed
+- [Log](doc/log.md): what drvu writes to the journal
 - [Debugging](doc/debugging.md): the bug button and the build stamp
 - [Install](doc/install.md): the Debian package, port 80 and locks in git
 - [Development](doc/development.md): `make run`, the two executables, the working name and the usage check
@@ -83,4 +83,4 @@ MIT, see `LICENSE`.
 
 The embedded fonts are subsets of STIX Two Text and Iosevka, under the SIL Open Font License: see `assets/fonts/STIXTwoText-OFL.txt` and `assets/fonts/Iosevka-OFL.txt`.
 
-The binary links in five Go modules. Four are under the MIT licence: goldmark by Yusuke Inuzuka, chroma by Alec Thomas, regexp2 by Doug Clark and kv, www's sister project. regexp2 ports parts of Microsoft's dotnet/corefx. The fifth, yaml.v3 by Canonical, is under Apache 2.0, with its files from Kirill Simonov's libyaml under MIT. The package's copyright file carries their notices.
+The binary links in five Go modules. Four are under the MIT licence: goldmark by Yusuke Inuzuka, chroma by Alec Thomas, regexp2 by Doug Clark and kv, dirview's sister project. regexp2 ports parts of Microsoft's dotnet/corefx. The fifth, yaml.v3 by Canonical, is under Apache 2.0, with its files from Kirill Simonov's libyaml under MIT. The package's copyright file carries their notices.

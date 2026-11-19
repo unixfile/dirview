@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"errors"
@@ -18,7 +18,7 @@ const maxBug = 16 << 20
 
 // handleBug files a page as a numbered bug, from the bug button at each
 // page's foot, or adds a comment to one. A report is one line in the log,
-// which `journalctl --user -t www -g '^bug '` finds; N.kv under the state
+// which `journalctl --user -t drvu -g '^bug '` finds; N.kv under the state
 // directory, as keyval: the time, URL, selected text as the note, the
 // window's size and scroll, the browser, the build and the server's
 // state from bugState; and N.html, the page as the reader saw it. It
@@ -26,7 +26,7 @@ const maxBug = 16 << 20
 // the log and to N.kv.
 func (s *server) handleBug(w http.ResponseWriter, r *http.Request) {
 	if !sameOrigin(r) {
-		http.Error(w, "a bug report must come from an "+progName+" page", http.StatusForbidden)
+		http.Error(w, "a bug report must come from a "+progName+" page", http.StatusForbidden)
 		return
 	}
 	r.Body = http.MaxBytesReader(w, r.Body, maxBug)
@@ -125,7 +125,7 @@ var sourceDir string
 
 // bugDir is where bug reports go, made on first use: csi/bugs in the
 // checkout the binary was built from, when that checkout has csi, so the
-// bugs sit with the project they are about; else $XDG_STATE_HOME/www/bugs.
+// bugs sit with the project they are about; else $XDG_STATE_HOME/drvu/bugs.
 func bugDir() (string, error) {
 	if sourceDir != "" {
 		if info, err := os.Stat(filepath.Join(sourceDir, "csi")); err == nil && info.IsDir() {

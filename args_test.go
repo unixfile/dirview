@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"errors"
@@ -62,7 +62,7 @@ func TestParseArgs(t *testing.T) {
 	}
 }
 
-// parseOK holds command lines www takes, and what each parses to.
+// parseOK holds command lines drvu takes, and what each parses to.
 var parseOK = []struct {
 	args []string
 	want config

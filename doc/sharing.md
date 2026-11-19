@@ -1,24 +1,24 @@
 # Sharing
 
-`www --share [DIR]` serves a tree on the address of the default route, so other machines on the LAN can read it. www asks the kernel which source address it would use to leave the machine, and the printed URL shows it. Over a full-tunnel VPN that is the tunnel's address.
+`drvu --share [DIR]` serves a tree on the address of the default route, so other machines on the LAN can read it. drvu asks the kernel which source address it would use to leave the machine, and the printed URL shows it. Over a full-tunnel VPN that is the tunnel's address.
 
-`WWW_SHARE`, eg `WWW_SHARE=mate.peer.home`, gives a bare `--share` another address, for `--kill --share` and `--restart --share` as well.
+`DRVU_SHARE`, eg `DRVU_SHARE=mate.peer.home`, gives a bare `--share` another address, for `--kill --share` and `--restart --share` as well.
 
-`--share=HOST` names the address instead, an IP or IP:PORT, joined with `=`: `--share 192.168.1.5` would read the address as the directory. Any IPv4 address the machine lets www bind will do, `0.0.0.0` included. A name will do too, such as `--share=mate.peer.home`: www binds the address it resolves to, which an interface here must hold.
+`--share=HOST` names the address instead, an IP or IP:PORT, joined with `=`: `--share 192.168.1.5` would read the address as the directory. Any IPv4 address the machine lets drvu bind will do, `0.0.0.0` included. A name will do too, such as `--share=mate.peer.home`: drvu binds the address it resolves to, which an interface here must hold.
 
-The printed URL carries the address's name when its reverse lookup resolves back to it, so a share on a WireGuard address with its own DNS prints `http://mate.peer.home/notes/`. Otherwise it carries the address. The port defaults to 80 where www may bind it, else 8080, as on loopback. `-a` takes only loopback addresses, so a typo there cannot share a tree.
+The printed URL carries the address's name when its reverse lookup resolves back to it, so a share on a WireGuard address with its own DNS prints `http://mate.peer.home/notes/`. Otherwise it carries the address. The port defaults to 80 where drvu may bind it, else 8080, as on loopback. `-a` takes only loopback addresses, so a typo there cannot share a tree.
 
 A shared address gets a server of its own, apart from the loopback one. More trees join it with the same `--share` address. The lock is named after the address, such as `192.168.1.5-80.lock`, and deleting it stops the share.
 
-`www --kill --share` stops every tree on that address. `www --restart --share` moves the trees to a new binary. `www -l` lists shared trees with the rest.
+`drvu --kill --share` stops every tree on that address. `drvu --restart --share` moves the trees to a new binary. `drvu -l` lists shared trees with the rest.
 
-On `0.0.0.0` the printed URL carries the machine's name, since the server answers on every address. `0.0.0.0` claims its port on every address, so it cannot bind a port that any listener holds, the loopback www included. www then fails with `E98` and names the listeners on that port. Share on one address, or give `0.0.0.0` another port.
+On `0.0.0.0` the printed URL carries the machine's name, since the server answers on every address. `0.0.0.0` claims its port on every address, so it cannot bind a port that any listener holds, the loopback drvu included. drvu then fails with `E98` and names the listeners on that port. Share on one address, or give `0.0.0.0` another port.
 
 ## What a visitor sees
 
 A shared tree mounts at its base name, eg `http://192.168.1.69/notes/`. The URL does not reveal where the tree lives on the machine.
 
-The server serves only what other users on the machine could read. A file needs the others-read bit, and every directory from the tree's root down to it needs others-read and others-execute. Links out of the tree follow the `.www-follow` rule as on loopback.
+The server serves only what other users on the machine could read. A file needs the others-read bit, and every directory from the tree's root down to it needs others-read and others-execute. Links out of the tree follow the `.drvu-follow` rule as on loopback.
 
 Names that begin with a dot are neither listed nor served, at any depth, nor are links that lead to them inside the tree: `.git` holds the history and every deleted file.
 
@@ -39,7 +39,7 @@ note: other machines connect to 192.168.1.69:80; a firewall here may drop them u
       Check with: sudo tcpdump -ni wlp0s20f3 tcp port 80
 ```
 
-www cannot find out by itself. A firewall drops the connection before any socket sees it, reading the ruleset needs root, and a test from this machine goes through loopback and passes.
+drvu cannot find out by itself. A firewall drops the connection before any socket sees it, reading the ruleset needs root, and a test from this machine goes through loopback and passes.
 
 Run the capture and load the URL on the other machine:
 
@@ -57,7 +57,7 @@ sudo nft insert rule inet <table> input ip saddr 192.168.1.0/24 tcp dport 80 acc
 
 ## Secret paths
 
-`--secret` mounts the tree under a random 128-bit token instead of its name, eg `http://192.168.1.5/lz7sjx3g2cvx54ev7ndbzf7i7q/`, and leaves it off the index. Only those holding the link reach it. `WWW_SECRET` sets a token of your own, of letters, digits, `-` and `_`. The command line takes none, since `ps` would show it to every local user.
+`--secret` mounts the tree under a random 128-bit token instead of its name, eg `http://192.168.1.5/lz7sjx3g2cvx54ev7ndbzf7i7q/`, and leaves it off the index. Only those holding the link reach it. `DRVU_SECRET` sets a token of your own, of letters, digits, `-` and `_`. The command line takes none, since `ps` would show it to every local user.
 
 The token also guards against DNS rebinding. Without it, a hostile web page could read a share through the browser of a visitor on the same network.
 

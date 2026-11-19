@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"encoding/xml"

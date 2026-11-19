@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"bytes"
@@ -15,10 +15,10 @@ import (
 	"time"
 )
 
-// www logs every action, so a later look can tell what the user and
-// www did: each run with its arguments, each server's start and stop
+// drvu logs every action, so a later look can tell what the user and
+// drvu did: each run with its arguments, each server's start and stop
 // with the cause, trees joining and leaving, and page requests. Entries go
-// to the systemd journal, tagged www, or to a file in the state
+// to the systemd journal, tagged drvu, or to a file in the state
 // directory where no journal runs. Nothing is filtered when written; the
 // journal's PRIORITY filters when read.
 
@@ -106,7 +106,7 @@ func journalEntry(prio int, ep, msg string) []byte {
 	return b.Bytes()
 }
 
-// logFile is the fallback log, eg ~/.local/state/www/log.
+// logFile is the fallback log, eg ~/.local/state/drvu/log.
 func logFile() (string, error) {
 	base, err := stateDir()
 	if err != nil {
@@ -201,7 +201,7 @@ func logSink() *os.File {
 	return f
 }
 
-// build names the running binary and its commit, eg /usr/bin/www
+// build names the running binary and its commit, eg /usr/bin/drvu
 // 54cca2a, with +modified for a build from uncommitted code. A stale binary
 // is the first thing to rule out.
 func build() string {

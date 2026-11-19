@@ -9,7 +9,7 @@
 // It is a program of its own because tree-sitter is C, and cgo would make
 // the main binary need a C compiler to build and a C library to run. The
 // main binary runs it for each tree page and does without it when it is
-// absent. The binary takes its name from the Makefile, eg www-syntax.
+// absent. The binary takes its name from the Makefile, eg drvu-syntax.
 //
 // The parse and the walk run in C, in walk.c, in one call; the Go binding
 // supplies tree-sitter's library and the grammars.

@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"bytes"
@@ -20,7 +20,7 @@ import (
 
 // A version is a tree as it was in one commit, served at the tree's URL
 // with @ and the commit's stardate after its name, eg
-// /scratch/www@261024.4/doc/, or its hash when it has none. The version
+// /scratch/dirview@261024.4/doc/, or its hash when it has none. The version
 // qualifies the tree, so it sits on the tree's name, not below it as an
 // entry would; a tree at / has no name, so its versions sit below it, eg
 // /@261024.4/. The version is in the path rather than a query, so
@@ -123,7 +123,7 @@ func versionPrefix(prefix, seg string) string {
 }
 
 // versionIn reads urlPath as a path in a version of t, eg
-// /scratch/www@261024.4/doc/x.md: first is the version, @261024.4, and
+// /scratch/dirview@261024.4/doc/x.md: first is the version, @261024.4, and
 // rest the path below it, doc/x.md. A tree at / reads its versions as
 // entries, in serve.
 func (t *tree) versionIn(urlPath string) (first, rest string, ok bool) {

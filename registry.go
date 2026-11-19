@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"crypto/rand"
@@ -14,8 +14,8 @@ import (
 )
 
 // A registry directory joins trees to the server of one endpoint, eg
-// ~/.local/state/www/127.31.1.1-8080/, with one symlink per lock. A
-// joining www adds a link; the server sees it through inotify, writes
+// ~/.local/state/drvu/127.31.1.1-8080/, with one symlink per lock. A
+// joining drvu adds a link; the server sees it through inotify, writes
 // the lock and serves the tree. An flock on the directory orders a join
 // against the server's start and exit, so no tree joins a dying server.
 type registry struct {
@@ -84,7 +84,7 @@ func flock(f *os.File, how int) error {
 // suffix follows. So every join makes a link of a new name, which the
 // server tells from the link it already has without trusting the inode,
 // which a new file may reuse. The name only helps a reader of the
-// registry; www reads the tree from the link's target.
+// registry; drvu reads the tree from the link's target.
 func linkName(dir string) string {
 	name := strings.NewReplacer("%", "%25", "/", "%2F").Replace(dir)
 	if len(name) > linkNameMax {

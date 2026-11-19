@@ -1,4 +1,4 @@
-module www
+module dirview
 
 go 1.26
 

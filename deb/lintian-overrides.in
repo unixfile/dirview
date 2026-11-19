@@ -1,2 +1,2 @@
 # Go builds static binaries on purpose: no libc to match on the target.
-@NAME@: statically-linked-binary [usr/bin/@NAME@]
+@PACKAGE@: statically-linked-binary [usr/bin/@NAME@]

@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"net/netip"
@@ -12,7 +12,7 @@ type config struct {
 	sharing bool
 	share   string // the address --share names; "" takes the default route's
 	secret  bool
-	token   string // the secret path's token, from WWW_SECRET or drawn at random
+	token   string // the secret path's token, from DRVU_SECRET or drawn at random
 	ep      netip.AddrPort
 	fg      bool
 	noopen  bool
@@ -21,7 +21,7 @@ type config struct {
 	noBug   bool   // hide the bug button and refuse reports
 	cache   string // the memory for cached git answers, eg 32M; "" takes defaultCache
 	disk    string // the disk for online repos, eg 4G; "" takes defaultDisk
-	base    string // the path every URL starts with, eg /www; "" serves at the root
+	base    string // the path every URL starts with, eg /drvu; "" serves at the root
 	public  bool   // serve only online repos, to the open web; the public executable sets it
 	help    bool
 	version bool

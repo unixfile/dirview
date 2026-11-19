@@ -1,4 +1,4 @@
-package www
+package dirview
 
 import (
 	"bufio"
@@ -96,7 +96,7 @@ func testEndpoint(t *testing.T) netip.AddrPort {
 	return ep
 }
 
-// start runs www for dir as a detached child would and returns its
+// start runs drvu for dir as a detached child would and returns its
 // report lines once it finished reporting, and a channel with its exit code.
 func start(t *testing.T, c config) ([]string, chan int) {
 	t.Helper()
