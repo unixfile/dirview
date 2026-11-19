@@ -254,7 +254,7 @@ func (t *tree) commitHead(stars *stardates, c *commit, name string, dir, browse 
 	if browse {
 		then = fmt.Sprintf(" <a class=\"then\" href=\"%s\">time warp</a>", esc(t.versionURL(stars, c, below(name, dir))))
 	}
-	links = fmt.Sprintf("<p class=\"own links\"><a href=\"%s\">permalink</a>%s</p>\n", esc("?commit="+c.hash), then)
+	links = fmt.Sprintf("<p class=\"own links\"><a href=\"%s\">commit</a>%s</p>\n", esc("?commit="+c.hash), then)
 	return lead, links
 }
 

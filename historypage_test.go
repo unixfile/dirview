@@ -49,7 +49,7 @@ func TestHistoryPage(t *testing.T) {
 	c := head(t, dir, "HEAD")
 	for _, want := range []string{
 		`<li><details data-diff="?commit=` + c + `">` + "\n<summary><span class=\"own lead\"><span class=\"date\" title=\"" + c[:7],
-		`</span></span> <span class="subject">Rename the package &lt;b&gt;</span></summary>` + "\n" + `<p class="own links"><a href="?commit=` + c + `">permalink</a> <a class="then"`,
+		`</span></span> <span class="subject">Rename the package &lt;b&gt;</span></summary>` + "\n" + `<p class="own links"><a href="?commit=` + c + `">commit</a> <a class="then"`,
 		`<div class="diffs"><p class="own"><a href="?commit=` + c + `">diff</a></p></div>` + "\n</details></li>",
 	} {
 		if !strings.Contains(body, want) {

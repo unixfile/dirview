@@ -10,7 +10,7 @@ Each commit's stardate and full hash sit small on their own line above the subje
 
 A line opens to the commit's full message and its diff, limited to the path. The diff loads when the line first opens. Bodies wrapped by hand join into paragraphs; a list item or an indented line keeps its own line.
 
-A row is one target: a click anywhere on it opens or closes the fold. Inside, permalink opens the commit's own page and time warp its version.
+A row is one target: a click anywhere on it opens or closes the fold. Inside, commit opens the commit's own page and time warp its version.
 
 ## Stardates
 
@@ -50,7 +50,7 @@ On the web address a feed request is a visit, so it fetches a copy over five min
 
 ## Commit pages
 
-permalink in a history's fold, or commit at the right end of a version's top line, opens the commit on a page of its own. It leads as the commit's row in a history does, so it reads as that row opened: the stardate with the full hash at the right, the subject, permalink and time warp, then the message and the diff. The diff is limited to the file or directory the history was for, with a link to all the files the commit changed in the tree.
+commit in a history's fold, or at the right end of a version's top line, opens the commit on a page of its own. It leads as the commit's row in a history does, so it reads as that row opened: the stardate with the full hash at the right, the subject, commit and time warp, then the message and the diff. The diff is limited to the file or directory the history was for, with a link to all the files the commit changed in the tree.
 
 Added lines sit on a green tint and removed ones on a red. The diff stops at 1 MiB.
 
