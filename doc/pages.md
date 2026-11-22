@@ -42,11 +42,17 @@ Every gap between blocks is the same, whether the block is a paragraph, list, ta
 
 ## PDF
 
-pdf in a doc's header, beside raw, saves the doc as a PDF file, eg `README.pdf`. `?pdf` asks for it directly. weasyprint draws it from the page drvu renders, with the same stylesheet and fonts, on A4 pages and without the header, search row or buttons.
+pdf in a doc's header, beside raw, saves the doc as a PDF file, eg `README.pdf`. `?pdf` asks for it directly. typst typesets it from drvu's own reading of the doc, so wiki links, alerts, broken-link marks and each block's language carry over.
 
-weasyprint reaches only the server that asked, as a browser on the page may. An image from another host, or a `file:` URL, stays out of the PDF.
+The look follows the md2pdf-a4 script: STIX Two Text at 12 pt in justified paragraphs on A4, with 47 mm side margins. Code is Iosevka: 0.85em in a sentence, as on the page, and 0.8em in a block, as in md2pdf-a4. Links look like the words around them, and a link to a missing file keeps its dotted underline. A relative link leads to the page on the server that made the PDF.
 
-The link shows only where weasyprint is installed. The Debian package depends on it, and with a build from `make install` it may be missing; then `?pdf` says so. A share offers no PDF, since each visitor would start weasyprint.
+Footnotes stand at the foot of the page that cites them. A Graphviz graph draws as on the page. Code carries no syntax colour. Raw HTML stays out, since typst cannot draw it, but the text between its tags stays.
+
+Images come from the tree alone. drvu copies each into a directory of its own, and typst runs there and reads nothing else. An image on another host, outside the tree or in a format typst cannot read shows its description instead. If typst rejects an image, the PDF comes without images.
+
+typst finds STIX Two Text and Iosevka among the fonts installed on the machine. Where one is missing, typst falls back to a font of its own and drvu logs the warning.
+
+The link shows only where typst is on the server's PATH; otherwise `?pdf` says where to get it. A server started from a shell has that shell's PATH. One that the systemd unit starts has the user manager's, which `systemctl --user show-environment` shows. No Debian suite packages typst, so the package does not depend on it. A share offers no PDF, since each visitor would start typst.
 
 ## Linked from
 

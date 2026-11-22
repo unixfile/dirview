@@ -53,7 +53,7 @@ To read a repo from GitHub, open `http://127.31.1.2/github.com/junegunn/fzf/`.
 
 ## Install
 
-drvu needs git.
+drvu needs git. It saves a doc as PDF where typst is installed.
 
 `make install` links `build/drvu` and `build/drvu-public` into `~/.local/bin` and serves on port 8080.
 

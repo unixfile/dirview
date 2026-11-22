@@ -2,11 +2,13 @@
 
 drvu needs git.
 
+Saving a doc as PDF also needs typst. No Debian suite packages it, so install a release binary from https://github.com/typst/typst/releases, eg into `/usr/local/bin`, or build it with `cargo install --locked typst-cli`. The server must find it on its PATH, and the PDF's fonts, STIX Two Text and Iosevka, among the machine's fonts.
+
 `make install` links `build/drvu` into `~/.local/bin`.
 
 ## Debian packages
 
-`make deb` builds a Debian package in `build/`, such as `dirview_0~git20261015223930.20f02fd_amd64.deb`, versioned by the last commit's UTC time and hash. It depends on git. For another architecture, pass `ARCH`, eg `make deb ARCH=arm64`.
+`make deb` builds a Debian package in `build/`, such as `dirview_0~git20261015223930.20f02fd_amd64.deb`, versioned by the last commit's UTC time and hash. It depends on git, and not on typst. For another architecture, pass `ARCH`, eg `make deb ARCH=arm64`.
 
 `make deb-syntax` builds the syntax tree helper `drvu-syntax` as a package of its own beside it, `dirview-syntax`, since the helper needs cgo and libc while drvu is static. The main package recommends it and the helper's package depends on dirview, each at the same version, because drvu reads the helper's output. For another architecture it needs a C cross compiler, eg `make deb-syntax ARCH=arm64 CC=aarch64-linux-gnu-gcc`.
 

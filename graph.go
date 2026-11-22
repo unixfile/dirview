@@ -27,15 +27,25 @@ func isGraph(lang string) bool {
 	return lang == "dot" || lang == "graphviz"
 }
 
-// drawGraph returns a fence's diagram as inline SVG, drawn by dot. dot
-// reads the source as data: SERVER_NAME makes it refuse the image files a
-// graph may name, so a diagram cannot show what lies outside the tree.
+// drawGraph returns a fence's diagram as inline SVG, drawn by dot.
 // Without dot, or when dot rejects the source, the error says why.
 func drawGraph(src string) (template.HTML, error) {
+	svg, err := dotSVG(src)
+	if err != nil {
+		return "", err
+	}
+	return template.HTML(`<div class="graph">` + svg + `</div>`), nil
+}
+
+// dotSVG is a fence's diagram as an SVG element, drawn by dot, for a page
+// or a PDF. dot reads the source as data: SERVER_NAME makes it refuse the
+// image files a graph may name, so a diagram cannot show what lies
+// outside the tree.
+func dotSVG(src string) (string, error) {
 	sum := sha256.Sum256([]byte(src))
 	key := string(sum[:])
 	if svg, ok := graphCache.get(key); ok {
-		return svg.(template.HTML), nil
+		return svg.(string), nil
 	}
 	dot, err := exec.LookPath("dot")
 	if err != nil {
@@ -71,9 +81,8 @@ func drawGraph(src string) (template.HTML, error) {
 	if i := strings.Index(svg, "<svg"); i >= 0 {
 		svg = svg[i:]
 	}
-	h := template.HTML(`<div class="graph">` + svg + `</div>`)
-	graphCache.put(key, h, int64(len(h)))
-	return h, nil
+	graphCache.put(key, svg, int64(len(svg)))
+	return svg, nil
 }
 
 // limited fails a write past n bytes, which stops dot.
