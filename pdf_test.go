@@ -2,16 +2,21 @@ package dirview
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
+	"fmt"
 	"image"
 	"image/png"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
+	"time"
 )
 
 // useTypst makes typst report prog as installed, or missing when prog is
@@ -216,6 +221,123 @@ func TestImageFormat(t *testing.T) {
 	} {
 		if got := imageFormat(c.name, c.b); got != c.want {
 			t.Errorf("%s %q: %q, want %q", c.name, c.b, got, c.want)
+		}
+	}
+}
+
+// pdfKeysOf reads the custom keys of a PDF's document info, as pdfinfo
+// lists them.
+func pdfKeysOf(t *testing.T, pdf []byte) map[string]string {
+	t.Helper()
+	keys := map[string]string{}
+	for _, line := range strings.Split(pdfTool(t, pdf, "pdfinfo", "-custom", "{}"), "\n") {
+		if k, v, ok := strings.Cut(line, ":"); ok {
+			keys[k] = strings.TrimSpace(v)
+		}
+	}
+	return keys
+}
+
+// A saved PDF embeds one file, the doc's source byte for byte under its
+// own name as Markdown, and names where the source lies in git, its
+// SHA-256, when drvu typeset it and which build did. origin's password
+// stays out.
+func TestPDFCarriesItsSource(t *testing.T) {
+	needTypst(t)
+	s, dir := repoTree(t)
+	name := "Ärende \"q\" (1).md"
+	src := []byte("# Ärende\r\n\r\nA line with CRLF and a tab\there.\n")
+	os.WriteFile(filepath.Join(dir, "a", name), src, 0o644)
+	commitAll(t, dir, "Add the case")
+	if out, err := exec.Command("git", "-C", dir, "remote", "add", "origin", "https://u:secret@example.org/r.git").CombinedOutput(); err != nil {
+		t.Fatalf("git remote: %v\n%s", err, out)
+	}
+	h := s.handler()
+	pdf := pdfOf(t, h, "/a/"+url.PathEscape(name))
+
+	if got := pdfTool(t, pdf, "pdfdetach", "-list", "{}"); got != "1 embedded files\n1: "+name+"\n" {
+		t.Errorf("attachments:\n%s", got)
+	}
+	out := t.TempDir()
+	pdfTool(t, pdf, "pdfdetach", "-saveall", "-o", out, "{}")
+	if got, err := os.ReadFile(filepath.Join(out, name)); err != nil || !bytes.Equal(got, src) {
+		t.Errorf("the embedded file: %q, %v, want %q", got, err, src)
+	}
+	if !bytes.Contains(pdf, []byte("/Subtype /text#2Fmarkdown")) {
+		t.Errorf("the embedded file is not text/markdown")
+	}
+	pdfTool(t, pdf, "qpdf", "--check", "{}")
+
+	sum := sha256.Sum256(src)
+	keys := pdfKeysOf(t, pdf)
+	for k, want := range map[string]string{
+		"GitURL":           "https://example.org/r.git",
+		"GitCommit":        head(t, dir, "HEAD"),
+		"GitPath":          "a/" + name,
+		"GitDirty":         "false",
+		"SourceSHA256":     hex.EncodeToString(sum[:]),
+		"GeneratorVersion": progName + " " + buildCommit,
+		"Title":            "a/" + name,
+		"Creator":          keys["Creator"],
+	} {
+		if keys[k] != want || want == "" {
+			t.Errorf("%s: %q, want %q", k, keys[k], want)
+		}
+	}
+	if _, err := time.Parse(time.RFC3339, keys["Generated"]); err != nil {
+		t.Errorf("Generated: %v", err)
+	}
+	if bytes.Contains(pdf, []byte("secret")) {
+		t.Errorf("origin's password is in the PDF")
+	}
+
+	os.WriteFile(filepath.Join(dir, "index.md"), []byte("# Changed\n"), 0o644)
+	if keys := pdfKeysOf(t, pdfOf(t, h, "/index.md")); keys["GitDirty"] != "true" || keys["GitPath"] != "index.md" {
+		t.Errorf("a changed doc: %v", keys)
+	}
+}
+
+// Outside a repo the PDF names no git, but still its source's sum.
+func TestPDFOutsideARepo(t *testing.T) {
+	needTypst(t)
+	s, _, _ := serveTree(t)
+	keys := pdfKeysOf(t, pdfOf(t, s.handler(), "/index.md"))
+	for _, k := range []string{"GitURL", "GitCommit", "GitPath", "GitDirty"} {
+		if v, ok := keys[k]; ok {
+			t.Errorf("%s: %q outside a repo", k, v)
+		}
+	}
+	if len(keys["SourceSHA256"]) != 64 {
+		t.Errorf("SourceSHA256: %q", keys["SourceSHA256"])
+	}
+}
+
+// pdfInfo refuses a PDF it cannot read rather than write a broken one,
+// and writes text that is not plain ASCII as UTF-16.
+func TestPDFInfo(t *testing.T) {
+	const body = "%PDF-1.7\n1 0 obj\n<< /Title (a (b) >> c) /N [1 2] >>\nendobj\n" +
+		"xref\n0 2\n0000000000 65535 f \n0000000009 00000 n \ntrailer\n<< /Size 2 /Root 1 0 R /Info 1 0 R >>\nstartxref\n"
+	good := []byte(fmt.Sprintf("%s%d\n%%%%EOF\n", body, strings.Index(body, "xref")))
+	out, err := pdfInfo(good, []pdfKey{{"K", "Ä (x)"}, {"L", `a\(b`}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "1 0 obj\n<< /Title (a (b) >> c) /N [1 2]\n  /K <FEFF00C40020002800780029>\n  /L (a\\\\\\(b)\n>>\nendobj\n"
+	if added := string(out[len(good):]); !strings.HasPrefix(added, want) || !strings.Contains(added, "/Info 1 0 R\n  /Prev ") {
+		t.Errorf("the update:\n%s", added)
+	}
+	if again, err := pdfInfo(out, []pdfKey{{"M", "m"}}); err != nil || !bytes.Contains(again, []byte("/K <FEFF")) {
+		t.Errorf("a second update: %v\n%s", err, again)
+	}
+	for _, c := range []struct{ name, pdf string }{
+		{"no startxref", "%PDF-1.7\n"},
+		{"an xref stream", "%PDF-1.7\n1 0 obj\n<< /Type /XRef >>\nstream\nendstream\nendobj\nstartxref\n9\n%%EOF\n"},
+		{"no info", strings.Replace(string(good), "/Info 1 0 R", "", 1)},
+		{"a free info", strings.Replace(string(good), "0000000009 00000 n", "0000000009 00000 f", 1)},
+		{"a lying table", strings.Replace(string(good), "0000000009", "0000000003", 1)},
+	} {
+		if _, err := pdfInfo([]byte(c.pdf), nil); !errors.Is(err, errPDFForm) {
+			t.Errorf("%s: %v", c.name, err)
 		}
 	}
 }

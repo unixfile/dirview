@@ -73,6 +73,13 @@ func (s *server) servePDF(w http.ResponseWriter, r *http.Request, t *tree, name 
 		t.fail(w, r, name, http.StatusInternalServerError, "typst failed: "+err.Error())
 		return
 	}
+	// The embedded source is the truth, so a PDF whose keys could not be
+	// written still goes out.
+	if out, err := pdfInfo(pdf, t.pdfKeys(r.Context(), name, src, time.Now())); err != nil {
+		logErr("E%d: cannot write the source's keys into the PDF of %s: %v", errnoOf(err), name, err)
+	} else {
+		pdf = out
+	}
 	logInfo("typeset %s as PDF in %d ms, %s", name, time.Since(start).Milliseconds(), sizeText(int64(len(pdf))))
 	file := strings.TrimSuffix(path.Base(name), path.Ext(name)) + ".pdf"
 	w.Header().Set("Content-Type", "application/pdf")
@@ -83,7 +90,8 @@ func (s *server) servePDF(w http.ResponseWriter, r *http.Request, t *tree, name 
 
 // typesetPDF writes the doc name, whose text is src, as typst markup in a
 // directory of its own, with the doc's images from the tree beside it,
-// and runs typst there. typst reads nothing outside that directory, so
+// and runs typst there. The PDF embeds src, byte for byte, under the
+// doc's own file name. typst reads nothing outside that directory, so
 // the PDF holds only what the tree gives, as the page's CSP lets a
 // browser take nothing else. An image typst cannot read fails the whole
 // run, so a failed run with images is tried again without them, as a
@@ -94,11 +102,15 @@ func (t *tree) typesetPDF(ctx context.Context, prog, name string, src []byte, pa
 		return nil, err
 	}
 	defer os.RemoveAll(dir)
+	if err := os.WriteFile(filepath.Join(dir, typstSource), src, 0o600); err != nil {
+		return nil, err
+	}
+	attach := typstAttach(path.Base(name))
 	images := t.pdfImages(dir, name)
-	pdf, err := runTypst(ctx, prog, dir, typstDoc(src, t.title(name), page, t.missing(name), images.file))
+	pdf, err := runTypst(ctx, prog, dir, append([]byte(attach), typstDoc(src, t.title(name), page, t.missing(name), images.file)...))
 	if err != nil && images.count > 0 && ctx.Err() == nil {
 		logErr("E%d: cannot typeset %s with its images, so it goes without: %v", errnoOf(err), name, err)
-		pdf, err = runTypst(ctx, prog, dir, typstDoc(src, t.title(name), page, t.missing(name), nil))
+		pdf, err = runTypst(ctx, prog, dir, append([]byte(attach), typstDoc(src, t.title(name), page, t.missing(name), nil)...))
 	}
 	return pdf, err
 }

@@ -28,6 +28,17 @@ const typstPreamble = `#set document(title: %s)
 #show raw.where(block: false): set text(size: 0.85em / 0.8)
 `
 
+// typstSource is the file in typst's root that holds the doc's source,
+// for the PDF to embed. Images are named image1 and on, so none takes it.
+const typstSource = "source"
+
+// typstAttach embeds typstSource in the PDF as the file name, a Markdown
+// file, so pdfdetach saves the doc as it was. It is one line, so it can
+// lead the preamble.
+func typstAttach(name string) string {
+	return `#pdf.attach(` + typstString(name) + `, read("` + typstSource + `", encoding: none), mime-type: "text/markdown")` + "\n"
+}
+
 // typstOwn sets text of drvu's own, eg an alert's label, in mono at the
 // size of code, as the page does.
 const typstOwn = `#text(font: "Iosevka", size: 0.8em)[`

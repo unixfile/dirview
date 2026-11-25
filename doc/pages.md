@@ -50,6 +50,18 @@ Footnotes stand at the foot of the page that cites them. A Graphviz graph draws 
 
 Images come from the tree alone. drvu copies each into a directory of its own, and typst runs there and reads nothing else. An image on another host, outside the tree or in a format typst cannot read shows its description instead. If typst rejects an image, the PDF comes without images.
 
+The PDF carries its source. It embeds one file, the doc itself, byte for byte under its own name as `text/markdown`, so `pdfdetach -saveall doc.pdf` gives the Markdown back. Its document info adds these keys, which `pdfinfo -custom doc.pdf` lists:
+
+- `GitURL`: the forge's address for a repo on the web address, else origin's URL without user or password; absent without origin
+- `GitCommit`: the commit HEAD names
+- `GitPath`: the doc's path in the repo
+- `GitDirty`: `true` when the doc differs from that commit
+- `SourceSHA256`: the SHA-256 of the embedded file
+- `Generated`: when drvu typeset the PDF, in RFC 3339
+- `GeneratorVersion`: the program and the commit it was built from
+
+The git keys name where the source came from and nothing more; outside a repo, or in one without a commit, they are absent. The embedded file is the truth, and its SHA-256 checks it. drvu appends the keys after typst runs, as an incremental update, so the bytes typst wrote stay as they are. If that step fails, drvu logs why and the PDF goes out without the keys.
+
 typst finds STIX Two Text and Iosevka among the fonts installed on the machine. Where one is missing, typst falls back to a font of its own and drvu logs the warning.
 
 The link shows only where typst is on the server's PATH; otherwise `?pdf` says where to get it. A server started from a shell has that shell's PATH. One that the systemd unit starts has the user manager's, which `systemctl --user show-environment` shows. No Debian suite packages typst, so the package does not depend on it. A share offers no PDF, since each visitor would start typst.
