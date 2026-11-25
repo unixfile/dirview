@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -267,6 +268,15 @@ func TestPDFCarriesItsSource(t *testing.T) {
 		t.Errorf("the embedded file is not text/markdown")
 	}
 	pdfTool(t, pdf, "qpdf", "--check", "{}")
+	// The header prints the repo, the path and the commit, and neither
+	// line reaches the text.
+	line := "example.org/r/a/" + name + "@" + head(t, dir, "HEAD")[:8]
+	if !bytes.Contains(pdf, []byte(pdfLiteral(winAnsi(line))+" Tj")) || !bytes.Contains(pdf, []byte("("+pdfScreenLine+") Tj")) {
+		t.Errorf("no header %q", line)
+	}
+	if text := pdfTool(t, pdf, "pdftotext", "{}", "-"); strings.Contains(text, "pdfdetach") || strings.Contains(text, "example.org") {
+		t.Errorf("the header is in the text:\n%s", text)
+	}
 
 	sum := sha256.Sum256(src)
 	keys := pdfKeysOf(t, pdf)
@@ -312,32 +322,166 @@ func TestPDFOutsideARepo(t *testing.T) {
 	}
 }
 
-// pdfInfo refuses a PDF it cannot read rather than write a broken one,
-// and writes text that is not plain ASCII as UTF-16.
-func TestPDFInfo(t *testing.T) {
-	const body = "%PDF-1.7\n1 0 obj\n<< /Title (a (b) >> c) /N [1 2] >>\nendobj\n" +
-		"xref\n0 2\n0000000000 65535 f \n0000000009 00000 n \ntrailer\n<< /Size 2 /Root 1 0 R /Info 1 0 R >>\nstartxref\n"
-	good := []byte(fmt.Sprintf("%s%d\n%%%%EOF\n", body, strings.Index(body, "xref")))
-	out, err := pdfInfo(good, []pdfKey{{"K", "Ä (x)"}, {"L", `a\(b`}})
+// rawPDF writes a PDF of objs, numbered from 1, with a classic table and
+// a trailer that holds the size and the keys in trailer.
+func rawPDF(trailer string, objs ...string) []byte {
+	var b bytes.Buffer
+	b.WriteString("%PDF-1.7\n")
+	var offs []int
+	for i, o := range objs {
+		offs = append(offs, b.Len())
+		fmt.Fprintf(&b, "%d 0 obj\n%s\nendobj\n", i+1, o)
+	}
+	x := b.Len()
+	fmt.Fprintf(&b, "xref\n0 %d\n0000000000 65535 f \n", len(objs)+1)
+	for _, o := range offs {
+		fmt.Fprintf(&b, "%010d 00000 n \n", o)
+	}
+	fmt.Fprintf(&b, "trailer\n<< /Size %d %s >>\nstartxref\n%d\n%%%%EOF\n", len(objs)+1, trailer, x)
+	return b.Bytes()
+}
+
+// testPDF is a PDF of three pages: one without annotations, which takes
+// its media box from the page tree, one with an array of them in its
+// dictionary, and one whose array is an object of its own.
+var testPDF = rawPDF("/Root 1 0 R /Info 6 0 R /ID [<01> <01>]",
+	"<< /Type /Catalog /Pages 2 0 R >>",
+	"<< /Type /Pages /Kids [3 0 R 4 0 R 5 0 R] /Count 3 /MediaBox [0 0 595 842] >>",
+	"<< /Type /Page /Parent 2 0 R >>",
+	"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 300 400] /Annots [8 0 R] >>",
+	"<< /Type /Page /Parent 2 0 R /Annots 7 0 R >>",
+	"<< /Title (a (b) >> c) /N [1 2] >>",
+	"[8 0 R]",
+	"<< /Type /Annot /Subtype /Link /Rect [0 0 1 1] >>")
+
+// stampPDF adds the keys to the info and two header annotations to each
+// page, in one update after the bytes it was given, and writes text that
+// is not plain ASCII as UTF-16. A second update chains to the first.
+func TestStampPDF(t *testing.T) {
+	out, err := stampPDF(testPDF, "doc.md", []pdfKey{{"K", "Ä (x)"}, {"L", `a\(b`}})
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "1 0 obj\n<< /Title (a (b) >> c) /N [1 2]\n  /K <FEFF00C40020002800780029>\n  /L (a\\\\\\(b)\n>>\nendobj\n"
-	if added := string(out[len(good):]); !strings.HasPrefix(added, want) || !strings.Contains(added, "/Info 1 0 R\n  /Prev ") {
-		t.Errorf("the update:\n%s", added)
+	if !bytes.HasPrefix(out, testPDF) {
+		t.Fatal("the update changed the bytes before it")
 	}
-	if again, err := pdfInfo(out, []pdfKey{{"M", "m"}}); err != nil || !bytes.Contains(again, []byte("/K <FEFF")) {
-		t.Errorf("a second update: %v\n%s", err, again)
+	f, err := readPDF(out)
+	if err != nil {
+		t.Fatal(err)
 	}
+	// Nine objects, then a font, two appearances for each of the two page
+	// widths and two annotations on each of three pages.
+	prev := strconv.Itoa(bytes.LastIndex(testPDF, []byte("\nxref\n")) + 1)
+	if got := string(f.trailer.bytes()); got != "<<\n  /Size 20\n  /Root 1 0 R\n  /Info 6 0 R\n  /ID [<01> <01>]\n  /Prev "+prev+"\n>>" {
+		t.Errorf("the trailer:\n%s", got)
+	}
+	_, _, info, err := f.dict("6 0 R")
+	if err != nil || info.get("/Title") != "(a (b) >> c)" || info.get("/N") != "[1 2]" || info.get("/K") != "<FEFF00C40020002800780029>" || info.get("/L") != `(a\\\(b)` {
+		t.Errorf("the info: %v %q", err, info.bytes())
+	}
+	for _, c := range []struct {
+		page  string
+		first string // the annotation before the header's, if any
+		width string // the header's width: the page's less two side margins
+	}{
+		{"3 0 R", "", "328.543"},
+		{"4 0 R", "8 0 R", "243.307"}, // too narrow for 47 mm sides, so 10 mm
+		{"5 0 R", "8 0 R", "328.543"},
+	} {
+		_, _, page, err := f.dict(c.page)
+		if err != nil {
+			t.Fatal(err)
+		}
+		annots := page.get("/Annots")
+		if !strings.HasPrefix(annots, "[") {
+			_, _, annots, _ = f.object(annots)
+		}
+		refs, _ := pdfRefs(annots)
+		if c.first != "" {
+			if len(refs) == 0 || refs[0] != c.first {
+				t.Errorf("page %s lost its annotation: %v", c.page, refs)
+				continue
+			}
+			refs = refs[1:]
+		}
+		if len(refs) != 2 {
+			t.Fatalf("page %s: annotations %v", c.page, refs)
+		}
+		for i, want := range []struct {
+			flags, text string
+		}{{"128", pdfScreenLine}, {"164", "doc.md"}} {
+			_, _, a, err := f.dict(refs[i])
+			if err != nil || a.get("/Subtype") != "/Watermark" || a.get("/F") != want.flags || a.get("/P") != c.page {
+				t.Errorf("page %s annotation %d: %v %s", c.page, i, err, a.bytes())
+				continue
+			}
+			num, gen, _ := pdfRef(strings.TrimSuffix(strings.TrimPrefix(a.get("/AP"), "<< /N "), " >>"))
+			off, _ := pdfObject(out, f.xref, num, gen)
+			form := string(out[off:])
+			form = form[:strings.Index(form, "endstream")]
+			if !strings.Contains(form, "/BBox [0 0 "+c.width+" 8]") || !strings.Contains(form, "("+want.text+") Tj") {
+				t.Errorf("page %s annotation %d draws:\n%s", c.page, i, form)
+			}
+		}
+	}
+	pdfTool(t, out, "qpdf", "--check", "{}")
+	again, err := stampPDF(out, "doc.md", []pdfKey{{"M", "m"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if f, err := readPDF(again); err != nil {
+		t.Error(err)
+	} else if _, _, info, _ := f.dict("6 0 R"); info.get("/K") == "" || info.get("/M") != "(m)" {
+		t.Errorf("a second update lost the first: %s", info.bytes())
+	}
+}
+
+// stampPDF refuses a PDF it cannot read rather than write a broken one.
+func TestStampPDFRefuses(t *testing.T) {
+	good := string(testPDF)
 	for _, c := range []struct{ name, pdf string }{
 		{"no startxref", "%PDF-1.7\n"},
 		{"an xref stream", "%PDF-1.7\n1 0 obj\n<< /Type /XRef >>\nstream\nendstream\nendobj\nstartxref\n9\n%%EOF\n"},
-		{"no info", strings.Replace(string(good), "/Info 1 0 R", "", 1)},
-		{"a free info", strings.Replace(string(good), "0000000009 00000 n", "0000000009 00000 f", 1)},
-		{"a lying table", strings.Replace(string(good), "0000000009", "0000000003", 1)},
+		{"no info", strings.Replace(good, "/Info 6 0 R", "", 1)},
+		{"a free info", strings.Replace(good, fmt.Sprintf("%010d 00000 n", strings.Index(good, "6 0 obj")), fmt.Sprintf("%010d 00000 f", strings.Index(good, "6 0 obj")), 1)},
+		{"a lying table", strings.Replace(good, fmt.Sprintf("%010d", strings.Index(good, "6 0 obj")), "0000000003", 1)},
+		{"a page without a box", strings.Replace(good, " /MediaBox [0 0 595 842]", "", 1)},
+		{"a page tree that loops", strings.Replace(good, "/Kids [3 0 R 4 0 R 5 0 R]", "/Kids [2 0 R]", 1)},
 	} {
-		if _, err := pdfInfo([]byte(c.pdf), nil); !errors.Is(err, errPDFForm) {
+		if _, err := stampPDF([]byte(c.pdf), "doc.md", nil); !errors.Is(err, errPDFForm) {
 			t.Errorf("%s: %v", c.name, err)
 		}
+	}
+}
+
+// The print line names the repo without scheme, user or .git, the path
+// and the commit, marked -dirty where the file differs; outside a repo it
+// is the file's name.
+func TestPDFPrintLine(t *testing.T) {
+	git := func(url, dirty string) []pdfKey {
+		keys := []pdfKey{{"GitCommit", "a1b2c3d4e5f6"}, {"GitPath", "doc/page.md"}, {"GitDirty", dirty}}
+		if url != "" {
+			keys = append(keys, pdfKey{"GitURL", url})
+		}
+		return keys
+	}
+	for _, c := range []struct {
+		keys []pdfKey
+		want string
+	}{
+		{git("https://github.com/u/r.git", "false"), "github.com/u/r/doc/page.md@a1b2c3d4"},
+		{git("https://github.com/u/r", "true"), "github.com/u/r/doc/page.md@a1b2c3d4-dirty"},
+		{git("git@github.com:u/r.git", "false"), "github.com/u/r/doc/page.md@a1b2c3d4"},
+		{git("ssh://git@host.example:22/srv/r.git/", "false"), "host.example:22/srv/r/doc/page.md@a1b2c3d4"},
+		{git("/srv/git/r.git", "false"), "/srv/git/r/doc/page.md@a1b2c3d4"},
+		{git("", "false"), "doc/page.md@a1b2c3d4"},
+		{[]pdfKey{{"SourceSHA256", "00"}}, "page.md"},
+	} {
+		if got := pdfPrintLine("notes/page.md", c.keys); got != c.want {
+			t.Errorf("%v: %q, want %q", c.keys, got, c.want)
+		}
+	}
+	if got := winAnsi("Ärende → ö"); got != "\xc4rende ? \xf6" {
+		t.Errorf("winAnsi: %q", got)
 	}
 }

@@ -73,10 +73,10 @@ func (s *server) servePDF(w http.ResponseWriter, r *http.Request, t *tree, name 
 		t.fail(w, r, name, http.StatusInternalServerError, "typst failed: "+err.Error())
 		return
 	}
-	// The embedded source is the truth, so a PDF whose keys could not be
-	// written still goes out.
-	if out, err := pdfInfo(pdf, t.pdfKeys(r.Context(), name, src, time.Now())); err != nil {
-		logErr("E%d: cannot write the source's keys into the PDF of %s: %v", errnoOf(err), name, err)
+	// The embedded source is the truth, so a PDF without its keys and
+	// header still goes out.
+	if out, err := stampPDF(pdf, name, t.pdfKeys(r.Context(), name, src, time.Now())); err != nil {
+		logErr("E%d: cannot add the source's keys and header to the PDF of %s: %v", errnoOf(err), name, err)
 	} else {
 		pdf = out
 	}
@@ -86,6 +86,26 @@ func (s *server) servePDF(w http.ResponseWriter, r *http.Request, t *tree, name 
 	w.Header().Set("Content-Disposition", "attachment; filename*=UTF-8''"+url.PathEscape(file))
 	w.Header().Set("Cache-Control", "no-store")
 	w.Write(pdf)
+}
+
+// stampPDF adds to a PDF typst wrote, in one incremental update, the
+// keys that name its source and the header on each page.
+func stampPDF(pdf []byte, name string, keys []pdfKey) ([]byte, error) {
+	f, err := readPDF(pdf)
+	if err != nil {
+		return nil, err
+	}
+	u, err := f.update()
+	if err != nil {
+		return nil, err
+	}
+	if err := u.info(keys); err != nil {
+		return nil, err
+	}
+	if err := u.header(pdfScreenLine, pdfPrintLine(name, keys)); err != nil {
+		return nil, err
+	}
+	return u.bytes(), nil
 }
 
 // typesetPDF writes the doc name, whose text is src, as typst markup in a

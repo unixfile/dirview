@@ -62,6 +62,10 @@ The PDF carries its source. It embeds one file, the doc itself, byte for byte un
 
 The git keys name where the source came from and nothing more; outside a repo, or in one without a commit, they are absent. The embedded file is the truth, and its SHA-256 checks it. drvu appends the keys after typst runs, as an incremental update, so the bytes typst wrote stay as they are. If that step fails, drvu logs why and the PDF goes out without the keys.
 
+Each page carries a header in 6 pt light gray, 10 mm below the top edge, since printers cannot print the outer 4 to 6 mm. On screen it reads "Markdown source embedded, extract with pdfdetach". On paper it names the source instead, eg `github.com/u/r/doc/page.md@a1b2c3d4`, with `-dirty` where the doc differs from that commit, or the file's name outside a repo. Two annotations carry the lines: the screen line does not print, and the print line does not show. They lie outside the page's text, so the layout stays as typst set it and `pdftotext` and copy and paste skip them. Characters outside Latin-1 print as question marks.
+
+The split is checked in poppler's renderers for screen and PostScript, in MuPDF on screen, in Ghostscript for print and in Firefox's viewer on screen. Chrome's viewer and a page from a real printer are not checked yet. A viewer that ignores annotation flags shows both lines or neither.
+
 typst finds STIX Two Text and Iosevka among the fonts installed on the machine. Where one is missing, typst falls back to a font of its own and drvu logs the warning.
 
 The link shows only where typst is on the server's PATH; otherwise `?pdf` says where to get it. A server started from a shell has that shell's PATH. One that the systemd unit starts has the user manager's, which `systemctl --user show-environment` shows. No Debian suite packages typst, so the package does not depend on it. A share offers no PDF, since each visitor would start typst.
