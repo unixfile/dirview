@@ -11,7 +11,7 @@ import (
 )
 
 // errPDFForm is the error for a PDF that drvu cannot update.
-var errPDFForm = errors.New("not a PDF with a cross-reference table that drvu can update")
+var errPDFForm = errors.New("not a PDF with a classic cross-reference table")
 
 // pdfFile is a PDF that drvu adds to in an incremental update: the bytes
 // typst wrote stay as they are, and new versions of the objects that
