@@ -102,7 +102,7 @@ func stampPDF(pdf []byte, name string, keys []pdfKey) ([]byte, error) {
 	if err := u.info(keys); err != nil {
 		return nil, err
 	}
-	if err := u.header(pdfScreenLine, pdfPrintLine(name, keys)); err != nil {
+	if err := u.header(pdfSourceLine(name, keys)); err != nil {
 		return nil, err
 	}
 	return u.bytes(), nil

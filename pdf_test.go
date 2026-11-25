@@ -268,13 +268,13 @@ func TestPDFCarriesItsSource(t *testing.T) {
 		t.Errorf("the embedded file is not text/markdown")
 	}
 	pdfTool(t, pdf, "qpdf", "--check", "{}")
-	// The header prints the repo, the path and the commit, and neither
-	// line reaches the text.
+	// The header names the repo, the path and the commit, and stays out of
+	// the text.
 	line := "r/a/" + name + "@" + head(t, dir, "HEAD")[:7]
-	if !bytes.Contains(pdf, []byte(pdfLiteral(winAnsi(line))+" Tj")) || !bytes.Contains(pdf, []byte("("+pdfScreenLine+") Tj")) {
+	if !bytes.Contains(pdf, []byte(pdfLiteral(winAnsi(line))+" Tj")) {
 		t.Errorf("no header %q", line)
 	}
-	if text := pdfTool(t, pdf, "pdftotext", "{}", "-"); strings.Contains(text, "pdfdetach") || strings.Contains(text, "@"+head(t, dir, "HEAD")[:7]) {
+	if text := pdfTool(t, pdf, "pdftotext", "{}", "-"); strings.Contains(text, "@"+head(t, dir, "HEAD")[:7]) {
 		t.Errorf("the header is in the text:\n%s", text)
 	}
 
@@ -354,8 +354,8 @@ var testPDF = rawPDF("/Root 1 0 R /Info 6 0 R /ID [<01> <01>]",
 	"[8 0 R]",
 	"<< /Type /Annot /Subtype /Link /Rect [0 0 1 1] >>")
 
-// stampPDF adds the keys to the info and two header annotations to each
-// page, in one update after the bytes it was given, and writes text that
+// stampPDF adds the keys to the info and a header annotation to each
+// page, which shows and prints, in one update after the bytes it was given, and writes text that
 // is not plain ASCII as UTF-16. A second update chains to the first.
 func TestStampPDF(t *testing.T) {
 	out, err := stampPDF(testPDF, "doc.md", []pdfKey{{"K", "Ä (x)"}, {"L", `a\(b`}})
@@ -369,10 +369,10 @@ func TestStampPDF(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Nine objects, then a font, two appearances for each of the two page
-	// widths and two annotations on each of three pages.
+	// Nine objects, then a font, an appearance for each of the two page
+	// widths and an annotation on each of three pages.
 	prev := strconv.Itoa(bytes.LastIndex(testPDF, []byte("\nxref\n")) + 1)
-	if got := string(f.trailer.bytes()); got != "<<\n  /Size 20\n  /Root 1 0 R\n  /Info 6 0 R\n  /ID [<01> <01>]\n  /Prev "+prev+"\n>>" {
+	if got := string(f.trailer.bytes()); got != "<<\n  /Size 15\n  /Root 1 0 R\n  /Info 6 0 R\n  /ID [<01> <01>]\n  /Prev "+prev+"\n>>" {
 		t.Errorf("the trailer:\n%s", got)
 	}
 	_, _, info, err := f.dict("6 0 R")
@@ -383,13 +383,13 @@ func TestStampPDF(t *testing.T) {
 		page  string
 		first string // the annotation before the header's, if any
 		width string // the header's width: the page's less two side margins
-		// Where each line starts, flush right: the width less 2.7 pt, a
-		// Courier character at 4.5 pt, for each of its 18 or 6 characters.
-		screenX, printX string
+		// Where the line starts, flush right: the width less 2.7 pt, a
+		// Courier character at 4.5 pt, for each of the 6 in doc.md.
+		x string
 	}{
-		{"3 0 R", "", "328.543", "279.943", "312.343"},
-		{"4 0 R", "8 0 R", "243.307", "194.707", "227.107"}, // too narrow for 47 mm sides, so 10 mm
-		{"5 0 R", "8 0 R", "328.543", "279.943", "312.343"},
+		{"3 0 R", "", "328.543", "312.343"},
+		{"4 0 R", "8 0 R", "243.307", "227.107"}, // too narrow for 47 mm sides, so 10 mm
+		{"5 0 R", "8 0 R", "328.543", "312.343"},
 	} {
 		_, _, page, err := f.dict(c.page)
 		if err != nil {
@@ -407,24 +407,20 @@ func TestStampPDF(t *testing.T) {
 			}
 			refs = refs[1:]
 		}
-		if len(refs) != 2 {
+		if len(refs) != 1 {
 			t.Fatalf("page %s: annotations %v", c.page, refs)
 		}
-		for i, want := range []struct {
-			flags, text, x, gray string
-		}{{"128", pdfScreenLine, c.screenX, "0.75"}, {"164", "doc.md", c.printX, "0.6"}} {
-			_, _, a, err := f.dict(refs[i])
-			if err != nil || a.get("/Subtype") != "/Watermark" || a.get("/F") != want.flags || a.get("/P") != c.page {
-				t.Errorf("page %s annotation %d: %v %s", c.page, i, err, a.bytes())
-				continue
-			}
-			num, gen, _ := pdfRef(strings.TrimSuffix(strings.TrimPrefix(a.get("/AP"), "<< /N "), " >>"))
-			off, _ := pdfObject(out, f.xref, num, gen)
-			form := string(out[off:])
-			form = form[:strings.Index(form, "endstream")]
-			if !strings.Contains(form, "/BBox [0 0 "+c.width+" 8]") || !strings.Contains(form, " q "+want.gray+" g BT /F 4.5 Tf "+want.x+" 2 Td ("+want.text+") Tj") {
-				t.Errorf("page %s annotation %d draws:\n%s", c.page, i, form)
-			}
+		_, _, a, err := f.dict(refs[0])
+		if err != nil || a.get("/Subtype") != "/Watermark" || a.get("/F") != "132" || a.get("/P") != c.page {
+			t.Errorf("page %s: %v %s", c.page, err, a.bytes())
+			continue
+		}
+		num, gen, _ := pdfRef(strings.TrimSuffix(strings.TrimPrefix(a.get("/AP"), "<< /N "), " >>"))
+		off, _ := pdfObject(out, f.xref, num, gen)
+		form := string(out[off:])
+		form = form[:strings.Index(form, "endstream")]
+		if !strings.Contains(form, "/BBox [0 0 "+c.width+" 8]") || !strings.Contains(form, " q 0.6 g BT /F 4.5 Tf "+c.x+" 2 Td (doc.md) Tj") {
+			t.Errorf("page %s draws:\n%s", c.page, form)
 		}
 	}
 	pdfTool(t, out, "qpdf", "--check", "{}")
@@ -457,10 +453,10 @@ func TestStampPDFRefuses(t *testing.T) {
 	}
 }
 
-// The print line names the repo's path on its host without .git, the
+// The source line names the repo's path on its host without .git, the
 // file's path and git's short hash, marked -dirty where the file differs;
 // outside a repo it is the file's name.
-func TestPDFPrintLine(t *testing.T) {
+func TestPDFSourceLine(t *testing.T) {
 	git := func(url, dirty string) []pdfKey {
 		keys := []pdfKey{{"GitCommit", "a1b2c3d4e5f6"}, {"GitPath", "doc/page.md"}, {"GitDirty", dirty}}
 		if url != "" {
@@ -480,7 +476,7 @@ func TestPDFPrintLine(t *testing.T) {
 		{git("", "false"), "doc/page.md@a1b2c3d"},
 		{[]pdfKey{{"SourceSHA256", "00"}}, "page.md"},
 	} {
-		if got := pdfPrintLine("notes/page.md", c.keys); got != c.want {
+		if got := pdfSourceLine("notes/page.md", c.keys); got != c.want {
 			t.Errorf("%v: %q, want %q", c.keys, got, c.want)
 		}
 	}
