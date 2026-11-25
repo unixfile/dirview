@@ -17,9 +17,11 @@ import (
 // fails to with err when token is "".
 func privateWeb(t *testing.T, f *forge, token string, err error) *web {
 	t.Helper()
-	w := testWeb(t, defaultDisk)
+	// Cleanups run last first, so the globals come back after testWeb's
+	// cleanup has waited for the goroutines that read them.
 	oldRoot, oldAuth, oldHost := privateRoot, privateAuth, privateHost
 	t.Cleanup(func() { privateRoot, privateAuth, privateHost = oldRoot, oldAuth, oldHost })
+	w := testWeb(t, defaultDisk)
 	if err := w.usePrivate(filepath.Join(t.TempDir(), progName)); err != nil {
 		t.Fatal(err)
 	}
