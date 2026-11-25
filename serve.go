@@ -496,6 +496,8 @@ func (h *hub) startWeb(c config, ep netip.AddrPort) {
 		ConnState: h.track, ErrorLog: log.New(logWriter{}, "", 0)}
 	h.srv.webURL = origin(ep) + basePath
 	w.srv.homeURL = h.origin + basePath
+	w.checkouts = &checkouts{home: h.srv, origin: h.origin}
+	w.checkouts.find("") // the first scan, so the first page has its link
 	go h.webHTTPD.Serve(ln)
 	logInfo("serves online repos at %s from %s, within %s", origin(ep), w.root, sizeText(limit))
 }

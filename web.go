@@ -46,6 +46,10 @@ type web struct {
 	// resolved, or "" where the server reads none: on a public server
 	// and in tests that do not set it.
 	private string
+	// checkouts finds the user's checkouts of cached repos in the trees
+	// of the default address; nil on a public server and in tests that
+	// do not set it.
+	checkouts *checkouts
 
 	// loadMu makes taking a repo from the disk one step, so two visits,
 	// or a visit and a clone, never serve one repo twice.

@@ -60,6 +60,8 @@ A repo here has versions as a local tree has: `@` and a commit below the repo's 
 
 The share button here copies the forge's own link at the commit the page shows, eg `https://github.com/junegunn/fzf/blob/<commit>/main.go#L10-L12`, since a link to this address opens only on this machine. Lines take the forge's form: `#L10-L12` on GitHub and Codeberg, `#L10-12` on GitLab and `#lines-10:12` on Bitbucket. A host drvu knows no link form for gets the page's own address.
 
+When you have a checkout of the repo, the header links `checkout`: the same page in your checkout, on the default address, with its uncommitted changes and branches. A file the checkout lacks leads to the checkout's root. A file you have not pushed is a 404 here, and its link opens it in the checkout. drvu finds the checkout by the origin URL in its git config, in https, ssh or scp form; a URL from an include or `insteadOf` goes unseen. It looks inside the trees the default address serves, at most three levels below a tree's root, eg `github.com/owner/repo` below `~/scratch`. It looks nowhere else, so a checkout no tree holds gets no link. A scan runs beside the pages and again a minute after the last, so a new clone or a tree just served gets its link on a later page. `drvu-public` has no link.
+
 ## Listings
 
 A path that names no repo lists the repos below it, eg `/github.com/junegunn` or `/git.suckless.org`. git cannot list an account, so here alone drvu asks something else, in this order:

@@ -1,0 +1,26 @@
+# A remote URL, a tab, and the key a cached repo goes by for it, or -
+# where the URL names no repo on a host. Read by TestRepoKey.
+https://github.com/unixfile/keyval	github.com/unixfile/keyval
+https://github.com/unixfile/keyval.git	github.com/unixfile/keyval
+https://github.com/unixfile/keyval/	github.com/unixfile/keyval
+https://www.github.com/Unixfile/KeyVal.git	github.com/unixfile/keyval
+https://github.com:443/unixfile/keyval	github.com/unixfile/keyval
+http://github.com:80/unixfile/keyval	github.com/unixfile/keyval
+https://token@github.com/unixfile/keyval	github.com/unixfile/keyval
+git@github.com:unixfile/keyval.git	github.com/unixfile/keyval
+github.com:unixfile/keyval	github.com/unixfile/keyval
+ssh://git@github.com/unixfile/keyval.git	github.com/unixfile/keyval
+ssh://git@github.com:2222/unixfile/keyval.git	github.com/unixfile/keyval
+git+ssh://git@github.com/unixfile/keyval	github.com/unixfile/keyval
+git://git.suckless.org/dwm	git.suckless.org/dwm
+https://git.suckless.org/Dwm	git.suckless.org/Dwm
+https://gitlab.com/Group/Sub/Repo.git	gitlab.com/group/sub/repo
+http://127.0.0.1:8123/acct/docs	127.0.0.1:8123/acct/docs
+https://127.0.0.1:8123/acct/docs.git	127.0.0.1:8123/acct/docs
+/srv/git/keyval.git	-
+../keyval	-
+file:///srv/git/keyval.git	-
+./dir:with/colon	-
+https://github.com/	-
+https://github.com	-
+	-

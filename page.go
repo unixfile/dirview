@@ -82,7 +82,11 @@ type page struct {
 	// permanent URL for it, which the share button copies; ForgeLines is
 	// how that forge marks lines.
 	Forge, ForgeLines string
-	Built             *stamp // when the binary was built, above the header, with --debug; none on a share
+	// Checkout is, for a page of a repo on the web address, the same page
+	// in the user's checkout of the repo, and CheckoutDir that checkout's
+	// directory, or "" where no served tree holds one.
+	Checkout, CheckoutDir string
+	Built                 *stamp // when the binary was built, above the header, with --debug; none on a share
 }
 
 func (t *tree) title(name string) string {
@@ -186,6 +190,9 @@ func (t *tree) render(w http.ResponseWriter, r *http.Request, status int, p page
 		p.Search = searchURL(r.URL.Path)
 		p.Forge, p.ForgeLines = t.forgeLink(r, p.Kind)
 	}
+	// Any page links the checkout, a missing one too, since a file not
+	// yet pushed is in the checkout alone.
+	p.Checkout, p.CheckoutDir = t.checkoutLink(r)
 	render(w, r, status, p)
 }
 
