@@ -270,11 +270,11 @@ func TestPDFCarriesItsSource(t *testing.T) {
 	pdfTool(t, pdf, "qpdf", "--check", "{}")
 	// The header prints the repo, the path and the commit, and neither
 	// line reaches the text.
-	line := "example.org/r/a/" + name + "@" + head(t, dir, "HEAD")[:8]
+	line := "r/a/" + name + "@" + head(t, dir, "HEAD")[:7]
 	if !bytes.Contains(pdf, []byte(pdfLiteral(winAnsi(line))+" Tj")) || !bytes.Contains(pdf, []byte("("+pdfScreenLine+") Tj")) {
 		t.Errorf("no header %q", line)
 	}
-	if text := pdfTool(t, pdf, "pdftotext", "{}", "-"); strings.Contains(text, "pdfdetach") || strings.Contains(text, "example.org") {
+	if text := pdfTool(t, pdf, "pdftotext", "{}", "-"); strings.Contains(text, "pdfdetach") || strings.Contains(text, "@"+head(t, dir, "HEAD")[:7]) {
 		t.Errorf("the header is in the text:\n%s", text)
 	}
 
@@ -383,10 +383,13 @@ func TestStampPDF(t *testing.T) {
 		page  string
 		first string // the annotation before the header's, if any
 		width string // the header's width: the page's less two side margins
+		// Where each line starts, flush right: the width less 2.7 pt, a
+		// Courier character at 4.5 pt, for each of its 18 or 6 characters.
+		screenX, printX string
 	}{
-		{"3 0 R", "", "328.543"},
-		{"4 0 R", "8 0 R", "243.307"}, // too narrow for 47 mm sides, so 10 mm
-		{"5 0 R", "8 0 R", "328.543"},
+		{"3 0 R", "", "328.543", "279.943", "312.343"},
+		{"4 0 R", "8 0 R", "243.307", "194.707", "227.107"}, // too narrow for 47 mm sides, so 10 mm
+		{"5 0 R", "8 0 R", "328.543", "279.943", "312.343"},
 	} {
 		_, _, page, err := f.dict(c.page)
 		if err != nil {
@@ -408,8 +411,8 @@ func TestStampPDF(t *testing.T) {
 			t.Fatalf("page %s: annotations %v", c.page, refs)
 		}
 		for i, want := range []struct {
-			flags, text string
-		}{{"128", pdfScreenLine}, {"164", "doc.md"}} {
+			flags, text, x, gray string
+		}{{"128", pdfScreenLine, c.screenX, "0.75"}, {"164", "doc.md", c.printX, "0.6"}} {
 			_, _, a, err := f.dict(refs[i])
 			if err != nil || a.get("/Subtype") != "/Watermark" || a.get("/F") != want.flags || a.get("/P") != c.page {
 				t.Errorf("page %s annotation %d: %v %s", c.page, i, err, a.bytes())
@@ -419,7 +422,7 @@ func TestStampPDF(t *testing.T) {
 			off, _ := pdfObject(out, f.xref, num, gen)
 			form := string(out[off:])
 			form = form[:strings.Index(form, "endstream")]
-			if !strings.Contains(form, "/BBox [0 0 "+c.width+" 8]") || !strings.Contains(form, "("+want.text+") Tj") {
+			if !strings.Contains(form, "/BBox [0 0 "+c.width+" 8]") || !strings.Contains(form, " q "+want.gray+" g BT /F 4.5 Tf "+want.x+" 2 Td ("+want.text+") Tj") {
 				t.Errorf("page %s annotation %d draws:\n%s", c.page, i, form)
 			}
 		}
@@ -454,9 +457,9 @@ func TestStampPDFRefuses(t *testing.T) {
 	}
 }
 
-// The print line names the repo without scheme, user or .git, the path
-// and the commit, marked -dirty where the file differs; outside a repo it
-// is the file's name.
+// The print line names the repo's path on its host without .git, the
+// file's path and git's short hash, marked -dirty where the file differs;
+// outside a repo it is the file's name.
 func TestPDFPrintLine(t *testing.T) {
 	git := func(url, dirty string) []pdfKey {
 		keys := []pdfKey{{"GitCommit", "a1b2c3d4e5f6"}, {"GitPath", "doc/page.md"}, {"GitDirty", dirty}}
@@ -469,12 +472,12 @@ func TestPDFPrintLine(t *testing.T) {
 		keys []pdfKey
 		want string
 	}{
-		{git("https://github.com/u/r.git", "false"), "github.com/u/r/doc/page.md@a1b2c3d4"},
-		{git("https://github.com/u/r", "true"), "github.com/u/r/doc/page.md@a1b2c3d4-dirty"},
-		{git("git@github.com:u/r.git", "false"), "github.com/u/r/doc/page.md@a1b2c3d4"},
-		{git("ssh://git@host.example:22/srv/r.git/", "false"), "host.example:22/srv/r/doc/page.md@a1b2c3d4"},
-		{git("/srv/git/r.git", "false"), "/srv/git/r/doc/page.md@a1b2c3d4"},
-		{git("", "false"), "doc/page.md@a1b2c3d4"},
+		{git("https://github.com/u/r.git", "false"), "u/r/doc/page.md@a1b2c3d"},
+		{git("https://u:secret@github.com/u/r", "true"), "u/r/doc/page.md@a1b2c3d-dirty"},
+		{git("git@github.com:u/r.git", "false"), "u/r/doc/page.md@a1b2c3d"},
+		{git("ssh://git@host.example:22/srv/r.git/", "false"), "srv/r/doc/page.md@a1b2c3d"},
+		{git("/srv/git/r.git", "false"), "/srv/git/r/doc/page.md@a1b2c3d"},
+		{git("", "false"), "doc/page.md@a1b2c3d"},
 		{[]pdfKey{{"SourceSHA256", "00"}}, "page.md"},
 	} {
 		if got := pdfPrintLine("notes/page.md", c.keys); got != c.want {

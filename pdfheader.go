@@ -8,19 +8,24 @@ import (
 	"strings"
 )
 
-// pdfScreenLine is the header a viewer shows on each page of a saved PDF.
-const pdfScreenLine = "Markdown source embedded, extract with pdfdetach"
+// pdfScreenLine is the header a viewer shows on each page of a saved PDF:
+// the command that saves the embedded source.
+const pdfScreenLine = "pdfdetach -saveall"
 
-// The header's place and look: 6 pt light gray, its baseline 10 mm below
-// the page's top edge, since printers cannot print the outer 4 to 6 mm,
-// and its start in line with the text, whose side margins typstPreamble
-// sets at 47 mm.
+// The header's place and look: Courier at 4.5 pt, the mono font every
+// viewer has without one embedded, set flush right with the text, whose
+// side margins typstPreamble sets at 47 mm. Its baseline is 10 mm below
+// the page's top edge, since printers cannot print the outer 4 to 6 mm.
+// The screen line is a lighter gray than the print line, which a printer
+// breaks into dots, so the print line stays legible on paper.
 const (
-	pdfMM         = 72 / 25.4
-	pdfHeaderSide = 47 * pdfMM
-	pdfHeaderTop  = 10 * pdfMM
-	pdfHeaderSize = 6
-	pdfHeaderGray = 0.6
+	pdfMM              = 72 / 25.4
+	pdfHeaderSide      = 47 * pdfMM
+	pdfHeaderTop       = 10 * pdfMM
+	pdfHeaderSize      = 4.5
+	pdfHeaderAdvance   = 0.6 // Courier's width per character, in ems
+	pdfHeaderGray      = 0.75
+	pdfHeaderPrintGray = 0.6
 )
 
 // Annotation flags, from table 165 of ISO 32000-1. A viewer shows an
@@ -33,9 +38,9 @@ const (
 )
 
 // pdfPrintLine names the source on paper: the repo, the file's path in it
-// and the commit, eg github.com/u/r/doc/a.md@a1b2c3d4, with -dirty where
-// the file differs from that commit. A repo without a URL leaves out the
-// repo, and outside a repo it is the file's name.
+// and git's short hash of the commit, eg u/r/doc/a.md@a1b2c3d, with -dirty
+// where the file differs from that commit. A repo without a URL leaves
+// out the repo, and outside a repo it is the file's name.
 func pdfPrintLine(name string, keys []pdfKey) string {
 	k := map[string]string{}
 	for _, p := range keys {
@@ -49,28 +54,26 @@ func pdfPrintLine(name string, keys []pdfKey) string {
 	if repo := repoName(k["GitURL"]); repo != "" {
 		line = repo + "/" + line
 	}
-	line += "@" + commit[:min(8, len(commit))]
+	line += "@" + commit[:min(7, len(commit))]
 	if k["GitDirty"] == "true" {
 		line += "-dirty"
 	}
 	return line
 }
 
-// repoName is a repo's URL without its scheme, user or .git, eg
-// github.com/u/r for https://github.com/u/r.git or git@github.com:u/r.
+// repoName is a repo's path on its host, without .git, eg u/r for
+// https://github.com/u/r.git or git@github.com:u/r. A URL without a host,
+// eg /srv/git/r.git, keeps its whole path.
 func repoName(u string) string {
 	if i := strings.Index(u, "://"); i >= 0 {
-		u = u[i+3:]
+		_, u, _ = strings.Cut(u[i+3:], "/")
 	} else if host, p, ok := strings.Cut(u, ":"); ok && !strings.Contains(host, "/") {
-		u = host + "/" + p
-	}
-	if host, _, _ := strings.Cut(u, "/"); strings.Contains(host, "@") {
-		u = u[strings.LastIndex(host, "@")+1:]
+		u = p
 	}
 	return strings.TrimSuffix(strings.TrimSuffix(u, "/"), ".git")
 }
 
-// header stamps two lines at the top of each page as watermark
+// header stamps two lines at the top right of each page as watermark
 // annotations, which lie outside the page's content, so the layout
 // stays. screen shows in a viewer and does not print; print prints and
 // does not show, where the viewer honours the flags. Each line is marked
@@ -82,15 +85,18 @@ func (u *pdfUpdate) header(screen, print string) error {
 	if err != nil {
 		return err
 	}
-	font := u.add([]byte("<<\n  /Type /Font\n  /Subtype /Type1\n  /BaseFont /Helvetica\n  /Encoding /WinAnsiEncoding\n>>"))
+	font := u.add([]byte("<<\n  /Type /Font\n  /Subtype /Type1\n  /BaseFont /Courier\n  /Encoding /WinAnsiEncoding\n>>"))
 	// Pages of one width share each line's appearance.
 	forms := map[string]string{}
-	form := func(width float64, text string) string {
+	form := func(width float64, text string, gray float64) string {
 		key := pdfNum(width) + "\x00" + text
 		if ref, ok := forms[key]; ok {
 			return ref
 		}
-		draw := fmt.Sprintf("/Artifact BMC /Span << /ActualText ( ) >> BDC q %s g BT /F %d Tf 0 2 Td %s Tj ET Q EMC EMC", pdfNum(pdfHeaderGray), pdfHeaderSize, pdfLiteral(winAnsi(text)))
+		text = winAnsi(text)
+		x := max(0, width-float64(len(text))*pdfHeaderAdvance*pdfHeaderSize)
+		draw := fmt.Sprintf("/Artifact BMC /Span << /ActualText ( ) >> BDC q %s g BT /F %s Tf %s 2 Td %s Tj ET Q EMC EMC",
+			pdfNum(gray), pdfNum(pdfHeaderSize), pdfNum(x), pdfLiteral(text))
 		forms[key] = u.add(fmt.Appendf(nil, "<<\n  /Type /XObject\n  /Subtype /Form\n  /BBox [0 0 %s 8]\n  /Resources << /Font << /F %s >> >>\n  /Length %d\n>>\nstream\n%s\nendstream",
 			pdfNum(width), font, len(draw), draw))
 		return forms[key]
@@ -133,9 +139,10 @@ func (u *pdfUpdate) header(screen, print string) error {
 		for _, l := range []struct {
 			text  string
 			flags int
-		}{{screen, annotLocked}, {print, annotPrint | annotNoView | annotLocked}} {
+			gray  float64
+		}{{screen, annotLocked, pdfHeaderGray}, {print, annotPrint | annotNoView | annotLocked, pdfHeaderPrintGray}} {
 			refs = append(refs, u.add(fmt.Appendf(nil, "<<\n  /Type /Annot\n  /Subtype /Watermark\n  /Rect %s\n  /F %d\n  /P %d %d R\n  /AP << /N %s >>\n>>",
-				rect, l.flags, num, gen, form(right-left, l.text))))
+				rect, l.flags, num, gen, form(right-left, l.text, l.gray))))
 		}
 		added := strings.Join(refs, " ")
 		switch old := strings.TrimSpace(d.get("/Annots")); {
