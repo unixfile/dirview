@@ -17,8 +17,63 @@ import (
 	"time"
 )
 
-// pdfQuery is the query that asks for a Markdown page as PDF.
+// pdfQuery is the query that asks for a Markdown page as PDF. Its value
+// names the page the PDF comes on, eg ?pdf=screen; ?pdf alone is A4.
 const pdfQuery = "pdf"
+
+// pdfPage is a page a saved PDF comes on, as one of the user's md2pdf
+// scripts in ~/keep/vibe-bin sets it.
+type pdfPage struct {
+	name  string // the value of ?pdf that asks for it
+	title string // what the header's menu says of it
+	typst string // typst's page rule
+	// The header stands flush right with the text, side from the page's
+	// edges, its baseline top below the page's top edge, in points.
+	side, top float64
+	suffix    string // added to the doc's name in the file's name
+}
+
+// pdfPages are the pages a PDF comes on; the first is the one ?pdf alone
+// gives. A4, as md2pdf-a4 sets it, prints: its header sits 10 mm down,
+// since printers cannot print the outer 4 to 6 mm. The screen page, as
+// md2pdf-screen sets it, is read on a screen: its margins are 8 mm, so
+// its header sits in the top margin, 5 mm down, clear of the text.
+var pdfPages = []pdfPage{
+	{"a4", "A4, for print", `#set page(paper: "a4", margin: (x: 47mm, y: 15mm))`, 47 * pdfMM, 10 * pdfMM, ""},
+	{"screen", "133 mm wide, for reading on a screen", `#set page(width: 133mm, height: 280mm + 8pt, margin: (x: 8mm, y: 8mm))`, 8 * pdfMM, 5 * pdfMM, "-screen"},
+}
+
+// pdfPageOf is the page ?pdf=v asks for, and whether one has that name.
+func pdfPageOf(v string) (pdfPage, bool) {
+	if v == "" {
+		return pdfPages[0], true
+	}
+	for _, p := range pdfPages {
+		if p.name == v {
+			return p, true
+		}
+	}
+	return pdfPage{}, false
+}
+
+// pdfMenu is what the header's pdf menu lists: each page's name and what
+// it is for.
+func pdfMenu() []struct{ Name, Title string } {
+	var out []struct{ Name, Title string }
+	for _, p := range pdfPages {
+		out = append(out, struct{ Name, Title string }{p.name, p.title})
+	}
+	return out
+}
+
+// pdfPageNames lists the pages' names, eg "a4 or screen".
+func pdfPageNames() string {
+	var names []string
+	for _, p := range pdfPages {
+		names = append(names, p.name)
+	}
+	return strings.Join(names[:len(names)-1], ", ") + " or " + names[len(names)-1]
+}
 
 // pdfTimeout bounds one run of typst; a long doc takes a second or two.
 const pdfTimeout = time.Minute
@@ -51,6 +106,11 @@ func (s *server) servePDF(w http.ResponseWriter, r *http.Request, t *tree, name 
 		t.fail(w, r, name, http.StatusForbidden, "A shared page offers no PDF")
 		return
 	}
+	pg, ok := pdfPageOf(r.URL.Query().Get(pdfQuery))
+	if !ok {
+		t.fail(w, r, name, http.StatusBadRequest, "No PDF page is called "+strconv.Quote(r.URL.Query().Get(pdfQuery))+"; ?pdf= takes "+pdfPageNames())
+		return
+	}
 	prog, err := typst()
 	if err != nil {
 		t.fail(w, r, name, http.StatusNotImplemented, typstMissing)
@@ -67,7 +127,7 @@ func (s *server) servePDF(w http.ResponseWriter, r *http.Request, t *tree, name 
 		return
 	}
 	start := time.Now()
-	pdf, err := t.typesetPDF(r.Context(), prog, name, src, page)
+	pdf, err := t.typesetPDF(r.Context(), prog, name, src, pg, page)
 	if err != nil {
 		logErr("E%d: cannot typeset %s as PDF: %v", errnoOf(err), name, err)
 		t.fail(w, r, name, http.StatusInternalServerError, "typst failed: "+err.Error())
@@ -75,13 +135,13 @@ func (s *server) servePDF(w http.ResponseWriter, r *http.Request, t *tree, name 
 	}
 	// The embedded source is the truth, so a PDF without its keys and
 	// header still goes out.
-	if out, err := stampPDF(pdf, name, t.pdfKeys(r.Context(), name, src, time.Now())); err != nil {
+	if out, err := stampPDF(pdf, name, pg, t.pdfKeys(r.Context(), name, src, time.Now())); err != nil {
 		logErr("E%d: cannot add the source's keys and header to the PDF of %s: %v", errnoOf(err), name, err)
 	} else {
 		pdf = out
 	}
-	logInfo("typeset %s as PDF in %d ms, %s", name, time.Since(start).Milliseconds(), sizeText(int64(len(pdf))))
-	file := strings.TrimSuffix(path.Base(name), path.Ext(name)) + ".pdf"
+	logInfo("typeset %s as PDF on the %s page in %d ms, %s", name, pg.name, time.Since(start).Milliseconds(), sizeText(int64(len(pdf))))
+	file := strings.TrimSuffix(path.Base(name), path.Ext(name)) + pg.suffix + ".pdf"
 	w.Header().Set("Content-Type", "application/pdf")
 	w.Header().Set("Content-Disposition", "attachment; filename*=UTF-8''"+url.PathEscape(file))
 	w.Header().Set("Cache-Control", "no-store")
@@ -89,8 +149,8 @@ func (s *server) servePDF(w http.ResponseWriter, r *http.Request, t *tree, name 
 }
 
 // stampPDF adds to a PDF typst wrote, in one incremental update, the
-// keys that name its source and the header on each page.
-func stampPDF(pdf []byte, name string, keys []pdfKey) ([]byte, error) {
+// keys that name its source and the header on each page of pg.
+func stampPDF(pdf []byte, name string, pg pdfPage, keys []pdfKey) ([]byte, error) {
 	f, err := readPDF(pdf)
 	if err != nil {
 		return nil, err
@@ -102,7 +162,7 @@ func stampPDF(pdf []byte, name string, keys []pdfKey) ([]byte, error) {
 	if err := u.info(keys); err != nil {
 		return nil, err
 	}
-	if err := u.header(pdfSourceLine(name, keys)); err != nil {
+	if err := u.header(pdfSourceLine(name, keys), pg); err != nil {
 		return nil, err
 	}
 	return u.bytes(), nil
@@ -110,13 +170,13 @@ func stampPDF(pdf []byte, name string, keys []pdfKey) ([]byte, error) {
 
 // typesetPDF writes the doc name, whose text is src, as typst markup in a
 // directory of its own, with the doc's images from the tree beside it,
-// and runs typst there. The PDF embeds src, byte for byte, under the
+// and runs typst there for the page pg. The PDF embeds src, byte for byte, under the
 // doc's own file name. typst reads nothing outside that directory, so
 // the PDF holds only what the tree gives, as the page's CSP lets a
 // browser take nothing else. An image typst cannot read fails the whole
 // run, so a failed run with images is tried again without them, as a
 // browser shows a page whose image is broken.
-func (t *tree) typesetPDF(ctx context.Context, prog, name string, src []byte, page *url.URL) ([]byte, error) {
+func (t *tree) typesetPDF(ctx context.Context, prog, name string, src []byte, pg pdfPage, page *url.URL) ([]byte, error) {
 	dir, err := os.MkdirTemp("", progName+"-pdf-")
 	if err != nil {
 		return nil, err
@@ -127,10 +187,10 @@ func (t *tree) typesetPDF(ctx context.Context, prog, name string, src []byte, pa
 	}
 	attach := typstAttach(path.Base(name))
 	images := t.pdfImages(dir, name)
-	pdf, err := runTypst(ctx, prog, dir, append([]byte(attach), typstDoc(src, t.title(name), page, t.missing(name), images.file)...))
+	pdf, err := runTypst(ctx, prog, dir, append([]byte(attach), typstDoc(src, t.title(name), pg, page, t.missing(name), images.file)...))
 	if err != nil && images.count > 0 && ctx.Err() == nil {
 		logErr("E%d: cannot typeset %s with its images, so it goes without: %v", errnoOf(err), name, err)
-		pdf, err = runTypst(ctx, prog, dir, append([]byte(attach), typstDoc(src, t.title(name), page, t.missing(name), nil)...))
+		pdf, err = runTypst(ctx, prog, dir, append([]byte(attach), typstDoc(src, t.title(name), pg, page, t.missing(name), nil)...))
 	}
 	return pdf, err
 }

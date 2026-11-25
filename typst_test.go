@@ -27,7 +27,7 @@ func typstCase(t *testing.T, name string) (src, markup []byte) {
 		}
 		return ""
 	}
-	return src, typstDoc(src, "notes/"+name+".md", page, missing, image)
+	return src, typstDoc(src, "notes/"+name+".md", pdfPages[0], page, missing, image)
 }
 
 // Each doc in testdata/typst writes as the markup beside it, after the
@@ -68,7 +68,7 @@ func TestTypstGraph(t *testing.T) {
 	if _, err := exec.LookPath("dot"); err != nil {
 		t.Skip("dot is not installed")
 	}
-	markup := typstDoc([]byte("```dot\ndigraph { a -> b }\n```\n\n```dot\nnot a graph\n```\n"), "g.md", nil, nil, nil)
+	markup := typstDoc([]byte("```dot\ndigraph { a -> b }\n```\n\n```dot\nnot a graph\n```\n"), "g.md", pdfPages[0], nil, nil, nil)
 	if !bytes.Contains(markup, []byte(`#image(bytes("<svg`)) {
 		t.Errorf("no SVG for the graph:\n%s", markup)
 	}

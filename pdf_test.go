@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"image"
 	"image/png"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
@@ -34,13 +35,14 @@ func useTypst(t *testing.T, prog string) {
 	t.Cleanup(func() { typst = old })
 }
 
-// A Markdown page links its PDF beside raw only while typst is installed.
-// Without it, ?pdf says what is missing and where to get it. A code page
-// has no PDF.
+// A Markdown page offers its PDF beside raw only while typst is
+// installed, in a menu of the pages it comes on. Without typst, ?pdf says
+// what is missing and where to get it. A code page has no PDF.
 func TestPDFLinkFollowsTypst(t *testing.T) {
 	s, _, _ := serveTree(t)
 	h := s.handler()
-	link := `<a href="?pdf" title="save this page as PDF, typeset by typst">pdf</a>`
+	link := `<details class="pdf"><summary title="save this page as PDF, typeset by typst">pdf</summary><span>` +
+		`<a href="?pdf=a4" title="A4, for print">a4</a><a href="?pdf=screen" title="133 mm wide, for reading on a screen">screen</a></span></details>`
 
 	useTypst(t, "/usr/bin/typst")
 	if body := get(h, "/index.md").Body.String(); !strings.Contains(body, `<a href="?raw">raw</a>`+link) {
@@ -70,7 +72,7 @@ func TestSharedPageOffersNoPDF(t *testing.T) {
 	s.shared, tr.shared = true, true
 	useTypst(t, "/usr/bin/typst")
 	h := s.handler()
-	if body := get(h, "/index.md").Body.String(); strings.Contains(body, `href="?pdf"`) {
+	if body := get(h, "/index.md").Body.String(); strings.Contains(body, `href="?pdf`) {
 		t.Errorf("a share links a PDF:\n%s", body)
 	}
 	if rec := get(h, "/index.md?pdf"); rec.Code != http.StatusForbidden {
@@ -358,7 +360,7 @@ var testPDF = rawPDF("/Root 1 0 R /Info 6 0 R /ID [<01> <01>]",
 // page, which shows and prints, in one update after the bytes it was given, and writes text that
 // is not plain ASCII as UTF-16. A second update chains to the first.
 func TestStampPDF(t *testing.T) {
-	out, err := stampPDF(testPDF, "doc.md", []pdfKey{{"K", "Ä (x)"}, {"L", `a\(b`}})
+	out, err := stampPDF(testPDF, "doc.md", pdfPages[0], []pdfKey{{"K", "Ä (x)"}, {"L", `a\(b`}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -424,7 +426,7 @@ func TestStampPDF(t *testing.T) {
 		}
 	}
 	pdfTool(t, out, "qpdf", "--check", "{}")
-	again, err := stampPDF(out, "doc.md", []pdfKey{{"M", "m"}})
+	again, err := stampPDF(out, "doc.md", pdfPages[0], []pdfKey{{"M", "m"}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -447,7 +449,7 @@ func TestStampPDFRefuses(t *testing.T) {
 		{"a page without a box", strings.Replace(good, " /MediaBox [0 0 595 842]", "", 1)},
 		{"a page tree that loops", strings.Replace(good, "/Kids [3 0 R 4 0 R 5 0 R]", "/Kids [2 0 R]", 1)},
 	} {
-		if _, err := stampPDF([]byte(c.pdf), "doc.md", nil); !errors.Is(err, errPDFForm) {
+		if _, err := stampPDF([]byte(c.pdf), "doc.md", pdfPages[0], nil); !errors.Is(err, errPDFForm) {
 			t.Errorf("%s: %v", c.name, err)
 		}
 	}
@@ -483,4 +485,73 @@ func TestPDFSourceLine(t *testing.T) {
 	if got := winAnsi("Ärende → ö"); got != "\xc4rende ? \xf6" {
 		t.Errorf("winAnsi: %q", got)
 	}
+}
+
+// ?pdf=screen gives md2pdf-screen's page, 133 mm wide, with the header
+// 8 mm from the right edge and 5 mm down, in the top margin; ?pdf and
+// ?pdf=a4 give A4 with the header 47 mm in and 10 mm down. The file's
+// name tells the two apart. A page of another name is refused.
+func TestPDFPages(t *testing.T) {
+	s, _, _ := serveTree(t)
+	h := s.handler()
+	useTypst(t, "/usr/bin/typst")
+	if rec := get(h, "/index.md?pdf=letter"); rec.Code != http.StatusBadRequest || !strings.Contains(rec.Body.String(), `No PDF page is called &#34;letter&#34;; ?pdf= takes a4 or screen`) {
+		t.Errorf("?pdf=letter: %d\n%s", rec.Code, rec.Body)
+	}
+	needTypst(t)
+	useTypst(t, mustLook(t, "typst"))
+	for _, c := range []struct {
+		query, file string
+		width       float64 // the page's, in points
+		side, top   float64 // the header's distance from the right and top edges, in mm
+	}{
+		{"pdf", "index.pdf", 595.276, 47, 10},
+		{"pdf=a4", "index.pdf", 595.276, 47, 10},
+		{"pdf=screen", "index-screen.pdf", 377.008, 8, 5},
+	} {
+		rec := get(h, "/index.md?"+c.query)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("?%s: %d\n%.400s", c.query, rec.Code, rec.Body)
+		}
+		if got := rec.Header().Get("Content-Disposition"); got != "attachment; filename*=UTF-8''"+c.file {
+			t.Errorf("?%s: Content-Disposition %q", c.query, got)
+		}
+		f, err := readPDF(rec.Body.Bytes())
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, _, root, _ := f.dict(f.trailer.get("/Root"))
+		_, _, pages, _ := f.dict(root.get("/Pages"))
+		kids, _ := pdfRefs(pages.get("/Kids"))
+		_, _, page, _ := f.dict(kids[0])
+		box := page.get("/MediaBox")
+		if box == "" {
+			box = pages.get("/MediaBox")
+		}
+		_, _, x1, y1, ok := pdfBox(box)
+		if !ok || math.Abs(x1-c.width) > 0.01 {
+			t.Errorf("?%s: media box %s, want %v wide", c.query, box, c.width)
+		}
+		annots, _ := pdfRefs(page.get("/Annots"))
+		var rect string
+		for _, a := range annots {
+			if _, _, d, err := f.dict(a); err == nil && d.get("/Subtype") == "/Watermark" {
+				rect = d.get("/Rect")
+			}
+		}
+		_, y0, right, _, ok := pdfBox(rect)
+		if !ok || math.Abs(x1-right-c.side*pdfMM) > 0.01 || math.Abs(y1-(y0+2)-c.top*pdfMM) > 0.01 {
+			t.Errorf("?%s: the header's rect %s, want %v mm from the right and its baseline %v mm down", c.query, rect, c.side, c.top)
+		}
+	}
+}
+
+// mustLook is the path of prog, which the test needs.
+func mustLook(t *testing.T, prog string) string {
+	t.Helper()
+	p, err := exec.LookPath(prog)
+	if err != nil {
+		t.Skipf("%s is not installed", prog)
+	}
+	return p
 }

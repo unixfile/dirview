@@ -18,9 +18,10 @@
 		if (e.key === themeKey) theme(e.newValue);
 	});
 	document.addEventListener("click", (e) => {
-		// A click outside the open menu closes it.
-		const menu = document.querySelector("details.theme[open]");
-		if (menu && !(e.target.closest && e.target.closest("details.theme"))) menu.open = false;
+		// A click outside an open menu of the header closes it, and so
+		// does a page chosen in the pdf menu.
+		for (const menu of document.querySelectorAll("header details:is(.theme, .pdf)[open]"))
+			if (!(e.target.closest && e.target.closest("header details:is(.theme, .pdf)") === menu) || e.target.closest("details.pdf a")) menu.open = false;
 		const b = e.target.closest && e.target.closest("details.theme button");
 		if (!b) return;
 		// The menu closes on a choice, and its line names the new mode.
@@ -947,6 +948,7 @@
 		if (crumbs.length) add("up", "to " + text(crumbs[crumbs.length - 1]), crumbs[crumbs.length - 1]);
 		if (crumbs.length && crumbs[0].getAttribute("href") === "/") add("index", "the served trees", crumbs[0]);
 		for (const b of document.querySelectorAll("details.theme button")) add(b.dataset.theme, b.title, b);
+		for (const a of document.querySelectorAll("details.pdf a")) add("pdf " + text(a), "save this page as PDF, " + a.title, a);
 		add("copy", "copy the page's text", document.querySelector("button.copy"));
 		add("share", "copy a link to what is selected, or to the page", document.querySelector("button.share"));
 		const bug = document.querySelector("button.bug");
@@ -1109,7 +1111,7 @@
 				break;
 			}
 			case "Escape":
-				if (document.querySelector("details.theme[open]")) document.querySelector("details.theme[open]").open = false;
+				if (document.querySelector("header details:is(.theme, .pdf)[open]")) document.querySelector("header details:is(.theme, .pdf)[open]").open = false;
 				else if (palOn()) clearSearch();
 				else if (openMenu()) openMenu().open = false;
 				else if (b && !inBox && document.activeElement !== document.body) b.focus({ preventScroll: true });

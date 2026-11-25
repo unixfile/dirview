@@ -42,9 +42,9 @@ Every gap between blocks is the same, whether the block is a paragraph, list, ta
 
 ## PDF
 
-pdf in a doc's header, beside raw, saves the doc as a PDF file, eg `README.pdf`. `?pdf` asks for it directly. typst typesets it from drvu's own reading of the doc, so wiki links, alerts, broken-link marks and each block's language carry over.
+pdf in a doc's header, beside raw, opens a menu of the pages a PDF comes on. a4 saves the doc for print, eg `README.pdf`. screen saves it on a page 133 mm wide for reading on a screen, eg `README-screen.pdf`. `?pdf=a4` and `?pdf=screen` ask for them directly, and `?pdf` alone gives A4. The command list offers them as `pdf a4` and `pdf screen`. typst typesets it from drvu's own reading of the doc, so wiki links, alerts, broken-link marks and each block's language carry over.
 
-The look follows the md2pdf-a4 script: STIX Two Text at 12 pt in justified paragraphs on A4, with 47 mm side margins. Code is Iosevka: 0.85em in a sentence, as on the page, and 0.8em in a block, as in md2pdf-a4. Links look like the words around them, and a link to a missing file keeps its dotted underline. A relative link leads to the page on the server that made the PDF.
+The look follows the md2pdf scripts: STIX Two Text at 12 pt in justified paragraphs. A4 has 47 mm side margins and 15 mm at top and bottom, as md2pdf-a4 sets them. The screen page has 8 mm margins all round, as md2pdf-screen sets them. Code is Iosevka: 0.85em in a sentence, as on the page, and 0.8em in a block, as in md2pdf-a4. Links look like the words around them, and a link to a missing file keeps its dotted underline. A relative link leads to the page on the server that made the PDF.
 
 Footnotes stand at the foot of the page that cites them. A Graphviz graph draws as on the page. Code carries no syntax colour. Raw HTML stays out, since typst cannot draw it, but the text between its tags stays.
 
@@ -62,11 +62,11 @@ The PDF carries its source. It embeds one file, the doc itself, byte for byte un
 
 The git keys name where the source came from and nothing more; outside a repo, or in one without a commit, they are absent. The embedded file is the truth, and its SHA-256 checks it. drvu appends the keys after typst runs, as an incremental update, so the bytes typst wrote stay as they are. If that step fails, drvu logs why and the PDF goes out without the keys.
 
-Each page carries a header in 4.5 pt gray Courier, flush right with the text and 10 mm below the top edge, since printers cannot print the outer 4 to 6 mm. It names the source, eg `u/r/doc/page.md@a1b2c3d`: the repo's path on its host, the doc's path and the commit's short hash, with `-dirty` where the doc differs from that commit, or the file's name outside a repo. The same line shows on screen and prints. An annotation carries it, outside the page's text, so the layout stays as typst set it and `pdftotext` and copy and paste skip it. Characters outside Latin-1 print as question marks.
+Each page carries a header in 4.5 pt gray Courier, flush right with the text. On A4 its baseline is 10 mm below the top edge, since printers cannot print the outer 4 to 6 mm. On the screen page it is 5 mm down, in the top margin, clear of the text. It names the source, eg `u/r/doc/page.md@a1b2c3d`: the repo's path on its host, the doc's path and the commit's short hash, with `-dirty` where the doc differs from that commit, or the file's name outside a repo. The same line shows on screen and prints. An annotation carries it, outside the page's text, so the layout stays as typst set it and `pdftotext` and copy and paste skip it. Characters outside Latin-1 print as question marks.
 
 typst finds STIX Two Text and Iosevka among the fonts installed on the machine. Where one is missing, typst falls back to a font of its own and drvu logs the warning.
 
-The link shows only where typst is on the server's PATH; otherwise `?pdf` says where to get it. A server started from a shell has that shell's PATH. One that the systemd unit starts has the user manager's, which `systemctl --user show-environment` shows. No Debian suite packages typst, so the package does not depend on it. A share offers no PDF, since each visitor would start typst.
+The menu shows only where typst is on the server's PATH; otherwise `?pdf` says where to get it. A server started from a shell has that shell's PATH. One that the systemd unit starts has the user manager's, which `systemctl --user show-environment` shows. No Debian suite packages typst, so the package does not depend on it. A share offers no PDF, since each visitor would start typst.
 
 ## Linked from
 

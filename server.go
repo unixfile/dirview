@@ -55,6 +55,7 @@ var layout = template.Must(template.New("layout").Funcs(template.FuncMap{
 	"styleURL": func() string { return styleURL },
 	"ownPath":  func() string { return ownPath },
 	"progName": func() string { return progName },
+	"pdfMenu":  pdfMenu,
 }).Parse(layoutHTML))
 
 // csp forbids every script but live reload's, which it names by hash.

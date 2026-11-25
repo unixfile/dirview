@@ -8,16 +8,12 @@ import (
 	"strings"
 )
 
-// The header's place and look: Courier at 4.5 pt, the mono font every
-// viewer has without one embedded, set flush right with the text, whose
-// side margins typstPreamble sets at 47 mm. Its baseline is 10 mm below
-// the page's top edge, since printers cannot print the outer 4 to 6 mm.
-// Its gray is 60%, no lighter, since a printer breaks light gray into
-// dots and the line must stay legible on paper.
+// The header's look: Courier at 4.5 pt, the mono font every viewer has
+// without one embedded. Its place is the pdfPage's. Its gray is 60%, no
+// lighter, since a printer breaks light gray into dots and the line must
+// stay legible on paper.
 const (
 	pdfMM            = 72 / 25.4
-	pdfHeaderSide    = 47 * pdfMM
-	pdfHeaderTop     = 10 * pdfMM
 	pdfHeaderSize    = 4.5
 	pdfHeaderAdvance = 0.6 // Courier's width per character, in ems
 	pdfHeaderGray    = 0.6
@@ -73,7 +69,7 @@ func repoName(u string) string {
 // for readers of tagged PDF, and a span whose actual text is a space,
 // since poppler, eg pdftotext, reads annotations and skips no artifact;
 // poppler 22.12 takes an empty actual text for none.
-func (u *pdfUpdate) header(line string) error {
+func (u *pdfUpdate) header(line string, pg pdfPage) error {
 	_, _, root, err := u.f.dict(u.f.trailer.get("/Root"))
 	if err != nil {
 		return err
@@ -122,11 +118,11 @@ func (u *pdfUpdate) header(line string) error {
 		if !ok {
 			return fmt.Errorf("%w: page %d has no media box", errPDFForm, num)
 		}
-		side := pdfHeaderSide
+		side := pg.side
 		if x1-x0-2*side < 72 {
-			side = pdfHeaderTop
+			side = pg.top
 		}
-		left, right, base := x0+side, x1-side, y1-pdfHeaderTop
+		left, right, base := x0+side, x1-side, y1-pg.top
 		rect := fmt.Sprintf("[%s %s %s %s]", pdfNum(left), pdfNum(base-2), pdfNum(right), pdfNum(base+6))
 		added := u.add(fmt.Appendf(nil, "<<\n  /Type /Annot\n  /Subtype /Watermark\n  /Rect %s\n  /F %d\n  /P %d %d R\n  /AP << /N %s >>\n>>",
 			rect, annotPrint|annotLocked, num, gen, form(right-left)))

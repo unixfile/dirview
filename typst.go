@@ -13,16 +13,15 @@ import (
 	"github.com/yuin/goldmark/util"
 )
 
-// typstPreamble sets the look of a saved PDF, as the user's md2pdf-a4
-// script sets it: STIX Two Text at 12 pt in justified paragraphs on A4,
-// with 47 mm side margins. Code is Iosevka, as on the page, and a code
-// block keeps typst's 0.8em, as in md2pdf-a4. Code in a sentence is 0.85em,
+// typstPreamble sets the look of a saved PDF, as the user's md2pdf
+// scripts set it: STIX Two Text at 12 pt in justified paragraphs, on the
+// page the pdfPage's line sets after it. Code is Iosevka, as on the page,
+// and a code block keeps typst's 0.8em, as in md2pdf-a4. Code in a sentence is 0.85em,
 // as on the page; typst sets it at 0.8em first, so the rule scales that.
 // The preamble holds no blank line, so the doc starts after the first.
 // %s is the title as a typst string.
 const typstPreamble = `#set document(title: %s)
 #set text(font: ("STIX Two Text", "Iosevka"), size: 12pt)
-#set page(paper: "a4", margin: (x: 47mm, y: 15mm))
 #set par(justify: true)
 #show raw: set text(font: "Iosevka")
 #show raw.where(block: false): set text(size: 0.85em / 0.8)
@@ -51,9 +50,10 @@ const typstBroken = `#underline(stroke: (paint: rgb("#902000"), thickness: 0.5pt
 // the PDF keeps what the page shows: wiki links, alerts, broken-link marks
 // and each block's language. page is the page's URL, against which
 // relative links resolve. missing, when given, tells a broken link, as
-// renderMarkdown does. image names the file in typst's root that holds a
-// doc's image, or "" to show its description instead.
-func typstDoc(src []byte, title string, page *url.URL, missing func(string) bool, image func(dest string) string) []byte {
+// renderMarkdown does. pg is the page it comes on. image names the file
+// in typst's root that holds a doc's image, or "" to show its description
+// instead.
+func typstDoc(src []byte, title string, pg pdfPage, page *url.URL, missing func(string) bool, image func(dest string) string) []byte {
 	doc := markdown.Parser().Parse(text.NewReader(src))
 	markAlerts(doc, src)
 	markLang(doc, src)
@@ -76,6 +76,7 @@ func typstDoc(src []byte, title string, page *url.URL, missing func(string) bool
 		return ast.WalkContinue, nil
 	})
 	w.b.WriteString(strings.Replace(typstPreamble, "%s", typstString(title), 1))
+	w.b.WriteString(pg.typst + "\n")
 	w.b.WriteByte('\n')
 	w.blocks(doc)
 	w.b.WriteByte('\n')
